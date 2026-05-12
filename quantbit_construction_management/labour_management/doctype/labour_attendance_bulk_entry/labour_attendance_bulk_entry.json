@@ -15,12 +15,14 @@
   "shift",
   "col_break_ident2",
   "date",
-  "section_break_moev",
-  "attendance",
+  "contractor",
+  "column_break_jnam",
+  "contractor_type",
   "section_financial",
-  "total_present",
+  "attendance_status",
+  "total_skilled",
   "col_break_fin1",
-  "total_absent",
+  "total_unskilled",
   "column_break_nphu",
   "total_hours",
   "section_notes",
@@ -93,18 +95,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "default": "0",
-   "fieldname": "total_present",
-   "fieldtype": "Int",
-   "label": "Total Present"
-  },
-  {
-   "default": "0",
-   "fieldname": "total_absent",
-   "fieldtype": "Int",
-   "label": "Total Absent"
-  },
-  {
    "fieldname": "col_break_fin1",
    "fieldtype": "Column Break"
   },
@@ -112,6 +102,7 @@
    "default": "0",
    "fieldname": "total_hours",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Total Man Hours"
   },
   {
@@ -135,26 +126,53 @@
    "search_index": 1
   },
   {
-   "fieldname": "section_break_moev",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "attendance",
-   "fieldtype": "Table",
-   "label": "Attendance",
-   "options": "Labour Attendance Row",
-   "reqd": 1
-  },
-  {
    "fieldname": "column_break_nphu",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contractor",
+   "fieldtype": "Link",
+   "label": "Contractor",
+   "options": "Contractor"
+  },
+  {
+   "fieldname": "column_break_jnam",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contractor_type",
+   "fieldtype": "Select",
+   "label": "Contractor Type",
+   "options": "Individuals\ncontract",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.contractor_type==\"contract\"",
+   "fieldname": "total_skilled",
+   "fieldtype": "Int",
+   "label": "Total Skilled Labour Present Count"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.contractor_type==\"contract\"",
+   "fieldname": "total_unskilled",
+   "fieldtype": "Int",
+   "label": "Total Unskilled Labour Present Count"
+  },
+  {
+   "depends_on": "eval:doc.contractor_type==\"Individuals\"",
+   "fieldname": "attendance_status",
+   "fieldtype": "Select",
+   "label": "Attendance Status",
+   "options": "Present\nabset"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-02 11:20:58.253331",
+ "modified": "2026-05-12 15:24:49.400224",
  "modified_by": "Administrator",
  "module": "Labour Management",
  "name": "Labour Attendance Bulk Entry",

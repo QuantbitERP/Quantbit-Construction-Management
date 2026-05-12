@@ -103,7 +103,7 @@
   "contract_type",
   "invoicing_type",
   "emd_exempted",
-  "earnest__money_deposit",
+  "earnest_money_deposit",
   "tender_fees_exempted",
   "tender_fees",
   "expected_end_date",
@@ -114,6 +114,7 @@
   "estimated_cost",
   "performance_bond",
   "location",
+  "tender_created",
   "bid_tab",
   "scope_of_work",
   "bid_evaluation_criteriatechnical",
@@ -743,7 +744,7 @@
   },
   {
    "depends_on": "eval:doc.emd_exempted==\"No\"",
-   "fieldname": "earnest__money_deposit",
+   "fieldname": "earnest_money_deposit",
    "fieldtype": "Float",
    "label": "Earnest  Money Deposit"
   },
@@ -964,21 +965,10 @@
    "default": "0",
    "fieldname": "show_create_customer_button",
    "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Show Create Customer Button",
-   "print_hide": 1
+   "label": "Show Create Customer Button"
   }
  ],
- "grid_page_length": 50,
- "icon": "fa fa-info-sign",
- "is_submittable": 1,
- "links": [
-  {
-   "link_doctype": "Tender",
-   "link_fieldname": "reference_doc_name"
-  }
- ],
- "modified": "2026-05-11 19:40:05.057179",
+ "modified": "2026-05-12 13:06:03.967089",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender",
