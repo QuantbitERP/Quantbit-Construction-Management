@@ -178,8 +178,6 @@ def create_tender_from_opportunity(opportunity_name, tender_name):
         })
     
     tender.insert(ignore_permissions=True)
-   
-    frappe.db.set_value('Tender', tender.name, 'tender_created', tender.name)
     
    
     frappe.db.set_value('Opportunity', opportunity_name, 'custom_tender_created_', tender.name)
