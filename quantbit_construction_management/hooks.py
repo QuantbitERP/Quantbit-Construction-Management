@@ -88,14 +88,12 @@ fixtures = [
                     "Approved By Top Management",
                     "Go For Bid",
                     "Don't Go For Bid",
-                    "Tender created",
                     "Preliminary Approved",
                     "Commercially Approved",
                     "Top Management Approved",
                     "Won",
                     "Lost",
                     "Alloted",
-                    "Project Created",
                     "New",
                     "Tender Submitted",
                     "In Progress",
@@ -120,12 +118,11 @@ fixtures = [
                     "Pending For Top Management Approval",
                     "Submit Tender",
                     "Pending",
-                    "Create Tender",
                     "Reject",
                     "Mark Won",
                     "Mark Lost",
                     "Allotment Received",
-                    "Create Project"
+                    
 
                 ]
             ]

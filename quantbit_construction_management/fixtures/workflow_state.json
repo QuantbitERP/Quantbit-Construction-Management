@@ -39,10 +39,19 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:40:48.597164",
-  "name": "Tender created",
+  "modified": "2026-04-30 00:45:02.373194",
+  "name": "Lost",
   "style": "",
-  "workflow_state_name": "Tender created"
+  "workflow_state_name": "Lost"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-04-30 00:39:51.727551",
+  "name": "Approved By Sales",
+  "style": "",
+  "workflow_state_name": "Approved By Sales"
  },
  {
   "docstatus": 0,
@@ -66,55 +75,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:44:13.481014",
-  "name": "Commercially Approved",
-  "style": "",
-  "workflow_state_name": "Commercially Approved"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-04-30 00:44:26.879460",
-  "name": "Top Management Approved",
-  "style": "",
-  "workflow_state_name": "Top Management Approved"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-04-30 00:44:51.319435",
   "name": "Won",
   "style": "",
   "workflow_state_name": "Won"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-04-30 00:45:02.373194",
-  "name": "Lost",
-  "style": "",
-  "workflow_state_name": "Lost"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-04-30 00:45:13.544320",
-  "name": "Alloted",
-  "style": "",
-  "workflow_state_name": "Alloted"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-04-30 00:45:23.836842",
-  "name": "Project Created",
-  "style": "",
-  "workflow_state_name": "Project Created"
  },
  {
   "docstatus": 0,
@@ -129,15 +93,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:44:40.054185",
-  "name": "Tender Submitted",
-  "style": "",
-  "workflow_state_name": "Tender Submitted"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-04-30 00:39:16.815799",
   "name": "Approved By Analyzer",
   "style": "",
@@ -147,18 +102,45 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:39:51.727551",
-  "name": "Approved By Sales",
+  "modified": "2026-04-30 00:40:32.354777",
+  "name": "Don't Go For Bid",
   "style": "",
-  "workflow_state_name": "Approved By Sales"
+  "workflow_state_name": "Don't Go For Bid"
  },
  {
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:40:32.354777",
-  "name": "Don't Go For Bid",
+  "modified": "2026-04-30 00:44:13.481014",
+  "name": "Commercially Approved",
   "style": "",
-  "workflow_state_name": "Don't Go For Bid"
+  "workflow_state_name": "Commercially Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-04-30 00:45:13.544320",
+  "name": "Alloted",
+  "style": "",
+  "workflow_state_name": "Alloted"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-04-30 00:44:40.054185",
+  "name": "Tender Submitted",
+  "style": "",
+  "workflow_state_name": "Tender Submitted"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-04-30 00:44:26.879460",
+  "name": "Top Management Approved",
+  "style": "",
+  "workflow_state_name": "Top Management Approved"
  }
 ]

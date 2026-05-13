@@ -9,13 +9,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-04-30 00:43:03.894067",
-  "name": "Create Tender",
-  "workflow_action_name": "Create Tender"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-04-30 00:45:51.939306",
   "name": "Mark Lost",
   "workflow_action_name": "Mark Lost"
@@ -33,13 +26,6 @@
   "modified": "2026-04-30 00:46:17.902534",
   "name": "Allotment Received",
   "workflow_action_name": "Allotment Received"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-04-30 00:46:32.152732",
-  "name": "Create Project",
-  "workflow_action_name": "Create Project"
  },
  {
   "docstatus": 0,
@@ -86,13 +72,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-05-04 13:12:24.527403",
-  "name": "Pending For Preliminary Approval",
-  "workflow_action_name": "Pending For Preliminary Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-05-04 13:12:34.206053",
   "name": "Pending For Commercial Approval",
   "workflow_action_name": "Pending For Commercial Approval"
@@ -110,5 +89,12 @@
   "modified": "2026-05-04 13:12:47.207987",
   "name": "Submit Tender",
   "workflow_action_name": "Submit Tender"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-05-04 13:12:24.527403",
+  "name": "Pending For Preliminary Approval",
+  "workflow_action_name": "Pending For Preliminary Approval"
  }
 ]
