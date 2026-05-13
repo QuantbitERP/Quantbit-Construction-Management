@@ -2,17 +2,17 @@
 # For license information, please see license.txt
 
 import frappe
+import requests
 from frappe.model.document import Document
 from frappe.utils import getdate, today
 import random
 
-
 class SiteDiary(Document):
 
 	def before_submit(self):
-
 		self.validate_future_date()
 		updated_tasks = set()
+		task_wages={}
 
 		for row in self.activity_progress:
 			if not row.task or not row.total_qty:
@@ -21,6 +21,38 @@ class SiteDiary(Document):
 			percent = (row.total_achieved / row.total_qty) * 100
 			frappe.db.set_value("Task", row.task, "progress", percent)
 			updated_tasks.add(row.task)
+			
+		for row in self.manpower_log:
+
+			if not row.task:
+				continue
+
+			total_wage = row.total_wage or 0
+
+			if row.task not in task_wages:
+				task_wages[row.task] = 0
+
+			task_wages[row.task] += total_wage
+
+		# -----------------------------
+		# Update Task Labour Wages
+		# -----------------------------
+		for task, wage in task_wages.items():
+
+			existing_wage = frappe.db.get_value(
+				"Task",
+				task,
+				"custom_total_labour_cost"
+			) or 0
+
+			new_total = existing_wage + wage
+
+			frappe.db.set_value(
+				"Task",
+				task,
+				"custom_total_labour_cost",
+				new_total
+			)
 
 		for task in updated_tasks:
 			update_parent_progress(task)
@@ -159,7 +191,6 @@ class SiteDiary(Document):
 			total_workers = (
 				(row.skilled or 0)
 				+ (row.unskilled or 0)
-				+ (row.supervisors or 0)
 			)
 
 			if total_workers <= 0:
@@ -231,8 +262,6 @@ class SiteDiary(Document):
 					f"Visitor purpose required in row {row.idx}"
 				)
 
-
-
 @frappe.whitelist()
 def update_daily_activity_progress_table(doc):
 
@@ -241,7 +270,7 @@ def update_daily_activity_progress_table(doc):
 	new_rows = []
 
 	seen = set()
-	
+
 	for parent_row in doc.task:
 
 		if not parent_row.task:
@@ -263,7 +292,6 @@ def update_daily_activity_progress_table(doc):
 
 			sub_task = frappe.get_doc("Task", sub.task)
 
-
 			previous = frappe.db.sql("""
 				SELECT total_qty, total_achieved, percent_completed
 				FROM `tabDPR Activity Progress`
@@ -275,7 +303,6 @@ def update_daily_activity_progress_table(doc):
 				parent_row.task,
 				sub.task,
 			), as_dict=True)
-		
 
 			total_achieved = 0
 			percent_completed = 0
@@ -286,11 +313,11 @@ def update_daily_activity_progress_table(doc):
 				total_achieved = previous[0].total_achieved
 				percent_completed = previous[0].percent_completed
 
-
 			new_rows.append({
 
 				"parent_task": parent_row.task,
 				"task": sub.task,
+				"task_subject":sub_task.subject,
 				"construction_type": sub_task.custom_construction_type,
 				"total_qty": total_qty,
 				"uom": sub_task.custom_uom,
@@ -299,44 +326,140 @@ def update_daily_activity_progress_table(doc):
 
 			})
 
-
 	doc.set("activity_progress", new_rows)
 
 	return doc
 
 
-
 @frappe.whitelist()
 def update_task_progress_from_dpr(task, achieved_qty, total_qty):
+
 	if not total_qty:
 		return
 
 	percent = (achieved_qty / total_qty) * 100
+
 	frappe.db.set_value("Task", task, "progress", percent)
+
 	update_parent_progress(task)
 
 
-	
 def update_parent_progress(task):
-    parent = frappe.db.get_value("Task", task, "parent_task")
-    if not parent:
-        return
 
-    children = frappe.get_all(
-        "Task",
-        filters={"parent_task": parent},
-        fields=["progress", "task_weight"]
-    )
+	parent = frappe.db.get_value("Task", task, "parent_task")
 
-    if not children:
-        return
+	if not parent:
+		return
 
-    weighted_total = 0
+	children = frappe.get_all(
+		"Task",
+		filters={"parent_task": parent},
+		fields=["progress", "task_weight"]
+	)
 
-    for c in children:
-        progress = c.progress or 0
-        weight = c.task_weight or 0
-        weighted_total += (progress * weight) / 100
+	if not children:
+		return
 
-    frappe.db.set_value("Task", parent, "progress", weighted_total)
-    update_parent_progress(parent)
+	weighted_total = 0
+
+	for c in children:
+
+		progress = c.progress or 0
+		weight = c.task_weight or 0
+
+		weighted_total += (progress * weight) / 100
+
+	frappe.db.set_value("Task", parent, "progress", weighted_total)
+
+	update_parent_progress(parent)
+
+
+@frappe.whitelist()
+def get_current_weather(lat, lon):
+
+	url = "https://api.open-meteo.com/v1/forecast"
+
+	params = {
+		"latitude": lat,
+		"longitude": lon,
+		"current": "temperature_2m,wind_speed_10m,weather_code",
+		"daily": "temperature_2m_max,temperature_2m_min",
+		"timezone": "auto"
+	}
+
+	res = requests.get(url, params=params)
+
+	data = res.json()
+
+	current = data.get("current", {})
+	daily = data.get("daily", {})
+
+	return {
+		"temp": current.get("temperature_2m"),
+		"wind_speed_kmh": current.get("wind_speed_10m"),
+		"weather_code": current.get("weather_code"),
+		"max_temp": daily.get("temperature_2m_max", [None])[0],
+		"min_temp": daily.get("temperature_2m_min", [None])[0],
+	}
+
+
+@frappe.whitelist()
+def get_task_bom_details(task):
+
+	materials = []
+	manpower = []
+	equipment = []
+
+	all_tasks = []
+
+	# Recursive function
+	def get_child_tasks(parent):
+
+		children = frappe.get_all(
+			"Task",
+			filters={"parent_task": parent},
+			fields=["name"]
+		)
+
+		for child in children:
+
+			all_tasks.append(child.name)
+
+			get_child_tasks(child.name)
+
+	# Start recursion
+	get_child_tasks(task)
+
+	# Fetch BOM Details
+	for task_name in all_tasks:
+
+		doc = frappe.get_doc("Task", task_name)
+
+		for d in doc.custom_bom_details:
+
+			row = {
+				"parent_task": doc.parent_task,
+	            "task": task_name,
+	            "task_subject": doc.subject,
+				"item": d.item,
+				"task": task_name,
+				"item_name": d.item_name,
+				"qty": d.qty,
+				"uom": d.uom,
+				"item_type": d.item_type
+			}
+
+			if d.item_type == "Material":
+				materials.append(row)
+
+			elif d.item_type == "Man":
+				manpower.append(row)
+
+			elif d.item_type == "Equipment":
+				equipment.append(row)
+
+	return {
+		"materials": materials,
+		"manpower": manpower,
+		"equipment": equipment
+	}

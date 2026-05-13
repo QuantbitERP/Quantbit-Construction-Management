@@ -1,11 +1,13 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:DIARY-{YYYY}-{MM}-{DD}",
+ "autoname": "naming_series:",
  "creation": "2026-04-29 15:48:44.762298",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "section_break_gcaj",
+  "naming_series",
   "section_break_9z3m",
   "diary_no",
   "project",
@@ -13,6 +15,7 @@
   "day_no_of_contract",
   "shift",
   "site_engineer",
+  "site_engineer_name",
   "column_break_qhff",
   "weather_am",
   "weather_pm",
@@ -243,17 +246,35 @@
    "fieldtype": "Table",
    "label": "Activity Progress",
    "options": "DPR Activity Progress"
+  },
+  {
+   "fetch_from": "site_engineer.employee_name",
+   "fieldname": "site_engineer_name",
+   "fieldtype": "Data",
+   "label": "Site Engineer Name"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_gcaj",
+   "fieldtype": "Section Break",
+   "label": "Naming Series"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SD-"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-05 10:42:59.905576",
+ "modified": "2026-05-13 10:00:38.415713",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Diary",
- "naming_rule": "Expression (old style)",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {

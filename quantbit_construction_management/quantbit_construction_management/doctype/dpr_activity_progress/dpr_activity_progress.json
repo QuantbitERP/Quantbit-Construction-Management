@@ -8,6 +8,7 @@
  "field_order": [
   "parent_task",
   "task",
+  "task_subject",
   "construction_type",
   "uom",
   "column_break_vmax",
@@ -101,13 +102,21 @@
    "in_list_view": 1,
    "label": "Percent Completed",
    "read_only": 1
+  },
+  {
+   "fetch_from": "task.subject",
+   "fieldname": "task_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task Subject"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-29 11:44:15.015467",
+ "modified": "2026-05-13 10:11:56.146624",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "DPR Activity Progress",
