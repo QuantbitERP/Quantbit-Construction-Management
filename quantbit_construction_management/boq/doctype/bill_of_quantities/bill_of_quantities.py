@@ -18,7 +18,7 @@ class BillofQuantities(Document):
         total = 0
 
         for row in self.boq_items:
-            total = total + row.amount
+            total += row.amount or 0
 
         self.contract_value = total
 

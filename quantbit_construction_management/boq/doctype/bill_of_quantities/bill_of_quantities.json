@@ -12,14 +12,12 @@
   "naming_series",
   "section_identity",
   "project",
+  "currency",
   "contract_type",
   "col_break_ident1",
   "title",
-  "contract_value",
-  "column_break_hfep",
-  "currency",
-  "column_break_jbgg",
   "version",
+  "contract_value",
   "section_break_ekvb",
   "tasks_details",
   "section_boq_items",
@@ -34,7 +32,10 @@
   "column_break_wnbd",
   "amendment_reason",
   "combined_boq_tab",
-  "combined_boq_details"
+  "combined_boq_details",
+  "tab_3_tab",
+  "task_hierarchy_section",
+  "task_hierarchy"
  ],
  "fields": [
   {
@@ -176,19 +177,26 @@
    "label": "Combined BOQ Details"
   },
   {
-   "fieldname": "column_break_hfep",
-   "fieldtype": "Column Break"
+   "fieldname": "tab_3_tab",
+   "fieldtype": "Tab Break",
+   "label": "Hierarchy"
   },
   {
-   "fieldname": "column_break_jbgg",
-   "fieldtype": "Column Break"
+   "fieldname": "task_hierarchy_section",
+   "fieldtype": "Section Break",
+   "label": "Task Hierarchy"
+  },
+  {
+   "fieldname": "task_hierarchy",
+   "fieldtype": "HTML",
+   "label": "Task Hierarchy"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-13 16:09:59.246852",
+ "modified": "2026-05-11 19:39:51.862449",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "Bill of Quantities",
