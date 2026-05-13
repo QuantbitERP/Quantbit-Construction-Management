@@ -53,6 +53,8 @@ def on_update(doc, method):
             "bid_evaluation_criteriacommerical": doc.custom_bid_evaluation_criteriacommercial,
             "bid_evaluation_criteriatechnical": doc.custom_bid_evaluation_criteriatechnical,
             "total": doc.total,
+            "reference_doc": "Opportunity",
+            "reference_doc_link": doc.name,
             "items": []
         })
 
@@ -156,6 +158,8 @@ def create_tender_from_opportunity(opportunity_name, tender_name):
         "bid_evaluation_criteriacommerical": opportunity_doc.custom_bid_evaluation_criteriacommercial,
         "bid_evaluation_criteriatechnical": opportunity_doc.custom_bid_evaluation_criteriatechnical,
         "total": opportunity_doc.total,
+        "reference_doc": "Opportunity",
+        "reference_doc_link": opportunity_name,
         "items": []
     })
     

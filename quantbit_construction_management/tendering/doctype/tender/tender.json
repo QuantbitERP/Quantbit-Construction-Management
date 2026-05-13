@@ -89,6 +89,9 @@
   "notes_html",
   "notes",
   "dashboard_tab",
+  "reference_doc",
+  "column_break_hwzy",
+  "reference_doc_link",
   "tender_details_tab",
   "tenderrfp_number",
   "tender_notification_date",
@@ -114,7 +117,6 @@
   "estimated_cost",
   "performance_bond",
   "location",
-  "tender_created",
   "bid_tab",
   "scope_of_work",
   "bid_evaluation_criteriatechnical",
@@ -966,9 +968,33 @@
    "fieldname": "show_create_customer_button",
    "fieldtype": "Check",
    "label": "Show Create Customer Button"
+  },
+  {
+   "fieldname": "reference_doc",
+   "fieldtype": "Link",
+   "label": "Reference Doc",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hwzy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_doc_link",
+   "fieldtype": "Dynamic Link",
+   "label": "Reference Doc Link",
+   "options": "reference_doc",
+   "read_only": 1
   }
  ],
- "modified": "2026-05-12 13:06:03.967089",
+ "links": [
+  {
+   "link_doctype": "Project",
+   "link_fieldname": "reference_doc_name"
+  }
+ ],
+ "modified": "2026-05-13 10:22:01.276296",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender",
@@ -1048,7 +1074,6 @@
    "write": 1
   },
   {
-   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -1058,7 +1083,6 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
    "write": 1
   }
  ],
