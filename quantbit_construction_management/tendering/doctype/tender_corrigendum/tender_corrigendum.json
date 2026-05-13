@@ -7,9 +7,12 @@
  "engine": "InnoDB",
  "field_order": [
   "date",
-  "changes_incorporated",
+  "column_break_givt",
+  "updated_by",
+  "column_break_bzgs",
   "details",
-  "updated_by"
+  "column_break_oyru",
+  "changes_incorporated"
  ],
  "fields": [
   {
@@ -21,7 +24,7 @@
   },
   {
    "fieldname": "changes_incorporated",
-   "fieldtype": "Date",
+   "fieldtype": "Small Text",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Changes Incorporated"
@@ -40,13 +43,25 @@
    "in_standard_filter": 1,
    "label": "Updated By",
    "options": "User"
+  },
+  {
+   "fieldname": "column_break_givt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_bzgs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_oyru",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-29 23:57:03.176826",
+ "modified": "2026-05-13 15:13:21.986620",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender Corrigendum",

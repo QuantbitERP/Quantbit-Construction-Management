@@ -128,6 +128,7 @@
   "bid_evaluation_criteriatechnical",
   "bid_evaluation_criteriacommerical",
   "boqsor_tab",
+  "boq",
   "boq_details",
   "documentsdeliverables_tab",
   "list_of_deliverables",
@@ -149,9 +150,9 @@
   "total_ctc",
   "contract_value",
   "column_break_mvgc",
-  "profit_margin",
-  "column_break_mmna",
   "profit_on_ctc",
+  "column_break_mmna",
+  "profit_margin",
   "column_break_itgg",
   "net_profit_margin",
   "section_break_tasl",
@@ -1022,6 +1023,12 @@
   {
    "fieldname": "column_break_itgg",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "boq",
+   "fieldtype": "Link",
+   "label": "BOQ",
+   "options": "Bill of Quantities"
   }
  ],
  "links": [
@@ -1030,7 +1037,7 @@
    "link_fieldname": "custom_reference_doc_name"
   }
  ],
- "modified": "2026-05-13 12:08:30.817484",
+ "modified": "2026-05-13 15:50:08.774208",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender",
