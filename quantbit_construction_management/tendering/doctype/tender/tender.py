@@ -15,8 +15,7 @@ class Tender(Document):
 			'customer':self.party_name,
 			'expected_start_date':self.expected_start_date,
 			'expected_end_date':self.expected_end_date,
-			'reference_doc_link':'Tender',
-			'reference_doc_name':self.name
+		    'custom_reference_doc_name':self.name
 
 
 		})
@@ -116,8 +115,7 @@ def create_project_from_tender(tender_name, project_name):
 		'customer': tender_doc.party_name,
 		'expected_start_date': tender_doc.expected_start_date,
 		'expected_end_date': tender_doc.expected_end_date,
-		'reference_doc_link': 'Tender',
-		'reference_doc_name': tender_name
+		'custom_reference_doc_name':tender_name
 	})
 	
 	project.insert(ignore_permissions=True)
