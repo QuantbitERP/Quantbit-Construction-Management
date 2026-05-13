@@ -1,47 +1,85 @@
 frappe.ui.form.on("Site Diary", {
+refresh(frm) {
 
-	setup(frm) {
+    if (!frm.is_new()) return;
 
-		frm.set_query("task", "task", function (doc, cdt, cdn) {
+    let lat = 16.8524;
+    let lon = 74.5815;
 
-			return {
-				filters: {
-					custom_is_stage: 1,
-					is_group: 1,
-					project: doc.project
-				}
-			};
+    frappe.call({
+        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_current_weather",
+        args: {
+            lat: lat,
+            lon: lon
+        },
+        callback: function(r) {
+            if (r.message) {
+                let w = r.message;   
+                let hour = new Date().getHours();
 
-		});
+                let weather_text = getWeatherText(w.weather_code);
 
-	},
+                if (hour < 12) {
+                    frm.set_value("weather_am", weather_text);
+                    console.log("AM Weather:", weather_text);
+                } else {
+                    frm.set_value("weather_pm", weather_text);
+                    console.log("PM Weather:", weather_text);
+                }
 
-	after_save(frm) {
+                frm.set_value("max_temp", w.max_temp);
+                frm.set_value("min_temp", w.min_temp);
+                frm.set_value("wind_speed_kmh", w.wind_speed_kmh);
+            }
+        }
+    });
+},
 
-		if (!frm.doc.project) return;
 
-		// 🔥 notify project screen
-		frappe.publish_realtime("project_progress_refresh", {
-			project: frm.doc.project
-		});
 
-	}
+setup(frm) {
+
+    frm.set_query("task", "task", function (doc, cdt, cdn) {
+
+        return {
+            filters: {
+                custom_is_stage: 0,
+                is_group: 1,
+                project: doc.project
+            }
+        };
+
+    });
+
+},
+
+after_save(frm) {
+
+	if (!frm.doc.project) return;
+
+	// 🔥 notify project screen
+	frappe.publish_realtime("project_progress_refresh", {
+		project: frm.doc.project
+	});
+
+}
+
 
 });
 
 frappe.ui.form.on("Task Summary", {
 
-	task(frm) {
+    task(frm) {
 
-		load_dpr_activity_progress(frm);
+        load_dpr_activity_progress(frm);
 
-	},
+    },
 
-	task_remove(frm) {
+    task_remove(frm) {
 
-		load_dpr_activity_progress(frm);
+        load_dpr_activity_progress(frm);
 
-	}
+    }
 
 });
 
@@ -52,50 +90,51 @@ function load_dpr_activity_progress(frm) {
         return;
     }
 
-    frappe.call({
-        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",
-        args: {
-            doc: frm.doc
-        },
-        callback(r) {
+frappe.call({
+    method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",
+    args: {
+        doc: frm.doc
+    },
+    callback(r) {
 
-            if (!r.message) return;
+        if (!r.message) return;
 
-            let new_data = r.message.activity_progress || [];
-            let existing = frm.doc.activity_progress || [];
+        let new_data = r.message.activity_progress || [];
+        let existing = frm.doc.activity_progress || [];
 
-            let updated_rows = [];
+        let updated_rows = [];
 
-            // 🔹 Step 1: Keep only rows whose parent_task still exists
-            let valid_parent_tasks = frm.doc.task.map(t => t.task);
+        // 🔹 Step 1: Keep only rows whose parent_task still exists
+        let valid_parent_tasks = frm.doc.task.map(t => t.task);
 
-            existing.forEach(row => {
-                if (valid_parent_tasks.includes(row.parent_task)) {
-                    updated_rows.push(row);
-                }
-            });
+        existing.forEach(row => {
+            if (valid_parent_tasks.includes(row.parent_task)) {
+                updated_rows.push(row);
+            }
+        });
 
-            // 🔹 Step 2: Add missing new subtasks
-            new_data.forEach(new_row => {
+        // 🔹 Step 2: Add missing new subtasks
+        new_data.forEach(new_row => {
 
-                let exists = updated_rows.find(r =>
-                    r.parent_task === new_row.parent_task &&
-                    r.task === new_row.task
-                );
+            let exists = updated_rows.find(r =>
+                r.parent_task === new_row.parent_task &&
+                r.task === new_row.task
+            );
 
-                if (!exists) {
-                    updated_rows.push(new_row);
-                }
+            if (!exists) {
+                updated_rows.push(new_row);
+            }
 
-            });
+        });
 
-            // 🔹 Step 3: Set merged data
-            frm.set_value("activity_progress", updated_rows);
+        // 🔹 Step 3: Set merged data
+        frm.set_value("activity_progress", updated_rows);
 
-        }
-    });
+    }
+});
+
+
 }
-
 
 frappe.ui.form.on("DPR Activity Progress", {
 
@@ -105,18 +144,18 @@ frappe.ui.form.on("DPR Activity Progress", {
 
     },
 
-	achieved_today(frm, cdt, cdn) {
+    achieved_today(frm, cdt, cdn) {
 
-		update_progress(frm, cdt, cdn);
+        update_progress(frm, cdt, cdn);
         validate_progress_limits(frm, cdt, cdn, "achieved_today");
 
-	},
+    },
 
-	total_qty(frm, cdt, cdn) {
+    total_qty(frm, cdt, cdn) {
 
-		update_progress(frm, cdt, cdn);
+        update_progress(frm, cdt, cdn);
 
-	}
+    }
 
 });
 
@@ -145,7 +184,6 @@ function validate_progress_limits(frm, cdt, cdn, fieldname) {
         return;
     }
 }
-
 
 function update_progress(frm, cdt, cdn) {
 
@@ -183,7 +221,6 @@ function update_progress(frm, cdt, cdn) {
     frm.refresh_field("activity_progress");
 }
 
-
 frappe.ui.form.on("Manpower Log", {
 
     skilled: function(frm, cdt, cdn) {
@@ -194,20 +231,21 @@ frappe.ui.form.on("Manpower Log", {
         calculate_total(frm, cdt, cdn);
     },
 
-    supervisors: function(frm, cdt, cdn) {
-        calculate_total(frm, cdt, cdn);
-    },
-
     hours_worked: function(frm, cdt, cdn) {
         validate_hours(frm, cdt, cdn);
     },
 
     overtime_hours: function(frm, cdt, cdn) {
         validate_hours(frm, cdt, cdn);
+    },
+    daily_wages: function(frm,cdt,cdn){
+        calculate_total_wages(frm,cdt,cdn);
+    },
+    total: function(frm,cdt,cdn){
+        calculate_total_wages(frm,cdt,cdn)
     }
 
 });
-
 
 function calculate_total(frm, cdt, cdn) {
 
@@ -215,14 +253,32 @@ function calculate_total(frm, cdt, cdn) {
 
     let total =
         (row.skilled || 0) +
-        (row.unskilled || 0) +
-        (row.supervisors || 0);
+        (row.unskilled || 0)
 
     frappe.model.set_value(cdt, cdn, "total", total);
 
     update_parent_total(frm);
-}
 
+
+    }
+
+function calculate_total_wages(frm, cdt, cdn) {
+
+	let row = locals[cdt][cdn];
+
+	let skilled = flt(row.skilled || 0);
+
+	let unskilled = flt(row.unskilled || 0);
+
+
+	let daily_wages = flt(row.daily_wages || 0);
+
+	let total_workers = skilled + unskilled;
+
+	let total_wage = total_workers * daily_wages;
+
+	frappe.model.set_value(cdt, cdn, "total_wage", total_wage);
+}
 
 function validate_hours(frm, cdt, cdn) {
 
@@ -241,4 +297,100 @@ function validate_hours(frm, cdt, cdn) {
         frappe.model.set_value(cdt, cdn, "hours_worked", 8);
         frappe.model.set_value(cdt, cdn, "overtime_hours", 0);
     }
+
+
+    }
+
+function getWeatherText(code) {
+    const map = {
+    0: "Clear sky ☀️",
+
+        1: "Mainly clear 🌤️",
+        2: "Partly cloudy ⛅",
+        3: "Overcast ☁️",
+
+        45: "Fog 🌫️",
+        48: "Freezing fog ❄️🌫️",
+
+        51: "Light drizzle 🌦️",
+        53: "Moderate drizzle 🌦️",
+        55: "Dense drizzle 🌧️",
+
+        61: "Slight rain 🌧️",
+        63: "Moderate rain 🌧️",
+        65: "Heavy rain 🌧️",
+
+        71: "Slight snow ❄️",
+        73: "Moderate snow ❄️",
+        75: "Heavy snow ❄️",
+
+        80: "Rain showers 🌦️",
+        81: "Moderate rain showers 🌧️",
+        82: "Violent rain showers ⛈️",
+
+        85: "Snow showers 🌨️",
+        86: "Heavy snow showers 🌨️",
+
+        95: "Thunderstorm ⛈️",
+        96: "Thunderstorm with hail ⛈️🧊",
+        99: "Severe thunderstorm ⛈️"
+    };
+
+return map[code] || "Unknown weather";
+
+
 }
+
+frappe.ui.form.on("Task Summary", {
+task: function(frm, cdt, cdn) {
+
+    let row = locals[cdt][cdn];
+
+    if (!row.task) return;
+
+    frappe.call({
+        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_task_bom_details",
+        args: {
+            task: row.task
+        },
+        callback: function(r) {
+
+            if (!r.message) return;
+            console.log(r.message)
+            // MATERIALS
+            r.message.materials.forEach(d => {
+
+                let row = frm.add_child("material_deliveries");
+                row.item = d.item;
+                row.item_type = d.item_type;
+                row.unit = d.uom;
+            });
+
+            // MANPOWER
+            r.message.manpower.forEach(d => {
+
+                let row = frm.add_child("manpower_log");
+                row.parent_task = d.parent_task;
+                row.task = d.task;
+                row.task_subject = d.task_subject;
+                row.tradecategory = d.item;
+                row.item_type = d.item_type;
+            });
+
+            // EQUIPMENT
+            r.message.equipment.forEach(d => {
+
+                let row = frm.add_child("equipment_log");
+                row.item = d.item;
+                row.item_type = d.item_type;
+            });
+
+            frm.refresh_field("material_deliveries");
+            frm.refresh_field("manpower_log");
+            frm.refresh_field("equipment_log");
+        }
+    });
+}
+
+
+});

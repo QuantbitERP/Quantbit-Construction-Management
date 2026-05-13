@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "item",
+  "item_type",
   "description",
   "supplier",
   "delivery_note",
@@ -114,13 +115,21 @@
   {
    "fieldname": "column_break_rtmo",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Type",
+   "options": "Item Type"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-29 16:21:58.486104",
+ "modified": "2026-05-12 15:15:46.968878",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Material Delivery",
