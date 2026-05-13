@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:contractor_name",
+ "creation": "2026-05-12 18:04:14.366553",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "contractor_name",
+  "column_break_isbv",
+  "supplier_name",
+  "column_break_gulr",
+  "contractor_type"
+ ],
+ "fields": [
+  {
+   "fieldname": "contractor_name",
+   "fieldtype": "Data",
+   "label": "Contractor Name ",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_isbv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "supplier_name",
+   "fieldtype": "Link",
+   "label": "Supplier Name ",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "column_break_gulr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contractor_type",
+   "fieldtype": "Select",
+   "label": "Contractor Type ",
+   "options": "Individual\nContract"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-12 18:04:14.366553",
+ "modified_by": "Administrator",
+ "module": "Subcontractor Management",
+ "name": "Contractor",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

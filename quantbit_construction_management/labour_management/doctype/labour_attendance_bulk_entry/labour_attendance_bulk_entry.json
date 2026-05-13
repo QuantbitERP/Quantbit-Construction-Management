@@ -9,20 +9,15 @@
  "field_order": [
   "section_identity",
   "entry_no",
-  "project",
+  "shift",
   "col_break_ident1",
   "gang",
-  "shift",
   "col_break_ident2",
   "date",
-  "section_break_moev",
-  "attendance",
+  "column_break_jnam",
+  "project",
   "section_financial",
-  "total_present",
-  "col_break_fin1",
-  "total_absent",
-  "column_break_nphu",
-  "total_hours",
+  "labour_entry_details",
   "section_notes",
   "site_engineer",
   "remarks",
@@ -93,28 +88,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "default": "0",
-   "fieldname": "total_present",
-   "fieldtype": "Int",
-   "label": "Total Present"
-  },
-  {
-   "default": "0",
-   "fieldname": "total_absent",
-   "fieldtype": "Int",
-   "label": "Total Absent"
-  },
-  {
-   "fieldname": "col_break_fin1",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "0",
-   "fieldname": "total_hours",
-   "fieldtype": "Float",
-   "label": "Total Man Hours"
-  },
-  {
    "fieldname": "section_notes",
    "fieldtype": "Section Break",
    "label": "Notes & Justification"
@@ -135,26 +108,21 @@
    "search_index": 1
   },
   {
-   "fieldname": "section_break_moev",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "attendance",
-   "fieldtype": "Table",
-   "label": "Attendance",
-   "options": "Labour Attendance Row",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_nphu",
+   "fieldname": "column_break_jnam",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "labour_entry_details",
+   "fieldtype": "Table",
+   "label": "Labour Entry Details",
+   "options": "Labour Entry Details"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-02 11:20:58.253331",
+ "modified": "2026-05-13 10:50:10.480906",
  "modified_by": "Administrator",
  "module": "Labour Management",
  "name": "Labour Attendance Bulk Entry",

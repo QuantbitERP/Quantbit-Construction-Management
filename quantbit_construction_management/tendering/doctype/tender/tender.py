@@ -14,7 +14,9 @@ class Tender(Document):
 			'is_active':'Yes',
 			'customer':self.party_name,
 			'expected_start_date':self.expected_start_date,
-			'expected_end_date':self.expected_end_date
+			'expected_end_date':self.expected_end_date,
+			'reference_doc_link':'Tender',
+			'reference_doc_name':self.name
 
 
 		})
@@ -23,12 +25,12 @@ class Tender(Document):
 	def validate(self):
 		self.check_show_create_customer_button()
 
-	def on_update(self):
-		# Check button visibility when document is updated
+	def on_update(self):	
+		
 		self.check_show_create_customer_button()
 
 	def on_update_after_submit(self):
-		# Check button visibility when submitted document is updated
+
 		self.check_show_create_customer_button()
 
 	def check_show_create_customer_button(self):
@@ -101,13 +103,10 @@ def create_project_from_tender(tender_name, project_name):
 	if not project_name:
 		frappe.throw("Project Name is required")
 	
-			
 	tender_doc = frappe.get_doc("Tender", tender_name)
-	
 	
 	if frappe.db.exists("Project", project_name):
 		frappe.throw("Project {0} already exists".format(project_name))
-	
 	
 	project = frappe.get_doc({
 		'doctype': 'Project',
@@ -116,7 +115,9 @@ def create_project_from_tender(tender_name, project_name):
 		'is_active': 'Yes',
 		'customer': tender_doc.party_name,
 		'expected_start_date': tender_doc.expected_start_date,
-		'expected_end_date': tender_doc.expected_end_date
+		'expected_end_date': tender_doc.expected_end_date,
+		'reference_doc_link': 'Tender',
+		'reference_doc_name': tender_name
 	})
 	
 	project.insert(ignore_permissions=True)
