@@ -12,12 +12,14 @@
   "naming_series",
   "section_identity",
   "project",
-  "currency",
   "contract_type",
   "col_break_ident1",
   "title",
-  "version",
   "contract_value",
+  "column_break_hfep",
+  "currency",
+  "column_break_jbgg",
+  "version",
   "section_break_ekvb",
   "tasks_details",
   "section_boq_items",
@@ -172,13 +174,21 @@
    "fieldname": "combined_boq_details",
    "fieldtype": "HTML",
    "label": "Combined BOQ Details"
+  },
+  {
+   "fieldname": "column_break_hfep",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_jbgg",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-08 15:31:07.403852",
+ "modified": "2026-05-13 16:09:59.246852",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "Bill of Quantities",

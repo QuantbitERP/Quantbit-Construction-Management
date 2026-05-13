@@ -7,9 +7,13 @@
  "engine": "InnoDB",
  "field_order": [
   "parameter",
+  "column_break_mith",
   "comments",
+  "column_break_thmz",
   "score",
+  "column_break_mjod",
   "attachments",
+  "column_break_fnym",
   "team_remarks"
  ],
  "fields": [
@@ -49,13 +53,29 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Team Remarks"
+  },
+  {
+   "fieldname": "column_break_mith",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_thmz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_mjod",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_fnym",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-30 00:11:23.227606",
+ "modified": "2026-05-13 14:49:43.979084",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Sales Recommendation Details",

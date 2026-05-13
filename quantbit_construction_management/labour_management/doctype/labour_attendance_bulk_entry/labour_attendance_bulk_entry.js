@@ -2,12 +2,14 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Labour Attendance Bulk Entry", {
-	refresh: function(frm) {
+    refresh: function(frm) {
 
-		if (!frm.doc.site_engineer) {
-			frm.set_value("site_engineer", frappe.session.user);
-		}
-	}
+        if (!frm.doc.site_engineer) {
+            frm.set_value("site_engineer", frappe.session.user);
+            frm.refresh_field("site_engineer");
+        }
+
+    }
 });
 
 frappe.ui.form.on("Labour Entry Details", {

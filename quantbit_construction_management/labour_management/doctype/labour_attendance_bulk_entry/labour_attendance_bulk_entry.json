@@ -1,14 +1,15 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:entry_no",
+ "autoname": "naming_series:",
  "creation": "2026-05-02 11:06:26.102778",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "section_break_hqha",
+  "naming_series",
   "section_identity",
-  "entry_no",
   "shift",
   "col_break_ident1",
   "gang",
@@ -36,12 +37,6 @@
    "label": "Project",
    "options": "Project",
    "reqd": 1
-  },
-  {
-   "fieldname": "entry_no",
-   "fieldtype": "Data",
-   "label": "Entry No",
-   "unique": 1
   },
   {
    "fieldname": "col_break_ident1",
@@ -116,17 +111,29 @@
    "fieldtype": "Table",
    "label": "Labour Entry Details",
    "options": "Labour Entry Details"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "LABE-"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_hqha",
+   "fieldtype": "Section Break",
+   "label": "Naming Series"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-13 10:50:10.480906",
+ "modified": "2026-05-13 16:18:21.180879",
  "modified_by": "Administrator",
  "module": "Labour Management",
  "name": "Labour Attendance Bulk Entry",
- "naming_rule": "By fieldname",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
