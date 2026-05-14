@@ -220,32 +220,114 @@ function update_progress(frm, cdt, cdn) {
 
     frm.refresh_field("activity_progress");
 }
-
 frappe.ui.form.on("Manpower Log", {
 
     skilled: function(frm, cdt, cdn) {
+
+        let row = locals[cdt][cdn];
+
+        if (flt(row.skilled) > 0 && flt(row.unskilled) > 0) {
+
+            frappe.msgprint({
+                title: __("Invalid Entry"),
+                message: __(
+                    "Only Skilled OR Unskilled can be entered in one row"
+                ),
+                indicator: "red"
+            });
+
+            frappe.model.set_value(
+                cdt,
+                cdn,
+                "unskilled",
+                0
+            );
+        }
+
         calculate_total(frm, cdt, cdn);
     },
 
     unskilled: function(frm, cdt, cdn) {
+
+        let row = locals[cdt][cdn];
+
+        if (flt(row.skilled) > 0 && flt(row.unskilled) > 0) {
+
+            frappe.msgprint({
+                title: __("Invalid Entry"),
+                message: __(
+                    "Only Skilled OR Unskilled can be entered in one row"
+                ),
+                indicator: "red"
+            });
+
+            frappe.model.set_value(
+                cdt,
+                cdn,
+                "skilled",
+                0
+            );
+        }
+
         calculate_total(frm, cdt, cdn);
     },
 
     hours_worked: function(frm, cdt, cdn) {
+
         validate_hours(frm, cdt, cdn);
     },
 
     overtime_hours: function(frm, cdt, cdn) {
+
         validate_hours(frm, cdt, cdn);
     },
-    daily_wages: function(frm,cdt,cdn){
-        calculate_total_wages(frm,cdt,cdn);
+
+    daily_wages: function(frm, cdt, cdn) {
+
+        calculate_total_wages(frm, cdt, cdn);
     },
-    total: function(frm,cdt,cdn){
-        calculate_total_wages(frm,cdt,cdn)
+
+    total: function(frm, cdt, cdn) {
+
+        calculate_total_wages(frm, cdt, cdn);
     }
 
 });
+frappe.ui.form.on("Site Equipment Log", {
+
+    rate: function(frm, cdt, cdn) {
+        calculate_equipment_total(frm, cdt, cdn);
+    },
+
+    working_hours: function(frm, cdt, cdn) {
+        calculate_equipment_total(frm, cdt, cdn);
+    },
+    quantity: function(frm, cdt, cdn) {
+        calculate_equipment_total(frm, cdt, cdn);
+    },
+
+});
+
+function calculate_equipment_total(frm, cdt, cdn) {
+
+    let row = locals[cdt][cdn];
+    
+    let quantity =row.quantity;
+
+    let rate = flt(row.rate || 0);
+
+    let working_hours = flt(row.working_hours || 0);
+
+    let total_amount = quantity* rate * working_hours;
+
+    frappe.model.set_value(
+        cdt,
+        cdn,
+        "total_amount",
+        total_amount
+    );
+
+}
 
 function calculate_total(frm, cdt, cdn) {
 
@@ -367,21 +449,52 @@ task: function(frm, cdt, cdn) {
             });
 
             // MANPOWER
-            r.message.manpower.forEach(d => {
+            // r.message.manpower.forEach(d => {
 
-                let row = frm.add_child("manpower_log");
-                row.parent_task = d.parent_task;
-                row.task = d.task;
-                row.task_subject = d.task_subject;
-                row.tradecategory = d.item;
-                row.item_type = d.item_type;
+            //     let row = frm.add_child("manpower_log");
+            //     row.parent_task = d.parent_task;
+            //     row.task = d.task;
+            //     row.task_subject = d.task_subject;
+            //     row.tradecategory = d.item;
+            //     row.item_type = d.item_type;
+            //     MANPOWER
+// MANPOWER
+            r.message.manpower.forEach(d => {
+                let child = frm.add_child("manpower_log");
+
+                frappe.model.set_value(child.doctype, child.name, "parent_task", d.parent_task);
+                frappe.model.set_value(child.doctype, child.name, "task", d.task);
+                frappe.model.set_value(child.doctype, child.name, "task_subject", d.task_subject);
+                frappe.model.set_value(child.doctype, child.name, "item_type", d.item_type);
+
+                // Set tradecategory first, then fetch daily_wages manually
+                frappe.model.set_value(child.doctype, child.name, "tradecategory", d.item).then(() => {
+                    if (d.item) {
+                        frappe.db.get_value("Item", d.item, "custom_daily_wages").then(r => {
+                            if (r.message && r.message.custom_daily_wages) {
+                                frappe.model.set_value(
+                                    child.doctype,
+                                    child.name,
+                                    "daily_wages",
+                                    r.message.custom_daily_wages
+                                );
+                                frm.refresh_field("manpower_log");
+                            }
+                        });
+                    }
+                });
             });
+
 
             // EQUIPMENT
             r.message.equipment.forEach(d => {
 
                 let row = frm.add_child("equipment_log");
+                row.parent_task = d.parent_task;
+                row.task = d.task;
+                row.task_subject = d.task_subject;
                 row.item = d.item;
+                row.equipment_name= d.item;
                 row.item_type = d.item_type;
             });
 

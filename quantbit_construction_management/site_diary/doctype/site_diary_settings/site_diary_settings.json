@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-14 19:28:40.465019",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "site_diary_section",
+  "one_record_per_day_per_project"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "If checked able to create only one site diary record per project per day",
+   "fieldname": "one_record_per_day_per_project",
+   "fieldtype": "Check",
+   "label": "One Record Per Day Per Project"
+  },
+  {
+   "fieldname": "site_diary_section",
+   "fieldtype": "Section Break",
+   "label": "Site Diary"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-05-15 00:20:46.067027",
+ "modified_by": "Administrator",
+ "module": "Site Diary",
+ "name": "Site Diary Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
