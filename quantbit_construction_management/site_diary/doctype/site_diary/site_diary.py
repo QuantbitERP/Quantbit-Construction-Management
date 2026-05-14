@@ -4,15 +4,21 @@
 import frappe
 import requests
 from frappe.model.document import Document
-from frappe.utils import getdate, today
+from frappe.utils import getdate, today, get_link_to_form
 import random
 
 class SiteDiary(Document):
 
 	def before_submit(self):
 		self.validate_future_date()
+		self.create_material_issue_entry()
+		self.update_task_labour_cost()
+		self.update_task_equipment_cost()
+		self.update_task_progress()
+				
+	def update_task_progress(self):
+
 		updated_tasks = set()
-		task_wages={}
 
 		for row in self.activity_progress:
 			if not row.task or not row.total_qty:
@@ -21,7 +27,16 @@ class SiteDiary(Document):
 			percent = (row.total_achieved / row.total_qty) * 100
 			frappe.db.set_value("Task", row.task, "progress", percent)
 			updated_tasks.add(row.task)
-			
+
+		for task in updated_tasks:
+			update_parent_progress(task)
+
+
+	def update_task_labour_cost(self):
+
+		task_wages = {}
+
+		# Consider ALL rows in manpower log
 		for row in self.manpower_log:
 
 			if not row.task:
@@ -34,9 +49,7 @@ class SiteDiary(Document):
 
 			task_wages[row.task] += total_wage
 
-		# -----------------------------
-		# Update Task Labour Wages
-		# -----------------------------
+
 		for task, wage in task_wages.items():
 
 			existing_wage = frappe.db.get_value(
@@ -54,11 +67,49 @@ class SiteDiary(Document):
 				new_total
 			)
 
-		for task in updated_tasks:
-			update_parent_progress(task)
+	def update_task_equipment_cost(self):
+
+		task_equipment_cost = {}
+
+		# Consider ALL rows in equipment log
+		for row in self.equipment_log:
+
+			if not row.task:
+				continue
+
+			total_amount = row.total_amount or 0
+
+			if row.task not in task_equipment_cost:
+				task_equipment_cost[row.task] = 0
+
+			task_equipment_cost[row.task] += total_amount
+
+
+		for task, equipment_cost in task_equipment_cost.items():
+
+			existing_equipment_cost = frappe.db.get_value(
+				"Task",
+				task,
+				"custom_total_equipment_cost"
+			) or 0
+
+			new_total_equipment_cost = (
+				existing_equipment_cost
+				+ equipment_cost
+			)
+
+			frappe.db.set_value(
+				"Task",
+				task,
+				"custom_total_equipment_cost",
+				new_total_equipment_cost
+			)
 
 
 	def validate_dpr_date(self):
+		one_record_restriction = frappe.db.get_single_value("Site Diary Settings","one_record_per_day_per_project")
+		if not one_record_restriction:
+			return
 
 		existing = frappe.db.exists(
 			"Site Diary",
@@ -96,6 +147,10 @@ class SiteDiary(Document):
 
 
 	def validate_unique_diary(self):
+		one_record_restriction = frappe.db.get_single_value("Site Diary Settings", "one_record_per_day_per_project")
+
+		if not one_record_restriction:
+			return  
 
 		existing = frappe.db.exists(
 			"Site Diary",
@@ -261,6 +316,66 @@ class SiteDiary(Document):
 				frappe.throw(
 					f"Visitor purpose required in row {row.idx}"
 				)
+	def create_material_issue_entry(self):
+
+		if not self.material_deliveries:
+			return
+
+		if not self.warehouse:
+			frappe.throw("Warehouse is mandatory")
+
+		stock_entry = frappe.new_doc("Stock Entry")
+
+		stock_entry.stock_entry_type = "Material Issue"
+		stock_entry.posting_date = self.site_date
+
+		for row in self.material_deliveries:
+
+			if not row.item:
+				continue
+
+			if not row.quantity:
+				continue
+
+			actual_qty = frappe.db.get_value(
+				"Bin",
+				{
+					"item_code": row.item,
+					"warehouse": self.warehouse
+				},
+				"actual_qty"
+			) or 0
+
+			if actual_qty < row.quantity:
+
+				frappe.throw(
+					f"Insufficient stock for item {row.item} "
+					f"in warehouse {self.warehouse}. "
+					f"Available qty is {actual_qty}"
+				)
+
+			stock_entry.append("items", {
+
+				"item_code": row.item,
+				"qty": row.quantity,
+				"s_warehouse": self.warehouse,
+				"project" : self.project
+
+			})
+
+		if not stock_entry.items:
+			return
+
+		stock_entry.insert(ignore_permissions=True)
+		stock_entry.submit()
+
+		frappe.msgprint(
+			f"""
+				Stock Entry
+				{get_link_to_form("Stock Entry", stock_entry.name)}
+				created successfully
+				"""	
+)
 
 @frappe.whitelist()
 def update_daily_activity_progress_table(doc):

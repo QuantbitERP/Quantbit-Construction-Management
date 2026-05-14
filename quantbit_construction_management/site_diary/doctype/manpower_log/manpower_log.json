@@ -45,7 +45,6 @@
    "columns": 1,
    "fieldname": "subcontractor",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Subcontractor",
    "options": "Supplier"
   },
@@ -53,7 +52,6 @@
    "columns": 1,
    "fieldname": "gang_no",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Gang No."
   },
   {
@@ -77,20 +75,20 @@
    "fieldname": "total",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Total"
+   "in_standard_filter": 1,
+   "label": "Total",
+   "read_only": 1
   },
   {
    "columns": 1,
    "fieldname": "work_area",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Work Area"
   },
   {
    "columns": 1,
    "fieldname": "activity",
    "fieldtype": "Data",
-   "in_list_view": 1,
    "label": "Activity"
   },
   {
@@ -105,7 +103,6 @@
    "columns": 1,
    "fieldname": "overtime_hours",
    "fieldtype": "Float",
-   "in_list_view": 1,
    "label": "Overtime Hours"
   },
   {
@@ -125,14 +122,19 @@
    "options": "Item Type"
   },
   {
+   "fetch_from": "tradecategory.custom_daily_wages",
    "fieldname": "daily_wages",
    "fieldtype": "Currency",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Daily Wages",
    "reqd": 1
   },
   {
    "fieldname": "total_wage",
    "fieldtype": "Currency",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Total Wage"
   },
   {
@@ -150,14 +152,20 @@
   {
    "fieldname": "parent_task",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Parent Task",
-   "options": "Task"
+   "options": "Task",
+   "reqd": 1
   },
   {
    "fieldname": "task",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Task",
-   "options": "Task"
+   "options": "Task",
+   "reqd": 1
   },
   {
    "fetch_from": "task.subject",
@@ -182,7 +190,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-14 14:44:42.929026",
+ "modified": "2026-05-14 23:11:28.669359",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Manpower Log",
