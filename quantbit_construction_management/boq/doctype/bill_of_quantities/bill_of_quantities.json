@@ -8,6 +8,20 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "tab_3_tab",
+  "data_import_section",
+  "document_type",
+  "download_template",
+  "column_break_uzyx",
+  "import_type",
+  "submit_after_import",
+  "task_hierarchy_section",
+  "task_hierarchy",
+  "section_break_tfsj",
+  "column_break_cimt",
+  "column_break_mjzc",
+  "import_file",
+  "details_tab",
   "section_break_swub",
   "naming_series",
   "section_identity",
@@ -32,10 +46,7 @@
   "column_break_wnbd",
   "amendment_reason",
   "combined_boq_tab",
-  "combined_boq_details",
-  "tab_3_tab",
-  "task_hierarchy_section",
-  "task_hierarchy"
+  "combined_boq_details"
  ],
  "fields": [
   {
@@ -48,8 +59,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Project",
-   "options": "Project",
-   "reqd": 1
+   "options": "Project"
   },
   {
    "fieldname": "currency",
@@ -190,13 +200,78 @@
    "fieldname": "task_hierarchy",
    "fieldtype": "HTML",
    "label": "Task Hierarchy"
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Document Type ",
+   "options": "DocType",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "column_break_mjzc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:!doc.__islocal",
+   "fieldname": "download_template",
+   "fieldtype": "Button",
+   "label": "Download Template"
+  },
+  {
+   "fieldname": "import_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Import Type ",
+   "options": "\nInsert New Records\nUpdate Existing Records",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:!doc.__islocal",
+   "fieldname": "import_file",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "Import File",
+   "read_only_depends_on": "eval: ['Success', 'Partial Success'].includes(doc.status)"
+  },
+  {
+   "default": "0",
+   "fieldname": "submit_after_import",
+   "fieldtype": "Check",
+   "label": "Submit After Import",
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "data_import_section",
+   "fieldtype": "Section Break",
+   "label": "Data Import"
+  },
+  {
+   "fieldname": "column_break_uzyx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_tfsj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_cimt",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-11 19:39:51.862449",
+ "modified": "2026-05-14 12:54:11.044746",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "Bill of Quantities",

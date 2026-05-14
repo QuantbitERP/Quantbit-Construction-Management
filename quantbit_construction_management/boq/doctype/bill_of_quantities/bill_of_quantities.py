@@ -3,6 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils.xlsxutils import build_xlsx_response, read_xlsx_file_from_attached_file
 
 
 class BillofQuantities(Document):
@@ -92,3 +93,129 @@ def get_boq_items_from_task(task_name):
             })
 
     return boq_items
+
+@frappe.whitelist()
+def download_boq_task_template():
+    columns = ["Stage", "Task", "Subtask", "Status", "Priority", "Task Weight"]
+    data = [columns]
+    build_xlsx_response(data, "BOQ_Task_Template")
+
+@frappe.whitelist()
+def import_boq_tasks(file_url, boq_name):
+    rows = read_xlsx_file_from_attached_file(file_url=file_url)
+    if not rows or len(rows) < 2:
+        frappe.throw("The uploaded file is empty or missing data.")
+    
+    headers = rows[0]
+    data_rows = rows[1:]
+
+    def get_val(row, header_name):
+        try:
+            idx = headers.index(header_name)
+            return row[idx]
+        except ValueError:
+            return None
+
+    stages = {}
+    tasks = {}
+    subtasks = []
+
+    for row in data_rows:
+        stage_val = get_val(row, "Stage")
+        task_val = get_val(row, "Task")
+        subtask_val = get_val(row, "Subtask")
+
+        status = get_val(row, "Status") or "Open"
+        priority = get_val(row, "Priority") or "Medium"
+        task_weight = get_val(row, "Task Weight") or 0.0
+
+        if not stage_val:
+            continue
+
+        if stage_val not in stages:
+            stages[stage_val] = {
+                "subject": stage_val,
+                "status": "Open",
+                "priority": "Medium",
+                "task_weight": 0.0
+            }
+
+        if task_val:
+            task_key = f"{stage_val}||{task_val}"
+            if task_key not in tasks:
+                tasks[task_key] = {
+                    "subject": task_val,
+                    "parent_subject": stage_val,
+                    "status": "Open",
+                    "priority": "Medium",
+                    "task_weight": 0.0
+                }
+
+            if subtask_val:
+                subtasks.append({
+                    "subject": subtask_val,
+                    "parent_key": task_key,
+                    "status": status,
+                    "priority": priority,
+                    "task_weight": task_weight
+                })
+            else:
+                tasks[task_key].update({
+                    "status": status,
+                    "priority": priority,
+                    "task_weight": task_weight
+                })
+        else:
+            stages[stage_val].update({
+                "status": status,
+                "priority": priority,
+                "task_weight": task_weight
+            })
+
+    subject_to_name = {}
+
+    for stage_val, t in stages.items():
+        doc = frappe.get_doc({
+            "doctype": "Task",
+            "subject": t["subject"],
+            "status": t["status"],
+            "priority": t["priority"],
+            "task_weight": t["task_weight"],
+            "custom_is_stage": 1,
+            "custom_boq_name": boq_name,
+            "is_group": 1
+        })
+        doc.insert(ignore_permissions=True)
+        subject_to_name[f"STAGE||{stage_val}"] = doc.name
+
+    for task_key, t in tasks.items():
+        parent_id = subject_to_name.get(f"STAGE||{t['parent_subject']}")
+        doc = frappe.get_doc({
+            "doctype": "Task",
+            "subject": t["subject"],
+            "status": t["status"],
+            "priority": t["priority"],
+            "task_weight": t["task_weight"],
+            "custom_is_task": 1,
+            "parent_task": parent_id,
+            "custom_boq_name": boq_name,
+            "is_group": 1
+        })
+        doc.insert(ignore_permissions=True)
+        subject_to_name[f"TASK||{task_key}"] = doc.name
+
+    for t in subtasks:
+        parent_id = subject_to_name.get(f"TASK||{t['parent_key']}")
+        doc = frappe.get_doc({
+            "doctype": "Task",
+            "subject": t["subject"],
+            "status": t["status"],
+            "priority": t["priority"],
+            "task_weight": t["task_weight"],
+            "custom_is_subtask": 1,
+            "parent_task": parent_id,
+            "custom_boq_name": boq_name,
+        })
+        doc.insert(ignore_permissions=True)
+
+    return "Success"

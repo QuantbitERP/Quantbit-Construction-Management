@@ -1,6 +1,45 @@
 frappe.ui.form.on("Bill of Quantities", {
     refresh(frm) {
+        if (!frm.doc.document_type) {
+            frm.set_value("document_type", "Task");
+        }
+        if (!frm.doc.import_type) {
+            frm.set_value("import_type", "Insert New Records");
+        }
         render_combined_boq(frm);
+
+        if (frm.doc.import_file) {
+            frm.add_custom_button(__("Import Tasks"), () => {
+                frappe.call({
+                    method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.import_boq_tasks",
+                    args: {
+                        file_url: frm.doc.import_file,
+                        boq_name: frm.doc.name
+                    },
+                    freeze: true,
+                    freeze_message: __("Importing Tasks hierarchically..."),
+                    callback: function(r) {
+                        if (!r.exc) {
+                            frappe.msgprint({
+                                title: __('Success'),
+                                indicator: 'green',
+                                message: __('Tasks imported successfully.')
+                            });
+                            frm.reload_doc();
+                        }
+                    }
+                });
+            }).addClass("btn-primary");
+        }
+
+        frm.fields_dict["tasks_details"].grid.update_docfield_property(
+            "task",
+            "only_select",
+            1
+        );
+    },
+    download_template: function(frm) {
+        open_url_post("/api/method/quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.download_boq_task_template", {});
     }
 });
 
@@ -232,7 +271,7 @@ function validate_total_weight(frm, new_weight, exclude_task = null) {
         args: {
             doctype: "Task",
             filters: {
-                project: frm.doc.name,
+                custom_boq_name: frm.doc.name,
                 custom_is_stage: 1
             },
             fields: ["task_weight"]
@@ -264,7 +303,7 @@ function validate_task_weight(frm, stage_name, new_weight, exclude_task = null) 
         args: {
             doctype: "Task",
             filters: {
-                project: frm.doc.name,
+                custom_boq_name: frm.doc.name,
                 parent_task: stage_name,
                 custom_is_task: 1
             },
@@ -297,7 +336,7 @@ function validate_subtask_weight(frm, task_name, new_weight, exclude_task = null
         args: {
             doctype: "Task",
             filters: {
-                project: frm.doc.name,
+                custom_boq_name: frm.doc.name,
                 parent_task: task_name,
                 custom_is_subtask: 1
             },
@@ -329,7 +368,7 @@ function load_hierarchy(frm) {
         method: "frappe.client.get_list",
         args: {
             doctype: "Task",
-            filters: { project: frm.doc.project },
+            filters: { custom_boq_name: frm.doc.name },
             fields: [
                 "name", "subject", "parent_task", "status", "priority",
                 "description", "task_weight", "custom_is_stage",
@@ -673,7 +712,7 @@ function attach_events(frm, all_tasks) {
 
                         fieldname: {
 
-                            project: frm.doc.project,
+                            custom_boq_name: frm.doc.name,
 
                             custom_is_stage: 1,
 
@@ -724,7 +763,7 @@ function attach_events(frm, all_tasks) {
                             doctype: "Task",
                             filters: parent_task
                                 ? { parent_task: parent_task }
-                                : { project: frm.doc.project, custom_is_stage: 1 },
+                                : { custom_boq_name: frm.doc.name, custom_is_stage: 1 },
                             fields: ["task_weight"]
                         },
                         callback: function (r) {
@@ -833,7 +872,7 @@ function attach_events(frm, all_tasks) {
                         fieldname: {
                             parent_task: stage,
                             custom_is_task: 1,
-                            project: frm.doc.project
+                            custom_boq_name: frm.doc.name
                         }
                     },
                     callback() {
@@ -875,7 +914,7 @@ function attach_events(frm, all_tasks) {
                             doc: {
                                 doctype: "Task",
                                 subject: values.subject,
-                                project: frm.doc.project,
+                                custom_boq_name: frm.doc.name,
                                 parent_task: stage,
                                 custom_is_task: 1,
                                 is_group: 1,
@@ -972,7 +1011,7 @@ function attach_events(frm, all_tasks) {
                         name: values.existing_subtask,
                         fieldname: {
                             parent_task: parent_task,
-                            project: frm.doc.project,
+                            custom_boq_name: frm.doc.name,
                             custom_is_subtask: 1
                         }
                     },
@@ -1023,7 +1062,7 @@ function attach_events(frm, all_tasks) {
                         doc: {
                             doctype: "Task",
                             subject: values.subject,
-                            project: frm.doc.project,
+                            custom_boq_name: frm.doc.name,
                             parent_task: parent_task,
                             custom_is_subtask: 1,
                             task_weight: values.task_weight,
