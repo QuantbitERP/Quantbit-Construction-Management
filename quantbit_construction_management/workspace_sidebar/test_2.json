@@ -1,0 +1,29 @@
+{
+ "app": "quantbit_construction_management",
+ "creation": "2026-05-14 18:29:43.125229",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "header_icon": "alarm-clock",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "alarm-clock-off",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "test 2",
+   "link_to": "test 2",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-05-14 18:46:07.891708",
+ "modified_by": "Administrator",
+ "module": "Quantbit Construction Management",
+ "name": "test 2",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "test 2"
+}
