@@ -67,7 +67,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Verified By",
-   "options": "Employee",
+   "options": "User",
    "reqd": 1
   },
   {
@@ -129,7 +129,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-13 16:18:21.180879",
+ "modified": "2026-05-14 17:09:59.532838",
  "modified_by": "Administrator",
  "module": "Labour Management",
  "name": "Labour Attendance Bulk Entry",

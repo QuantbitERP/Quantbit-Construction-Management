@@ -12,7 +12,7 @@ class Tender(Document):
 			'project_name':self.name,
 			'status':'Open',
 			'is_active':'Yes',
-			'customer':self.party_name,
+			'customer': self.customer_name if self.opportunity_from == "Lead" else self.party_name,
 			'expected_start_date':self.expected_start_date,
 			'expected_end_date':self.expected_end_date,
 		    'custom_reference_doc_name':self.name
@@ -61,8 +61,6 @@ class Tender(Document):
 		existing_customer = frappe.db.get_value("Customer", {"lead_name": self.party_name}, "name")
 		if existing_customer:
 			
-			self.opportunity_from = "Customer"
-			self.party_name = existing_customer
 			customer_doc = frappe.get_doc("Customer", existing_customer)
 			self.customer_name = customer_doc.customer_name
 			self.save(ignore_permissions=True)
@@ -85,8 +83,6 @@ class Tender(Document):
 		
 		customer.insert(ignore_permissions=True)
 		
-		self.opportunity_from = "Customer"
-		self.party_name = customer.name
 		self.customer_name = customer.customer_name
 		self.save(ignore_permissions=True)
 		
@@ -112,7 +108,7 @@ def create_project_from_tender(tender_name, project_name):
 		'project_name': project_name,
 		'status': 'Open',
 		'is_active': 'Yes',
-		'customer': tender_doc.party_name,
+		'customer': tender_doc.customer_name if tender_doc.opportunity_from == "Lead" else tender_doc.party_name,
 		'expected_start_date': tender_doc.expected_start_date,
 		'expected_end_date': tender_doc.expected_end_date,
 		'custom_reference_doc_name':tender_name

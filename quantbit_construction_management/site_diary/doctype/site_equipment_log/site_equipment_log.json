@@ -7,18 +7,19 @@
  "engine": "InnoDB",
  "field_order": [
   "item",
-  "equipment_name",
-  "item_type",
   "type",
+  "work_area",
   "column_break_rxpv",
   "owner_type",
   "hire_supplier",
-  "work_area",
+  "breakdown_hours",
   "column_break_gdea",
   "working_hours",
   "idle_hours",
-  "breakdown_hours",
-  "remarks"
+  "remarks",
+  "column_break_eeze",
+  "equipment_name",
+  "item_type"
  ],
  "fields": [
   {
@@ -118,13 +119,17 @@
    "label": "Equipment",
    "options": "Item",
    "reqd": 1
+  },
+  {
+   "fieldname": "column_break_eeze",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-12 18:00:30.390196",
+ "modified": "2026-05-14 14:45:53.424317",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Equipment Log",

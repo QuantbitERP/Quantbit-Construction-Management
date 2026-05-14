@@ -127,7 +127,7 @@ def import_boq_tasks(file_url, boq_name):
 
         status = get_val(row, "Status") or "Open"
         priority = get_val(row, "Priority") or "Medium"
-        task_weight = get_val(row, "Task Weight") or 0.0
+        task_weight = get_val(row, "Task Weight (%)") or get_val(row, "Task Weight") or 0.0
 
         if not stage_val:
             continue

@@ -18,7 +18,7 @@ frappe.ui.form.on("Bill of Quantities", {
                     },
                     freeze: true,
                     freeze_message: __("Importing Tasks hierarchically..."),
-                    callback: function(r) {
+                    callback: function (r) {
                         if (!r.exc) {
                             frappe.msgprint({
                                 title: __('Success'),
@@ -38,7 +38,7 @@ frappe.ui.form.on("Bill of Quantities", {
             1
         );
     },
-    download_template: function(frm) {
+    download_template: function (frm) {
         open_url_post("/api/method/quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.download_boq_task_template", {});
     }
 });
@@ -121,7 +121,7 @@ frappe.ui.form.on("BOQ Task Details", {
         });
     },
 
-    before_tasks_details_remove: function(frm, cdt, cdn) {
+    before_tasks_details_remove: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         remove_boq_items_for_task(frm, row.task);
     }
@@ -130,22 +130,22 @@ frappe.ui.form.on("BOQ Task Details", {
 
 frappe.ui.form.on("BOQ Item", {
 
-    internal_qty: function(frm, cdt, cdn) {
+    internal_qty: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         frappe.model.set_value(cdt, cdn, "internal_amount", (row.internal_qty || 0) * (row.internal_rate || 0));
     },
 
-    internal_rate: function(frm, cdt, cdn) {
+    internal_rate: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         frappe.model.set_value(cdt, cdn, "internal_amount", (row.internal_qty || 0) * (row.internal_rate || 0));
     },
 
-    actual_qty: function(frm, cdt, cdn) {
+    actual_qty: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         frappe.model.set_value(cdt, cdn, "actual_amount", (row.actual_qty || 0) * (row.actual_rate || 0));
     },
 
-    actual_rate: function(frm, cdt, cdn) {
+    actual_rate: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         frappe.model.set_value(cdt, cdn, "actual_amount", (row.actual_qty || 0) * (row.actual_rate || 0));
     }
@@ -220,7 +220,6 @@ function render_combined_boq(frm) {
     frm.fields_dict.combined_boq_details.$wrapper.html(html);
 }
 
-// Variable to track expanded nodes (Everything is collapsed by default)
 window.expanded_nodes = window.expanded_nodes || new Set();
 
 frappe.ui.form.on('Bill of Quantities', {
@@ -238,7 +237,7 @@ frappe.realtime.on("project_progress_refresh", (data) => {
 
     if (cur_frm.doc.name === data.project) {
 
-        // 🔥 refresh hierarchy UI
+
         load_hierarchy(cur_frm);
 
     }
@@ -372,7 +371,7 @@ function load_hierarchy(frm) {
             fields: [
                 "name", "subject", "parent_task", "status", "priority",
                 "description", "task_weight", "custom_is_stage",
-                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date","progress"
+                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date", "progress"
             ],
             order_by: "creation asc",
             limit_page_length: 1000
@@ -444,25 +443,29 @@ function load_hierarchy(frm) {
                                 html += render_row(sub, "subtask", false);
                             });
 
-                            // Subtask Total Row
+                           
                             html += render_total_row(
-                                "Subtasks Total",
-                                subtask_total,
+                                "subtask percentage",
+                                subtask_total.toFixed(2),
                                 80
                             );
                         }
                     });
 
-                    // Task Total Row (Inside Stage)
+                    
+                    let task_weight_sum = 0;
+                    stageObj.tasks.forEach(tObj => {
+                        task_weight_sum += flt(tObj.data.task_weight || 0);
+                    });
                     html += render_total_row(
-                        "Tasks Total",
-                        stage_progress.toFixed(2),
+                        "Total task percentage",
+                        task_weight_sum.toFixed(2),
                         40
                     );
                 }
             });
 
-            // Overall Stage Total (Bottom Styled Like Screenshot)
+            
             html += `
       <div style="
           margin-top:15px;
@@ -472,7 +475,7 @@ function load_hierarchy(frm) {
           gap:10px;
           font-weight:600;">
 
-          <div>Total Stages Percentage :</div>
+          <div>stage percentage :</div>
 
           <div style="
               background:#27ae60;
@@ -481,7 +484,7 @@ function load_hierarchy(frm) {
               border-radius:4px;
               min-width:50px;
               text-align:center;">
-              ${calculate_project_progress(tasks)} %
+              ${overall_stage_total.toFixed(2)} %
           </div>
 
       </div>
@@ -641,291 +644,96 @@ function attach_events(frm, all_tasks) {
     // ADD STAGE
     wrapper.find(".add-stage").off("click").on("click", function () {
 
-    let d = new frappe.ui.Dialog({
+        let d = new frappe.ui.Dialog({
 
-        title: "Add Stage",
+            title: "Add Stage",
 
-        fields: [
+            fields: [
 
-            {
-                label: "Select Existing Stage",
-                fieldname: "existing_stage",
-                fieldtype: "Link",
-                options: "Task",
+                {
+                    label: "Select Existing Stage",
+                    fieldname: "existing_stage",
+                    fieldtype: "Link",
+                    options: "Task",
 
-                get_query() {
-                    return {
-                        filters: {
-                            custom_is_stage: 1
-                        }
-                    };
-                }
-            },
-
-            {
-                fieldtype: "Section Break"
-            },
-
-            {
-                label: "OR Create New Stage",
-                fieldname: "section_label",
-                fieldtype: "HTML",
-                options: "<b>Create New Stage</b>"
-            },
-
-            {
-                label: "Stage Name",
-                fieldname: "subject",
-                fieldtype: "Data"
-            },
-
-            {
-                label: "Weight",
-                fieldname: "task_weight",
-                fieldtype: "Float"
-            },
-
-            {
-                label: "Description",
-                fieldname: "description",
-                fieldtype: "Small Text"
-            }
-
-        ],
-
-        primary_action_label: "Add",
-
-        primary_action(values) {
-
-            // CASE 1: attach existing template stage
-            if (values.existing_stage) {
-
-                frappe.call({
-
-                    method: "frappe.client.set_value",
-
-                    args: {
-
-                        doctype: "Task",
-
-                        name: values.existing_stage,
-
-                        fieldname: {
-
-                            custom_boq_name: frm.doc.name,
-
-                            custom_is_stage: 1,
-
-                            is_group: 1
-
-                        }
-
-                    },
-
-                    callback: function () {
-
-                        frappe.show_alert({
-
-                            message: __("Existing Stage Linked"),
-
-                            indicator: "green"
-
-                        });
-
-                        d.hide();
-
-                        load_hierarchy(frm);
-
+                    get_query() {
+                        return {
+                            filters: {
+                                custom_is_stage: 1
+                            }
+                        };
                     }
+                },
 
-                });
+                {
+                    fieldtype: "Section Break"
+                },
 
-                return;
+                {
+                    label: "OR Create New Stage",
+                    fieldname: "section_label",
+                    fieldtype: "HTML",
+                    options: "<b>Create New Stage</b>"
+                },
 
-            }
+                {
+                    label: "Stage Name",
+                    fieldname: "subject",
+                    fieldtype: "Data"
+                },
 
-            // CASE 2: create new stage
-            if (!values.subject || !values.task_weight) {
+                {
+                    label: "Weight",
+                    fieldname: "task_weight",
+                    fieldtype: "Float"
+                },
 
-                frappe.msgprint("Enter stage details");
+                {
+                    label: "Description",
+                    fieldname: "description",
+                    fieldtype: "Small Text"
+                }
 
-                return;
+            ],
 
-            }
+            primary_action_label: "Add",
 
-            function validate_total_weight(frm, new_weight, old_weight = 0, parent_task = null) {
+            primary_action(values) {
 
-                return new Promise(resolve => {
+                // CASE 1: attach existing template stage
+                if (values.existing_stage) {
 
                     frappe.call({
-                        method: "frappe.client.get_list",
+
+                        method: "frappe.client.set_value",
+
                         args: {
+
                             doctype: "Task",
-                            filters: parent_task
-                                ? { parent_task: parent_task }
-                                : { custom_boq_name: frm.doc.name, custom_is_stage: 1 },
-                            fields: ["task_weight"]
-                        },
-                        callback: function (r) {
 
-                            let current_total = 0;
+                            name: values.existing_stage,
 
-                            if (r.message) {
-                                r.message.forEach(t => {
-                                    current_total += t.task_weight || 0;
-                                });
-                            }
+                            fieldname: {
 
-                            // 🔥 FIXED LOGIC
-                            let projected_total = (current_total - (old_weight || 0)) + new_weight;
-
-                            let remaining = 100 - (current_total - (old_weight || 0));
-
-                            resolve({
-                                valid: projected_total <= 100,
-                                current_total: current_total,
-                                projected_total: projected_total,
-                                remaining: remaining
-                            });
-                        }
-                    });
-                });
-            }
-
-        }
-
-    });
-
-    d.show();
-
-    });
-
-    // ADD TASK
-    wrapper.find(".add-task").off("click").on("click", function () {
-
-    let stage = $(this).data("stage");
-
-    let d = new frappe.ui.Dialog({
-        title: "Add Task",
-        fields: [
-
-            {
-                label: "Select Existing Task",
-                fieldname: "existing_task",
-                fieldtype: "Link",
-                options: "Task",
-
-                get_query() {
-
-
-                    return {
-
-                        // filters: {
-
-                           
-
-                        // }
-
-                    };
-
-                }
-
-            },
-
-            {
-                label: "OR Create New Task",
-                fieldname: "section_break",
-                fieldtype: "Section Break"
-            },
-
-            {
-                label: "Task Name",
-                fieldname: "subject",
-                fieldtype: "Data"
-            },
-
-            {
-                label: "Weight",
-                fieldname: "task_weight",
-                fieldtype: "Float"
-            },
-
-            {
-                label: "Description",
-                fieldname: "description",
-                fieldtype: "Data"
-            }
-
-        ],
-
-        primary_action_label: "Add",
-
-        primary_action(values) {
-
-            if (values.existing_task) {
-
-                frappe.call({
-                    method: "frappe.client.set_value",
-                    args: {
-                        doctype: "Task",
-                        name: values.existing_task,
-                        fieldname: {
-                            parent_task: stage,
-                            custom_is_task: 1,
-                            custom_boq_name: frm.doc.name
-                        }
-                    },
-                    callback() {
-
-                        frappe.show_alert("Existing task linked");
-
-                        d.hide();
-
-                        load_hierarchy(frm);
-
-                    }
-                });
-
-                return;
-            }
-
-            if (!values.subject || !values.task_weight) {
-
-                frappe.msgprint("Enter task details");
-
-                return;
-            }
-
-            validate_task_weight(frm, stage, values.task_weight)
-                .then(result => {
-
-                    if (!result.valid) {
-
-                        frappe.msgprint("Weight exceeded");
-
-                        return;
-                    }
-
-                    frappe.call({
-
-                        method: "frappe.client.insert",
-
-                        args: {
-                            doc: {
-                                doctype: "Task",
-                                subject: values.subject,
                                 custom_boq_name: frm.doc.name,
-                                parent_task: stage,
-                                custom_is_task: 1,
-                                is_group: 1,
-                                task_weight: values.task_weight,
-                                description: values.description
+
+                                custom_is_stage: 1,
+
+                                is_group: 1
+
                             }
+
                         },
 
-                        callback() {
+                        callback: function () {
 
-                            frappe.show_alert("Task Created");
+                            frappe.show_alert({
+
+                                message: __("Existing Stage Linked"),
+
+                                indicator: "green"
+
+                            });
 
                             d.hide();
 
@@ -935,163 +743,358 @@ function attach_events(frm, all_tasks) {
 
                     });
 
-                });
+                    return;
 
-        }
+                }
+
+                // CASE 2: create new stage
+                if (!values.subject || !values.task_weight) {
+
+                    frappe.msgprint("Enter stage details");
+
+                    return;
+
+                }
+
+                function validate_total_weight(frm, new_weight, old_weight = 0, parent_task = null) {
+
+                    return new Promise(resolve => {
+
+                        frappe.call({
+                            method: "frappe.client.get_list",
+                            args: {
+                                doctype: "Task",
+                                filters: parent_task
+                                    ? { parent_task: parent_task }
+                                    : { custom_boq_name: frm.doc.name, custom_is_stage: 1 },
+                                fields: ["task_weight"]
+                            },
+                            callback: function (r) {
+
+                                let current_total = 0;
+
+                                if (r.message) {
+                                    r.message.forEach(t => {
+                                        current_total += t.task_weight || 0;
+                                    });
+                                }
+
+                                // 🔥 FIXED LOGIC
+                                let projected_total = (current_total - (old_weight || 0)) + new_weight;
+
+                                let remaining = 100 - (current_total - (old_weight || 0));
+
+                                resolve({
+                                    valid: projected_total <= 100,
+                                    current_total: current_total,
+                                    projected_total: projected_total,
+                                    remaining: remaining
+                                });
+                            }
+                        });
+                    });
+                }
+
+            }
+
+        });
+
+        d.show();
 
     });
 
-    d.show();
+    // ADD TASK
+    wrapper.find(".add-task").off("click").on("click", function () {
+
+        let stage = $(this).data("stage");
+
+        let d = new frappe.ui.Dialog({
+            title: "Add Task",
+            fields: [
+
+                {
+                    label: "Select Existing Task",
+                    fieldname: "existing_task",
+                    fieldtype: "Link",
+                    options: "Task",
+
+                    get_query() {
+
+
+                        return {
+
+                            // filters: {
+
+
+
+                            // }
+
+                        };
+
+                    }
+
+                },
+
+                {
+                    label: "OR Create New Task",
+                    fieldname: "section_break",
+                    fieldtype: "Section Break"
+                },
+
+                {
+                    label: "Task Name",
+                    fieldname: "subject",
+                    fieldtype: "Data"
+                },
+
+                {
+                    label: "Weight",
+                    fieldname: "task_weight",
+                    fieldtype: "Float"
+                },
+
+                {
+                    label: "Description",
+                    fieldname: "description",
+                    fieldtype: "Data"
+                }
+
+            ],
+
+            primary_action_label: "Add",
+
+            primary_action(values) {
+
+                if (values.existing_task) {
+
+                    frappe.call({
+                        method: "frappe.client.set_value",
+                        args: {
+                            doctype: "Task",
+                            name: values.existing_task,
+                            fieldname: {
+                                parent_task: stage,
+                                custom_is_task: 1,
+                                custom_boq_name: frm.doc.name
+                            }
+                        },
+                        callback() {
+
+                            frappe.show_alert("Existing task linked");
+
+                            d.hide();
+
+                            load_hierarchy(frm);
+
+                        }
+                    });
+
+                    return;
+                }
+
+                if (!values.subject || !values.task_weight) {
+
+                    frappe.msgprint("Enter task details");
+
+                    return;
+                }
+
+                validate_task_weight(frm, stage, values.task_weight)
+                    .then(result => {
+
+                        if (!result.valid) {
+
+                            frappe.msgprint("Weight exceeded");
+
+                            return;
+                        }
+
+                        frappe.call({
+
+                            method: "frappe.client.insert",
+
+                            args: {
+                                doc: {
+                                    doctype: "Task",
+                                    subject: values.subject,
+                                    custom_boq_name: frm.doc.name,
+                                    parent_task: stage,
+                                    custom_is_task: 1,
+                                    is_group: 1,
+                                    task_weight: values.task_weight,
+                                    description: values.description
+                                }
+                            },
+
+                            callback() {
+
+                                frappe.show_alert("Task Created");
+
+                                d.hide();
+
+                                load_hierarchy(frm);
+
+                            }
+
+                        });
+
+                    });
+
+            }
+
+        });
+
+        d.show();
 
     });
 
     // ADD SUBTASK
     wrapper.find(".add-subtask").off("click").on("click", function () {
 
-    let parent_task = $(this).data("task");
+        let parent_task = $(this).data("task");
 
-    let d = new frappe.ui.Dialog({
+        let d = new frappe.ui.Dialog({
 
-        title: "Add Subtask",
+            title: "Add Subtask",
 
-        fields: [
+            fields: [
 
-            {
-                label: "Select Existing Subtask",
-                fieldname: "existing_subtask",
-                fieldtype: "Link",
-                options: "Task",
+                {
+                    label: "Select Existing Subtask",
+                    fieldname: "existing_subtask",
+                    fieldtype: "Link",
+                    options: "Task",
 
-            },
+                },
 
-            {
-                fieldtype: "Section Break"
-            },
+                {
+                    fieldtype: "Section Break"
+                },
 
-            {
-                label: "OR Create New Subtask",
-                fieldname: "section_label",
-                fieldtype: "HTML",
-                options: "<b>Create New Subtask</b>"
-            },
+                {
+                    label: "OR Create New Subtask",
+                    fieldname: "section_label",
+                    fieldtype: "HTML",
+                    options: "<b>Create New Subtask</b>"
+                },
 
-            {
-                label: "Subtask Name",
-                fieldname: "subject",
-                fieldtype: "Data"
-            },
+                {
+                    label: "Subtask Name",
+                    fieldname: "subject",
+                    fieldtype: "Data"
+                },
 
-            {
-                label: "Weight",
-                fieldname: "task_weight",
-                fieldtype: "Float"
-            },
+                {
+                    label: "Weight",
+                    fieldname: "task_weight",
+                    fieldtype: "Float"
+                },
 
-            {
-                label: "Description",
-                fieldname: "description",
-                fieldtype: "Small Text"
-            }
+                {
+                    label: "Description",
+                    fieldname: "description",
+                    fieldtype: "Small Text"
+                }
 
-        ],
+            ],
 
-        primary_action_label: "Add",
+            primary_action_label: "Add",
 
-        primary_action(values) {
+            primary_action(values) {
 
-            // CASE 1: attach existing template subtask
-            if (values.existing_subtask) {
+                // CASE 1: attach existing template subtask
+                if (values.existing_subtask) {
 
-                frappe.call({
+                    frappe.call({
 
-                    method: "frappe.client.set_value",
+                        method: "frappe.client.set_value",
 
-                    args: {
-                        doctype: "Task",
-                        name: values.existing_subtask,
-                        fieldname: {
-                            parent_task: parent_task,
-                            custom_boq_name: frm.doc.name,
-                            custom_is_subtask: 1
+                        args: {
+                            doctype: "Task",
+                            name: values.existing_subtask,
+                            fieldname: {
+                                parent_task: parent_task,
+                                custom_boq_name: frm.doc.name,
+                                custom_is_subtask: 1
+                            }
+                        },
+
+                        callback() {
+
+                            frappe.show_alert({
+                                message: "Existing subtask linked",
+                                indicator: "green"
+                            });
+
+                            d.hide();
+
+                            load_hierarchy(frm);
+
                         }
-                    },
 
-                    callback() {
+                    });
 
-                        frappe.show_alert({
-                            message: "Existing subtask linked",
-                            indicator: "green"
-                        });
+                    return;
+                }
 
-                        d.hide();
+                // CASE 2: create new subtask
+                if (!values.subject || !values.task_weight) {
 
-                        load_hierarchy(frm);
-
-                    }
-
-                });
-
-                return;
-            }
-
-            // CASE 2: create new subtask
-            if (!values.subject || !values.task_weight) {
-
-                frappe.msgprint("Enter subtask details");
-
-                return;
-
-            }
-
-            validate_subtask_weight(frm, parent_task, values.task_weight)
-            .then(result => {
-
-                if (!result.valid) {
-
-                    frappe.msgprint("Subtask weight exceeded");
+                    frappe.msgprint("Enter subtask details");
 
                     return;
 
                 }
 
-                frappe.call({
+                validate_subtask_weight(frm, parent_task, values.task_weight)
+                    .then(result => {
 
-                    method: "frappe.client.insert",
+                        if (!result.valid) {
 
-                    args: {
-                        doc: {
-                            doctype: "Task",
-                            subject: values.subject,
-                            custom_boq_name: frm.doc.name,
-                            parent_task: parent_task,
-                            custom_is_subtask: 1,
-                            task_weight: values.task_weight,
-                            description: values.description
+                            frappe.msgprint("Subtask weight exceeded");
+
+                            return;
+
                         }
-                    },
 
-                    callback() {
+                        frappe.call({
 
-                        frappe.show_alert({
-                            message: "Subtask Created",
-                            indicator: "green"
+                            method: "frappe.client.insert",
+
+                            args: {
+                                doc: {
+                                    doctype: "Task",
+                                    subject: values.subject,
+                                    custom_boq_name: frm.doc.name,
+                                    parent_task: parent_task,
+                                    custom_is_subtask: 1,
+                                    task_weight: values.task_weight,
+                                    description: values.description
+                                }
+                            },
+
+                            callback() {
+
+                                frappe.show_alert({
+                                    message: "Subtask Created",
+                                    indicator: "green"
+                                });
+
+                                d.hide();
+
+                                load_hierarchy(frm);
+
+                            }
+
                         });
 
-                        d.hide();
+                    });
 
-                        load_hierarchy(frm);
+            }
 
-                    }
+        });
 
-                });
-
-            });
-
-        }
-
-    });
-
-    d.show();
+        d.show();
 
     });
 

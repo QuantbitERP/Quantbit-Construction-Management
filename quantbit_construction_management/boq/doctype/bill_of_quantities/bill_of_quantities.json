@@ -14,13 +14,10 @@
   "download_template",
   "column_break_uzyx",
   "import_type",
+  "import_file",
   "submit_after_import",
   "task_hierarchy_section",
   "task_hierarchy",
-  "section_break_tfsj",
-  "column_break_cimt",
-  "column_break_mjzc",
-  "import_file",
   "details_tab",
   "section_break_swub",
   "naming_series",
@@ -211,10 +208,6 @@
    "set_only_once": 1
   },
   {
-   "fieldname": "column_break_mjzc",
-   "fieldtype": "Column Break"
-  },
-  {
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "download_template",
    "fieldtype": "Button",
@@ -257,21 +250,13 @@
   {
    "fieldname": "column_break_uzyx",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_tfsj",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "column_break_cimt",
-   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-14 12:54:11.044746",
+ "modified": "2026-05-14 15:38:47.776629",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "Bill of Quantities",
