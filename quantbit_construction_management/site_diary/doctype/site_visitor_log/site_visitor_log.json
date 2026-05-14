@@ -7,15 +7,16 @@
  "engine": "InnoDB",
  "field_order": [
   "visitor_name",
-  "company",
   "purpose",
   "column_break_mkwd",
   "time_in",
   "time_out",
-  "safety_inducted",
   "column_break_uiph",
   "accompanied_by",
-  "notes"
+  "notes",
+  "column_break_rlxf",
+  "company",
+  "safety_inducted"
  ],
  "fields": [
   {
@@ -85,13 +86,17 @@
   {
    "fieldname": "column_break_uiph",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_rlxf",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-29 16:21:18.669376",
+ "modified": "2026-05-14 14:46:49.380345",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Visitor Log",

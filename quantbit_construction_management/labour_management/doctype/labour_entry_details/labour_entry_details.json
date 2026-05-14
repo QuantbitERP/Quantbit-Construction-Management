@@ -54,7 +54,7 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Contractor type ",
-   "options": "Individuals\nContract"
+   "options": "\nIndividuals\nContract"
   },
   {
    "depends_on": "eval:doc.contractor_type==\"Contract\"",
@@ -78,7 +78,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-13 11:05:45.940613",
+ "modified": "2026-05-14 16:56:08.970139",
  "modified_by": "Administrator",
  "module": "Labour Management",
  "name": "Labour Entry Details",

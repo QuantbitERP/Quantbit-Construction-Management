@@ -8,7 +8,6 @@ frappe.ui.form.on("Labour Attendance Bulk Entry", {
             frm.set_value("site_engineer", frappe.session.user);
             frm.refresh_field("site_engineer");
         }
-
     }
 });
 
@@ -28,6 +27,7 @@ frappe.ui.form.on("Labour Entry Details", {
 						var contractor_type = r.message.contractor_type;
 						if (contractor_type === "Individual") {
 							frappe.model.set_value(cdt, cdn, "contractor_type", "Individuals");
+							frappe.model.set_value(cdt, cdn, "total_skilled", 1);
 						} else if (contractor_type === "Contract") {
 							frappe.model.set_value(cdt, cdn, "contractor_type", "Contract");
 						}
@@ -36,6 +36,12 @@ frappe.ui.form.on("Labour Entry Details", {
 			});
 		} else {
 			frappe.model.set_value(cdt, cdn, "contractor_type", "");
+		}
+	},
+	contractor_type: function(frm, cdt, cdn) {
+		var row = locals[cdt][cdn];
+		if (row.contractor_type === "Individuals") {
+			frappe.model.set_value(cdt, cdn, "total_skilled", 1);
 		}
 	}
 });

@@ -1,0 +1,26 @@
+{
+ "allow_roles": [
+  {
+   "role": "Administrator"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "creation": "2026-05-14 18:54:53.976092",
+ "docstatus": 0,
+ "doctype": "Module Onboarding",
+ "idx": 0,
+ "is_complete": 0,
+ "modified": "2026-05-14 18:54:53.976092",
+ "modified_by": "Administrator",
+ "module": "Quantbit Construction Management",
+ "name": "Construction",
+ "owner": "Administrator",
+ "steps": [
+  {
+   "step": "Create Item"
+  }
+ ],
+ "title": "Construction"
+}

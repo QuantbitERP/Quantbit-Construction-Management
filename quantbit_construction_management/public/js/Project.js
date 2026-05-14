@@ -222,48 +222,34 @@ function load_hierarchy(frm) {
                                 html += render_row(sub, "subtask", false);
                             });
 
-                            // Subtask Total Row
+                            // subtask percentage Row
                             html += render_total_row(
-                                "Subtasks Total",
-                                subtask_total,
+                                "subtask percentage",
+                                subtask_total.toFixed(2),
                                 80
                             );
                         }
                     });
 
-                    // Task Total Row (Inside Stage)
+                    // Total task percentage Row (Inside Stage)
+                    let task_weight_sum = 0;
+                    stageObj.tasks.forEach(tObj => {
+                        task_weight_sum += flt(tObj.data.task_weight || 0);
+                    });
                     html += render_total_row(
-                        "Tasks Total",
-                        stage_progress.toFixed(2),
+                        "Total task percentage",
+                        task_weight_sum.toFixed(2),
                         40
                     );
                 }
             });
 
-            // Overall Stage Total (Bottom Styled Like Screenshot)
-            html += `
-      <div style="
-          margin-top:15px;
-          display:flex;
-          justify-content:flex-end;
-          align-items:center;
-          gap:10px;
-          font-weight:600;">
-
-          <div>Total Stages Percentage :</div>
-
-          <div style="
-              background:#27ae60;
-              color:white;
-              padding:4px 10px;
-              border-radius:4px;
-              min-width:50px;
-              text-align:center;">
-              ${calculate_project_progress(tasks)} %
-          </div>
-
-      </div>
-      `;
+            // Overall Project Summary
+            html += render_total_row(
+                "stage percentage",
+                overall_stage_total.toFixed(2),
+                0
+            );
 
             html += "</div>";
             frm.fields_dict.custom_task_hierarchy.$wrapper.html(html);
@@ -532,45 +518,36 @@ function attach_events(frm, all_tasks) {
 
             }
 
-            function validate_total_weight(frm, new_weight, old_weight = 0, parent_task = null) {
-
-                return new Promise(resolve => {
+            validate_total_weight(frm, values.task_weight)
+                .then(result => {
+                    if (!result.valid) {
+                        frappe.msgprint(__("Total weight of stages cannot exceed 100%. Current total: {0}%", [result.current_total]));
+                        return;
+                    }
 
                     frappe.call({
-                        method: "frappe.client.get_list",
+                        method: "frappe.client.insert",
                         args: {
-                            doctype: "Task",
-                            filters: parent_task
-                                ? { parent_task: parent_task }
-                                : { project: frm.doc.name, custom_is_stage: 1 },
-                            fields: ["task_weight"]
+                            doc: {
+                                doctype: "Task",
+                                subject: values.subject,
+                                project: frm.doc.name,
+                                custom_is_stage: 1,
+                                is_group: 1,
+                                task_weight: values.task_weight,
+                                description: values.description
+                            }
                         },
                         callback: function (r) {
-
-                            let current_total = 0;
-
-                            if (r.message) {
-                                r.message.forEach(t => {
-                                    current_total += t.task_weight || 0;
-                                });
-                            }
-
-                            // 🔥 FIXED LOGIC
-                            let projected_total = (current_total - (old_weight || 0)) + new_weight;
-
-                            let remaining = 100 - (current_total - (old_weight || 0));
-
-                            resolve({
-                                valid: projected_total <= 100,
-                                current_total: current_total,
-                                projected_total: projected_total,
-                                remaining: remaining
+                            frappe.show_alert({
+                                message: __("Stage Created"),
+                                indicator: "green"
                             });
+                            d.hide();
+                            load_hierarchy(frm);
                         }
                     });
                 });
-            }
-
         }
 
     });
