@@ -1,4 +1,3 @@
-// Variable to track expanded nodes (Everything is collapsed by default)
 window.expanded_nodes = window.expanded_nodes || new Set();
 
 frappe.ui.form.on('Project', {
@@ -16,7 +15,6 @@ frappe.realtime.on("project_progress_refresh", (data) => {
 
     if (cur_frm.doc.name === data.project) {
 
-        // 🔥 refresh hierarchy UI
         load_hierarchy(cur_frm);
 
     }
@@ -25,8 +23,18 @@ frappe.realtime.on("project_progress_refresh", (data) => {
 
 function inject_hierarchy_css() {
     const css = `
-        .hierarchy-row { position: relative; transition: all 0.2s ease; cursor: pointer; margin-bottom: 5px; }
-        .hierarchy-row:hover { filter: brightness(0.95); transform: translateX(5px); }
+        .hierarchy-row { 
+            position: relative; 
+            transition: all 0.2s ease; 
+            cursor: pointer; 
+            margin-bottom: 8px; 
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+        }
+        .hierarchy-row:hover { 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            background-color: #E1F5FE !important;
+        }
         .hover-details {
             display: none; position: absolute; top: -10px; left: 50%;
             transform: translateX(-50%) translateY(-100%); background: #2d3436;
@@ -35,10 +43,10 @@ function inject_hierarchy_css() {
             pointer-events: none;
         }
         .hierarchy-row:hover .hover-details { display: block; }
-        .toggle-icon { margin-right: 8px; font-weight: bold; cursor: pointer; width: 15px; display: inline-block; text-align: center; }
+        .toggle-icon { margin-right: 12px; font-weight: bold; cursor: pointer; width: 15px; display: inline-block; text-align: center; color: #666; }
         .detail-label { color: #bdc3c7; font-weight: bold; margin-right: 5px; }
         .hierarchy-controls { margin-bottom: 15px; display: flex; gap: 10px; justify-content: flex-end; }
-        .weight-warning { color: #e74c3c; font-weight: 600; margin-top: 5px; }
+        .weight-warning { color: #fb8c00; font-weight: 600; margin-top: 5px; }
     `;
     frappe.dom.set_style(css, 'project-hierarchy-style');
 }
@@ -222,7 +230,7 @@ function load_hierarchy(frm) {
                                 html += render_row(sub, "subtask", false);
                             });
 
-                            // subtask percentage Row
+                        
                             html += render_total_row(
                                 "subtask percentage",
                                 subtask_total.toFixed(2),
@@ -231,7 +239,7 @@ function load_hierarchy(frm) {
                         }
                     });
 
-                    // Total task percentage Row (Inside Stage)
+                    
                     let task_weight_sum = 0;
                     stageObj.tasks.forEach(tObj => {
                         task_weight_sum += flt(tObj.data.task_weight || 0);
@@ -244,7 +252,7 @@ function load_hierarchy(frm) {
                 }
             });
 
-            // Overall Project Summary
+        
             html += render_total_row(
                 "stage percentage",
                 overall_stage_total.toFixed(2),
@@ -282,26 +290,31 @@ function calculate_project_progress(tasks) {
 
 function render_row(item, type, is_expanded) {
     let margin = type === "stage" ? "0px" : (type === "task" ? "25px" : "60px");
-    let bg = type === "stage" ? "#1E88E5" : (type === "task" ? "#E3F2FD" : "#F5F5F5");
-    let color = type === "stage" ? "white" : "#333";
-    let btnClass = type === "stage" ? "btn-light" : "btn-default";
+    let border_color = type === "stage" ? "#1E88E5" : (type === "task" ? "#4FC3F7" : "#B0BEC5");
+    let bg = type === "stage" ? "#E3F2FD" : (type === "task" ? "#F1F8FE" : "#F9FCFF");
+    let color = "#374151";
+    let btnClass = "btn-default";
 
-    // Icon logic
+
     let icon = "";
     if (type !== "subtask") {
         icon = is_expanded ? "▼" : "▶";
     }
 
-    let progress = item.progress || 0;
+    let weight = item.task_weight || 0;
+    let progress_color = "#fb8c00"; 
+    if (weight >= 100) progress_color = "#2ecc71";
+    else if (weight > 70) progress_color = "#27ae60";
+    else if (weight > 30) progress_color = "#f1c40f";
 
     let progress_bar = `
     <div style="margin-top:6px;width:150px;background:#eee;border-radius:6px;height:6px;">
-    <div style="width:${progress}%;background:#27ae60;height:6px;border-radius:6px;"></div>
+    <div style="width:${weight}%;background:${progress_color};height:6px;border-radius:6px;"></div>
     </div>
     `;
 
     return `
-    <div class="hierarchy-row" data-name="${item.name}" data-type="${type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:${color}; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div class="hierarchy-row" data-name="${item.name}" data-type="${type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:${color}; border-left: 6px solid ${border_color}; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
       
       <div class="hover-details">
          <div style="border-bottom: 1px solid #444; margin-bottom: 5px; font-weight: bold; padding-bottom: 3px;">${item.name}</div>
@@ -325,6 +338,7 @@ function render_row(item, type, is_expanded) {
         <button class="btn ${btnClass} btn-xs redirect-item" data-name="${item.name}" title="Open Form View"> Redirect</button>
         <button class="btn ${btnClass} btn-xs edit-item" data-name="${item.name}">✏ Edit</button>
         <button class="btn ${btnClass} btn-xs assign-item" data-name="${item.name}">👤 Assign</button>
+        <button class="btn btn-xs delete-item" style="background:#607D8B; color:white;" data-name="${item.name}">🗑 Delete</button>
         ${type === "stage" ? `<button class="btn btn-light btn-xs add-task" data-stage="${item.name}">+ Task</button>` : ""}
         ${type === "task" ? `<button class="btn btn-default btn-xs add-subtask" data-task="${item.name}">+ Subtask</button>` : ""}
           
@@ -339,8 +353,11 @@ function render_row(item, type, is_expanded) {
 }
 
 function render_total_row(label, total, margin_left) {
-    let bg_color = "#27ae60";
-    if (total > 100) bg_color = "#e74c3c";
+    let bg_color = "#fb8c00"; 
+    if (total > 100) bg_color = "#c0392b"; 
+    else if (total >= 100) bg_color = "#2ecc71"; 
+    else if (total > 70) bg_color = "#27ae60"; 
+    else if (total > 30) bg_color = "#f1c40f"; 
 
     return `
     <div style="
@@ -370,8 +387,7 @@ function render_total_row(label, total, margin_left) {
 
 function attach_events(frm, all_tasks) {
     const wrapper = frm.fields_dict.custom_task_hierarchy.$wrapper;
-
-    // TOGGLE EXPAND / COLLAPSE
+        
     wrapper.find(".toggle-node").off("click").on("click", function (e) {
         e.stopPropagation();
         let row = $(this).closest(".hierarchy-row");
@@ -387,7 +403,7 @@ function attach_events(frm, all_tasks) {
         load_hierarchy(frm);
     });
 
-    // EXPAND ALL
+    
     wrapper.find(".expand-all").off("click").on("click", function () {
         all_tasks.forEach(t => {
             if (t.custom_is_stage || t.custom_is_task)
@@ -396,13 +412,13 @@ function attach_events(frm, all_tasks) {
         load_hierarchy(frm);
     });
 
-    // COLLAPSE ALL
+    
     wrapper.find(".collapse-all").off("click").on("click", function () {
         expanded_nodes.clear();
         load_hierarchy(frm);
     });
 
-    // ADD STAGE
+    
     wrapper.find(".add-stage").off("click").on("click", function () {
 
     let d = new frappe.ui.Dialog({
@@ -420,11 +436,27 @@ function attach_events(frm, all_tasks) {
                 get_query() {
                     return {
                         filters: {
-                            status: "Template",
-                            custom_is_stage: 1
+                            custom_is_stage: 1,
+                            is_template: 1
                         }
                     };
                 }
+            },
+
+            {
+                label: "Include Dependencies",
+                fieldname: "include_dependencies",
+                fieldtype: "Check",
+                default: 0,
+                depends_on: "eval:doc.existing_stage"
+            },
+
+            {
+                label: "Include Subtasks",
+                fieldname: "include_children",
+                fieldtype: "Check",
+                default: 0,
+                depends_on: "eval:doc.existing_stage"
             },
 
             {
@@ -462,54 +494,34 @@ function attach_events(frm, all_tasks) {
 
         primary_action(values) {
 
-            // CASE 1: attach existing template stage
+        
             if (values.existing_stage) {
 
                 frappe.call({
-
-                    method: "frappe.client.set_value",
-
+                    method: "quantbit_construction_management.api.clone_task_hierarchy",
                     args: {
-
-                        doctype: "Task",
-
-                        name: values.existing_stage,
-
-                        fieldname: {
-
-                            project: frm.doc.name,
-
-                            custom_is_stage: 1,
-
-                            is_group: 1
-
-                        }
-
+                        source_task: values.existing_stage,
+                        target_project: frm.doc.name,
+                        include_dependencies: values.include_dependencies,
+                        include_children: values.include_children
                     },
-
-                    callback: function () {
-
-                        frappe.show_alert({
-
-                            message: __("Existing Stage Linked"),
-
-                            indicator: "green"
-
-                        });
-
-                        d.hide();
-
-                        load_hierarchy(frm);
-
+                    callback: function (r) {
+                        if (r.message) {
+                            frappe.show_alert({
+                                message: __("New Stage Created from existing Stage"),
+                                indicator: "green"
+                            });
+                            d.hide();
+                            load_hierarchy(frm);
+                        }
                     }
-
                 });
 
                 return;
 
             }
 
-            // CASE 2: create new stage
+    
             if (!values.subject || !values.task_weight) {
 
                 frappe.msgprint("Enter stage details");
@@ -534,6 +546,7 @@ function attach_events(frm, all_tasks) {
                                 project: frm.doc.name,
                                 custom_is_stage: 1,
                                 is_group: 1,
+                                is_template: 1,
                                 task_weight: values.task_weight,
                                 description: values.description
                             }
@@ -556,7 +569,7 @@ function attach_events(frm, all_tasks) {
 
     });
 
-    // ADD TASK
+
     wrapper.find(".add-task").off("click").on("click", function () {
 
     let stage = $(this).data("stage");
@@ -572,20 +585,21 @@ function attach_events(frm, all_tasks) {
                 options: "Task",
 
                 get_query() {
-
-
                     return {
-
                         filters: {
-
-                            status: "Template"
-
+                            custom_is_task: 1,
+                            is_template: 1
                         }
-
                     };
-
                 }
+            },
 
+            {
+                label: "Include Subtasks",
+                fieldname: "include_children",
+                fieldtype: "Check",
+                default: 0,
+                depends_on: "eval:doc.existing_task"
             },
 
             {
@@ -621,24 +635,17 @@ function attach_events(frm, all_tasks) {
             if (values.existing_task) {
 
                 frappe.call({
-                    method: "frappe.client.set_value",
+                    method: "quantbit_construction_management.api.clone_task_hierarchy",
                     args: {
-                        doctype: "Task",
-                        name: values.existing_task,
-                        fieldname: {
-                            parent_task: stage,
-                            custom_is_task: 1,
-                            project: frm.doc.name
-                        }
+                        source_task: values.existing_task,
+                        target_project: frm.doc.name,
+                        parent_task: stage,
+                        include_children: values.include_children
                     },
                     callback() {
-
-                        frappe.show_alert("Existing task linked");
-
+                        frappe.show_alert("New Task Created from existing Task");
                         d.hide();
-
                         load_hierarchy(frm);
-
                     }
                 });
 
@@ -674,6 +681,7 @@ function attach_events(frm, all_tasks) {
                                 parent_task: stage,
                                 custom_is_task: 1,
                                 is_group: 1,
+                                is_template: 1,
                                 task_weight: values.task_weight,
                                 description: values.description
                             }
@@ -701,7 +709,7 @@ function attach_events(frm, all_tasks) {
 
     });
 
-    // ADD SUBTASK
+    
     wrapper.find(".add-subtask").off("click").on("click", function () {
 
     let parent_task = $(this).data("task");
@@ -717,7 +725,14 @@ function attach_events(frm, all_tasks) {
                 fieldname: "existing_subtask",
                 fieldtype: "Link",
                 options: "Task",
-
+                get_query() {
+                    return {
+                        filters: {
+                            custom_is_subtask: 1,
+                            is_template: 1
+                        }
+                    };
+                }
             },
 
             {
@@ -755,42 +770,27 @@ function attach_events(frm, all_tasks) {
 
         primary_action(values) {
 
-            // CASE 1: attach existing template subtask
+          
             if (values.existing_subtask) {
 
                 frappe.call({
-
-                    method: "frappe.client.set_value",
-
+                    method: "quantbit_construction_management.api.clone_task_hierarchy",
                     args: {
-                        doctype: "Task",
-                        name: values.existing_subtask,
-                        fieldname: {
-                            parent_task: parent_task,
-                            project: frm.doc.name,
-                            custom_is_subtask: 1
-                        }
+                        source_task: values.existing_subtask,
+                        target_project: frm.doc.name,
+                        parent_task: parent_task
                     },
-
                     callback() {
-
-                        frappe.show_alert({
-                            message: "Existing subtask linked",
-                            indicator: "green"
-                        });
-
+                        frappe.show_alert("New Subtask Created from existing Subtask");
                         d.hide();
-
                         load_hierarchy(frm);
-
                     }
-
                 });
 
                 return;
             }
 
-            // CASE 2: create new subtask
+           
             if (!values.subject || !values.task_weight) {
 
                 frappe.msgprint("Enter subtask details");
@@ -821,6 +821,7 @@ function attach_events(frm, all_tasks) {
                             project: frm.doc.name,
                             parent_task: parent_task,
                             custom_is_subtask: 1,
+                            is_template: 1,
                             task_weight: values.task_weight,
                             description: values.description
                         }
@@ -851,7 +852,7 @@ function attach_events(frm, all_tasks) {
 
     });
 
-    // EDIT 
+   
     wrapper.find(".edit-item").off("click").on("click", function (e) {
         e.stopPropagation();
         let row = $(this).closest(".hierarchy-row");
@@ -1066,6 +1067,59 @@ function attach_events(frm, all_tasks) {
                 }
             });
             d.show();
+        });
+    });
+
+    
+    wrapper.find(".delete-item").off("click").on("click", function (e) {
+        e.stopPropagation();
+        let docname = $(this).data("name");
+
+        
+        let has_children = all_tasks.some(t => t.parent_task === docname);
+
+        if (has_children) {
+            frappe.msgprint({
+                title: __("Cannot Delete"),
+                message: __("This item has children (Tasks or Subtasks). Please delete the children first."),
+                indicator: "orange"
+            });
+            return;
+        }
+
+       
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Task Depends On",
+                filters: { task: docname },
+                fields: ["parent"]
+            },
+            callback: function (r) {
+                if (r.message && r.message.length > 0) {
+                    let dependents = r.message.map(d => d.parent).join(", ");
+                    frappe.msgprint({
+                        title: __("Cannot Delete"),
+                        message: __("This task is a dependency for the following tasks: <b>{0}</b>. Please remove these dependencies first.", [dependents]),
+                        indicator: "orange"
+                    });
+                    return;
+                }
+
+                frappe.confirm(__('Are you sure you want to delete {0}?', [docname]), () => {
+                    frappe.call({
+                        method: "frappe.client.delete",
+                        args: {
+                            doctype: "Task",
+                            name: docname
+                        },
+                        callback: function () {
+                            frappe.show_alert({ message: __("Task Deleted"), indicator: "red" });
+                            load_hierarchy(frm);
+                        }
+                    });
+                });
+            }
         });
     });
 }
