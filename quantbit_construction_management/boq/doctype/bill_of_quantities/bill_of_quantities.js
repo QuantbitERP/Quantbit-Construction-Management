@@ -37,8 +37,8 @@ frappe.ui.form.on("Bill of Quantities", {
             "only_select",
             1
         );
-        
-        frm.set_query("task", "tasks_details", function() {
+
+        frm.set_query("task", "tasks_details", function () {
             return {
                 filters: {
                     custom_boq_name: frm.doc.name,
@@ -46,6 +46,25 @@ frappe.ui.form.on("Bill of Quantities", {
                 }
             };
         });
+
+        // Display human-readable Subjects instead of raw Task IDs in the grid columns
+        frm.fields_dict.boq_items.grid.get_docfield("task").formatter = function(value, df, active_doc, row) {
+            if (!value) return "";
+            let task_row = (frm.doc.tasks_details || []).find(d => d.task === value);
+            if (task_row && task_row.task_subject) {
+                return task_row.task_subject;
+            }
+            return value;
+        };
+
+        frm.fields_dict.boq_items.grid.get_docfield("subtask").formatter = function(value, df, active_doc, row) {
+            if (!value) return "";
+            if (active_doc && active_doc.subtask_name) {
+                return active_doc.subtask_name;
+            }
+            return value;
+        };
+
         sync_tasks_details(frm);
     },
     download_template: function (frm) {
@@ -56,23 +75,18 @@ frappe.ui.form.on("Bill of Quantities", {
 async function remove_boq_items_for_task(frm, task_name_or_id) {
     if (!task_name_or_id) return;
 
-    // If it's an ID (TASK-XXXX), get the subject
-    let task_subject = task_name_or_id;
-    if (task_name_or_id.startsWith("TASK-")) {
-        const r = await frappe.db.get_value("Task", task_name_or_id, "subject");
-        task_subject = r.message.subject;
+    let i = (frm.doc.boq_items || []).length;
+    while (i--) {
+        if (frm.doc.boq_items[i].task === task_name_or_id) {
+            let item = frm.doc.boq_items.splice(i, 1)[0];
+            frappe.model.clear_doc("BOQ Item", item.name);
+        }
     }
-
-    const rows_to_remove = (frm.doc.boq_items || []).filter(
-        item => item.task === task_subject
-    );
-
-    rows_to_remove.forEach(item => frappe.model.clear_doc("BOQ Item", item.name));
 
     frm.refresh_field("boq_items");
 
     frappe.show_alert({
-        message: __("BOQ items removed for task: {0}", [task_subject]),
+        message: __("BOQ items removed for task: {0}", [task_name_or_id]),
         indicator: "orange"
     }, 4);
 }
@@ -117,47 +131,51 @@ frappe.ui.form.on("BOQ Task Details", {
         fetch_items_for_task(frm, row);
     },
 
-    before_tasks_details_remove: async function (frm, cdt, cdn) {
-        const row = locals[cdt][cdn];
-        await remove_boq_items_for_task(frm, row.task);
-    }
+    // before_tasks_details_remove: async function (frm, cdt, cdn) {
+    //     const row = locals[cdt][cdn];
+    //     await remove_boq_items_for_task(frm, row.task);
+    // }
 
 });
 
 async function fetch_items_for_task(frm, row) {
     if (!row.task) return;
 
-    frappe.call({
-        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.get_boq_items_from_task",
-        args: { task_name: row.task },
-        freeze: true,
-        freeze_message: __("Loading BOQ items..."),
-        callback: function(r) {
-            if (r.exc) {
-                frappe.msgprint(__("Error loading items. Check console for details."));
-                return;
-            }
-            const items = r.message || [];
-            if (!items.length) {
+    return new Promise((resolve, reject) => {
+        frappe.call({
+            method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.get_boq_items_from_task",
+            args: { task_name: row.task },
+            freeze: true,
+            freeze_message: __("Loading BOQ items..."),
+            callback: async function (r) {
+                if (r.exc) {
+                    frappe.msgprint(__("Error loading items. Check console for details."));
+                    reject();
+                    return;
+                }
+                const items = r.message || [];
+                if (!items.length) {
+                    frappe.show_alert({
+                        message: __("No subtask BOM items found for this task."),
+                        indicator: "orange"
+                    }, 5);
+                    resolve();
+                    return;
+                }
+                for (let d of items) {
+                    const child = frm.add_child("boq_items");
+                    await frappe.model.set_value(child.doctype, child.name, d);
+                }
+                frm.refresh_field("boq_items");
                 frappe.show_alert({
-                    message: __("No subtask BOM items found for this task."),
-                    indicator: "orange"
-                }, 5);
-                return;
+                    message: __("{0} item(s) added from task: {1}", [items.length, row.task_subject || row.task]),
+                    indicator: "green"
+                });
+                resolve();
             }
-            items.forEach(d => {
-                const child = frm.add_child("boq_items");
-                Object.keys(d).forEach(key => { child[key] = d[key]; });
-            });
-            frm.refresh_field("boq_items");
-            frappe.show_alert({
-                message: __("{0} item(s) added from task: {1}", [items.length, row.task_subject || row.task]),
-                indicator: "green"
-            });
-        }
+        });
     });
 }
-
 
 frappe.ui.form.on("BOQ Item", {
 
@@ -1283,9 +1301,9 @@ function attach_events(frm, all_tasks) {
             frappe.msgprint(__("No document name found. Please refresh the page."));
             return;
         }
-        // Open the Task form in a new browser tab for reliability
-        let url = frappe.utils.get_url_to_form("Task", docname);
-        window.open(url, "_blank");
+        // Build the correct Frappe desk URL: /desk/task/{encoded-name}
+        let route = `/desk/task/${encodeURIComponent(docname)}`;
+        window.open(route, "_blank");
     });
 
     // ASSIGN
@@ -1443,6 +1461,7 @@ function show_bom_dialog(frm, task_name) {
                                 });
                                 d.hide();
                                 load_hierarchy(frm);
+                                update_boq_items_for_subtask(frm, task_name);
                             }
                         }
                     });
@@ -1462,7 +1481,7 @@ function show_bom_dialog(frm, task_name) {
 
 function sync_tasks_details(frm) {
     if (!frm.doc.name || frm.doc.__islocal || frm._is_syncing) return;
-    
+
     frm._is_syncing = true;
     frappe.call({
         method: "frappe.client.get_list",
@@ -1472,24 +1491,25 @@ function sync_tasks_details(frm) {
                 custom_boq_name: frm.doc.name,
                 custom_is_task: 1
             },
-            fields: ["name"]
+            fields: ["name", "subject"]
         },
-        callback: function(r) {
+        callback: function (r) {
             if (r.message && r.message.length > 0) {
                 let existing_tasks = (frm.doc.tasks_details || []).map(d => d.task);
                 let added = false;
-                
+
                 let fetch_promises = [];
                 r.message.forEach(t => {
                     if (!existing_tasks.includes(t.name)) {
                         let child = frm.add_child("tasks_details");
                         child.task = t.name;
+                        child.task_subject = t.subject;
                         fetch_promises.push(fetch_items_for_task(frm, child));
                         existing_tasks.push(t.name);
                         added = true;
                     }
                 });
-                
+
                 Promise.all(fetch_promises).then(() => {
                     if (added) {
                         frm.refresh_field("tasks_details");
@@ -1503,9 +1523,57 @@ function sync_tasks_details(frm) {
                 frm._is_syncing = false;
             }
         },
-        error: function() {
+        error: function () {
             frm._is_syncing = false;
         }
     });
 }
 
+async function update_boq_items_for_subtask(frm, subtask_name) {
+    if (!subtask_name) return;
+
+    frappe.call({
+        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.get_boq_items_from_subtask",
+        args: { subtask_name: subtask_name },
+        freeze: true,
+        freeze_message: __("Updating BOQ items..."),
+        callback: async function (r) {
+            if (r.exc) return;
+
+            // Remove existing items for this subtask from the array properly
+            let i = (frm.doc.boq_items || []).length;
+            while (i--) {
+                let row = frm.doc.boq_items[i];
+                if (row.subtask === subtask_name || row.task === subtask_name || row.subtask_name === subtask_name) {
+                    let item = frm.doc.boq_items.splice(i, 1)[0];
+                    frappe.model.clear_doc("BOQ Item", item.name);
+                }
+            }
+
+            // Add updated items
+            const items = r.message || [];
+            for (let d of items) {
+                const child = frm.add_child("boq_items");
+                await frappe.model.set_value(child.doctype, child.name, d);
+            }
+            
+            frm.refresh_field("boq_items");
+        }
+    });
+}
+
+// Ensure BOM Dialog auto-fetches Item Name and UOM when Item is selected
+frappe.ui.form.on("Task BOQ Details", {
+    item: function (frm, cdt, cdn) {
+        let row = frappe.get_doc(cdt, cdn);
+        if (row && row.item) {
+            frappe.db.get_value("Item", row.item, ["item_name", "stock_uom", "custom_item_type"], function (r) {
+                if (r) {
+                    frappe.model.set_value(cdt, cdn, "item_name", r.item_name);
+                    if (!row.uom) frappe.model.set_value(cdt, cdn, "uom", r.stock_uom);
+                    if (!row.item_type) frappe.model.set_value(cdt, cdn, "item_type", r.custom_item_type);
+                }
+            });
+        }
+    }
+});

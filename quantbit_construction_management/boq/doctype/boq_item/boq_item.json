@@ -239,7 +239,6 @@
    "columns": 3,
    "fieldname": "subtask_name",
    "fieldtype": "Data",
-   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Subtask Name"
