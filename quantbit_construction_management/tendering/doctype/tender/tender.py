@@ -84,7 +84,7 @@ class Tender(Document):
 		customer.insert(ignore_permissions=True)
 		
 		self.customer_name = customer.customer_name
-		self.save(ignore_permissions=True)
+		# self.save(ignore_permissions=True)
 		
 		return {
 			'customer': customer.name,
