@@ -804,17 +804,17 @@
   },
   {
    "fieldname": "scope_of_work",
-   "fieldtype": "Data",
+   "fieldtype": "Text Editor",
    "label": "Scope Of Work"
   },
   {
    "fieldname": "bid_evaluation_criteriatechnical",
-   "fieldtype": "Text",
+   "fieldtype": "Text Editor",
    "label": "Bid Evaluation Criteria(Technical)"
   },
   {
    "fieldname": "bid_evaluation_criteriacommerical",
-   "fieldtype": "Text",
+   "fieldtype": "Text Editor",
    "label": "Bid Evaluation Criteria(Commerical)"
   },
   {
@@ -1035,7 +1035,7 @@
    "link_fieldname": "custom_reference_doc_name"
   }
  ],
- "modified": "2026-05-14 17:27:48.342653",
+ "modified": "2026-05-15 15:05:26.219322",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender",

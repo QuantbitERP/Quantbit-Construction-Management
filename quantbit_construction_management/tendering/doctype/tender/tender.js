@@ -33,6 +33,30 @@ frappe.ui.form.on("Tender", {
 
     profit_on_ctc: function(frm) {
         calculate_contract_values(frm);
+    },
+    
+    boq: function(frm) {
+        if (frm.doc.boq) {
+            frappe.call({
+                method: "quantbit_construction_management.tendering.doctype.tender.tender.get_boq_details",
+                args: {
+                    boq: frm.doc.boq
+                },
+                callback: function(r) {
+                    if (r.message) {
+                        frm.clear_table("boq_details");
+                        r.message.forEach(item => {
+                            let child = frm.add_child("boq_details");
+                            frappe.model.set_value(child.doctype, child.name, item);
+                        });
+                        frm.refresh_field("boq_details");
+                    }
+                }
+            });
+        } else {
+            frm.clear_table("boq_details");
+            frm.refresh_field("boq_details");
+        }
     }
 });
 

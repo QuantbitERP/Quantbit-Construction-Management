@@ -115,6 +115,26 @@ def create_project_from_tender(tender_name, project_name):
 	})
 	
 	project.insert(ignore_permissions=True)
+
+	# Update tasks and subtasks from BOQ Details with the new project name and BOQ
+	updated_tasks = set()
+	for item in tender_doc.boq_details:
+		for t_name in [item.task, item.subtask]:
+			if t_name and t_name not in updated_tasks:
+				frappe.db.set_value("Task", t_name, {
+					"project": project.name,
+					"custom_boq_name": tender_doc.boq
+				})
+				updated_tasks.add(t_name)
+				
+				# Also update the stage (parent of the task)
+				parent = frappe.db.get_value("Task", t_name, "parent_task")
+				if parent and parent not in updated_tasks:
+					frappe.db.set_value("Task", parent, {
+						"project": project.name,
+						"custom_boq_name": tender_doc.boq
+					})
+					updated_tasks.add(parent)
 	
 	frappe.db.set_value('Tender', tender_name, 'workflow_state', 'Project Created')
 	
@@ -126,4 +146,26 @@ def create_project_from_tender(tender_name, project_name):
 		'message': message
 	}
 
-	 
+@frappe.whitelist()
+def get_boq_details(boq):
+	"""Fetch items from Bill of Quantities and map to Tender Item format"""
+	if not boq:
+		return []
+	
+	boq_doc = frappe.get_doc("Bill of Quantities", boq)
+	details = []
+	for item in boq_doc.boq_items:
+		details.append({
+			"item_code": item.item_code,
+			"uom": item.unit,
+			"qty": item.quantity,
+			"rate": item.unit_rate,
+			"amount": item.amount,
+			"task": item.task,
+			"subtask": item.subtask,
+			"subtask_name": item.subtask_name,
+			"item_type": item.item_type,
+			"cost_code": item.cost_code,
+			"item_name": item.item_no
+		})
+	return details

@@ -6,8 +6,55 @@ frappe.ui.form.on('Project', {
         if (frm.doc.name && typeof load_hierarchy === "function") {
             load_hierarchy(frm);
         }
+        if (frm.doc.custom_report_name_) {
+            render_report_view(frm);
+        }
+    },
+    custom_report_name_: function(frm) {
+        if (frm.doc.custom_report_name_) {
+            render_report_view(frm);
+        } else {
+            frm.set_value('custom_html_view', '');
+        }
     }
 });
+
+function render_report_view(frm) {
+    if (!frm.doc.custom_report_name_) return;
+
+    let filters = {};
+    if (frm.doc.name && !frm.doc.__islocal) filters.project = frm.doc.name;
+    if (frm.doc.company) filters.company = frm.doc.company;
+    if (frm.doc.expected_start_date) filters.from_date = frm.doc.expected_start_date;
+    if (frm.doc.expected_end_date) filters.to_date = frm.doc.expected_end_date;
+
+    frappe.call({
+        method: "quantbit_construction_management.report_handler.get_report_html",
+        args: {
+            report_name: frm.doc.custom_report_name_,
+            filters: filters
+        },
+        callback: function(r) {
+            if (r.message) {
+                let msg = r.message;
+                let html = typeof msg === 'string' ? msg : msg.html;
+                
+                frm.set_df_property('custom_html_view', 'options', html);
+                frm.refresh_field('custom_html_view');
+
+                // If still preparing, poll again in 5 seconds
+                if (msg.status === "preparing") {
+                    setTimeout(() => {
+                        // Check if we are still on the same report
+                        if (frm.doc.custom_report_name_) {
+                            render_report_view(frm);
+                        }
+                    }, 5000);
+                }
+            }
+        }
+    });
+}
 
 frappe.realtime.on("project_progress_refresh", (data) => {
 
@@ -33,7 +80,6 @@ function inject_hierarchy_css() {
         }
         .hierarchy-row:hover { 
             box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            background-color: #E1F5FE !important;
         }
         .hover-details {
             display: none; position: absolute; top: -10px; left: 50%;
@@ -290,11 +336,10 @@ function calculate_project_progress(tasks) {
 
 function render_row(item, type, is_expanded) {
     let margin = type === "stage" ? "0px" : (type === "task" ? "25px" : "60px");
-    let border_color = type === "stage" ? "#1E88E5" : (type === "task" ? "#4FC3F7" : "#B0BEC5");
-    let bg = type === "stage" ? "#E3F2FD" : (type === "task" ? "#F1F8FE" : "#F9FCFF");
-    let color = "#374151";
-    let btnClass = "btn-default";
-
+    let border_color = type === "stage" ? "#ffffff" : (type === "task" ? "#4FC3F7" : "#B0BEC5");
+    let bg = "#1a365d";
+    let color = "#ffffff";
+    let btnClass = "btn-light";
 
     let icon = "";
     if (type !== "subtask") {
@@ -326,7 +371,7 @@ function render_row(item, type, is_expanded) {
       </div>
 
       <div class="toggle-node" style="display:flex; align-items:center; flex-grow:1;">
-        <span class="toggle-icon">${icon}</span>
+        <span class="toggle-icon" style="color: #ffffff;">${icon}</span>
         <div>
           <div style="font-weight:600; font-size:${type === 'stage' ? '16px' : '14px'};">${item.subject}</div>
           <div style="font-size:11px; opacity:0.7;">${item.name}</div>
@@ -338,9 +383,9 @@ function render_row(item, type, is_expanded) {
         <button class="btn ${btnClass} btn-xs redirect-item" data-name="${item.name}" title="Open Form View"> Redirect</button>
         <button class="btn ${btnClass} btn-xs edit-item" data-name="${item.name}">✏ Edit</button>
         <button class="btn ${btnClass} btn-xs assign-item" data-name="${item.name}">👤 Assign</button>
-        <button class="btn btn-xs delete-item" style="background:#607D8B; color:white;" data-name="${item.name}">🗑 Delete</button>
-        ${type === "stage" ? `<button class="btn btn-light btn-xs add-task" data-stage="${item.name}">+ Task</button>` : ""}
-        ${type === "task" ? `<button class="btn btn-default btn-xs add-subtask" data-task="${item.name}">+ Subtask</button>` : ""}
+        <button class="btn ${btnClass} btn-xs delete-item" data-name="${item.name}">🗑 Delete</button>
+        ${type === "stage" ? `<button class="btn ${btnClass} btn-xs add-task" data-stage="${item.name}">+ Task</button>` : ""}
+        ${type === "task" ? `<button class="btn ${btnClass} btn-xs add-subtask" data-task="${item.name}">+ Subtask</button>` : ""}
           
         <button class="btn btn-warning btn-xs show-weight" 
           data-name="${item.name}" 
@@ -349,7 +394,6 @@ function render_row(item, type, is_expanded) {
         </button>
       </div>
     </div>`;
-
 }
 
 function render_total_row(label, total, margin_left) {
