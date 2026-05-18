@@ -7,50 +7,38 @@ from frappe.utils.xlsxutils import build_xlsx_response, read_xlsx_file_from_atta
 
 
 class BillofQuantities(Document):
-
     def validate(self):
         self.calculate_contract_value()
-        self.validate_tasks_exist()
-        self.validate_item_exist()
-        self.validate_contract_value()
-        self.validate_item_values()
+        # self.validate_contract_value()
+        # self.validate_item_values()
 
     def calculate_contract_value(self):
         total = 0
-
         for row in self.boq_items:
             total += row.amount or 0
-
         self.contract_value = total
 
-    def validate_item_exist(self):
-        if not self.boq_items:
-            frappe.throw("Add at least one item in the BOQ Items before saving.")
-
-    def validate_tasks_exist(self):
-        if not self.tasks_details:
-            frappe.throw("Add Task in Task Details before saving.")
-
-        for row in self.tasks_details:
-            if not row.task:
-                frappe.throw(
-                    ("Add Task at row {0}")
-                    .format(row.idx)
-                )
-
-    def validate_contract_value(self):
-        if self.contract_value <= 0:
-            frappe.throw(
-                "Contract Value cannot be zero — add task with item, quantity and rates."
-            )
-
-    def validate_item_values(self):
-        for row in self.boq_items:
-            if row.quantity <= 0 or row.unit_rate <= 0:
-                frappe.throw(
-                    ("Item at row {0} - {1} has zero quantity or rate.")
-                    .format(row.idx, row.item_code)
-                )
+@frappe.whitelist()
+def update_task_bom_details(task_name, bom_details):
+    import json
+    from frappe.utils import flt
+    if isinstance(bom_details, str):
+        bom_details = json.loads(bom_details)
+    
+    task = frappe.get_doc("Task", task_name)
+    task.set("custom_bom_details", [])
+    for row in bom_details:
+        task.append("custom_bom_details", {
+            "item": row.get("item"),
+            "item_name": row.get("item_name"),
+            "qty": row.get("qty"),
+            "uom": row.get("uom"),
+            "rate": row.get("rate"),
+            "item_type": row.get("item_type"),
+            "total_amount": flt(row.get("qty") or 0) * flt(row.get("rate") or 0)
+        })
+    task.save(ignore_permissions=True)
+    return task.name
 
 
 @frappe.whitelist()
@@ -64,16 +52,22 @@ def get_boq_items_from_task(task_name):
         fields=["name", "subject"]
     )
 
+    # Debug: log what we found
+    frappe.logger().debug(f"get_boq_items_from_task: task={task_name}, child_tasks={[t.name for t in child_tasks]}")
+
+    task_subject = frappe.db.get_value("Task", task_name, "subject")
     for task in child_tasks:
 
         task_doc = frappe.get_doc("Task", task.name)
 
-        for row in task_doc.custom_bom_details:
+        bom_rows = task_doc.get("custom_bom_details") or []
+        frappe.logger().debug(f"  subtask={task.name}, bom_rows={len(bom_rows)}")
+
+        for row in bom_rows:
 
             boq_items.append({
-                "task": task_name,
-                "subtask": task.name,
-                "subtask_name": task.subject,
+                "task":task.subject,
+                "subtask": task.subject,
 
                 "item_code": row.item,
                 "item_type": row.item_type,
