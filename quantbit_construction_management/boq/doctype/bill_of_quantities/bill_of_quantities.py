@@ -66,10 +66,12 @@ def get_boq_items_from_task(task_name):
         for row in bom_rows:
 
             boq_items.append({
-                "task":task.subject,
-                "subtask": task.subject,
+                "task": task_name,
+                "subtask": task.name,
+                "subtask_name": task.subject,
 
                 "item_code": row.item,
+                "item_no": row.item_name,
                 "item_type": row.item_type,
 
                 "quantity": row.qty,
@@ -86,6 +88,41 @@ def get_boq_items_from_task(task_name):
                 "actual_amount": row.total_amount
             })
 
+    return boq_items
+
+@frappe.whitelist()
+def get_boq_items_from_subtask(subtask_name):
+    boq_items = []
+    task_doc = frappe.get_doc("Task", subtask_name)
+    
+    # If the task has a parent, it's a subtask. Otherwise it's a top-level task.
+    if task_doc.parent_task:
+        task_id = task_doc.parent_task
+        subtask_id = task_doc.name
+    else:
+        task_id = task_doc.name
+        subtask_id = ""
+
+    bom_rows = task_doc.get("custom_bom_details") or []
+    for row in bom_rows:
+        boq_items.append({
+            "task": task_id,
+            "subtask": subtask_id,
+            "subtask_name": task_doc.subject,
+            "item_code": row.item,
+            "item_no": row.item_name,
+            "item_type": row.item_type,
+            "quantity": row.qty,
+            "unit": row.uom,
+            "unit_rate": row.rate,
+            "amount": row.total_amount,
+            "internal_qty": row.qty,
+            "internal_rate": row.rate,
+            "internal_amount": row.total_amount,
+            "actual_qty": row.qty,
+            "actual_rate": row.rate,
+            "actual_amount": row.total_amount
+        })
     return boq_items
 
 @frappe.whitelist()
