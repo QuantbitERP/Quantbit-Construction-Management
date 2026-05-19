@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+import json
 from frappe.model.document import Document
 from frappe.utils.xlsxutils import build_xlsx_response, read_xlsx_file_from_attached_file
 
@@ -250,3 +251,83 @@ def import_boq_tasks(file_url, boq_name):
         doc.insert(ignore_permissions=True)
 
     return "Success"
+
+@frappe.whitelist()
+def create_stage_task(boq_name=None, selected_stages=None, values=None):
+        if isinstance(selected_stages, str):
+            selected_stages = json.loads(selected_stages)
+
+        created = []
+
+        for stage_name in selected_stages:
+
+            old_doc = frappe.get_doc("Task", stage_name)
+
+            new_doc = frappe.get_doc({
+                "doctype": "Task",
+                "subject": old_doc.subject,
+                "custom_is_stage": 1,
+                "is_group":1,
+                "custom_boq_name":boq_name
+            })
+
+            new_doc.insert(ignore_permissions=True)
+
+            created.append(new_doc.name)
+
+        return created
+
+@frappe.whitelist()
+def create_task(  boq_name=None,
+    selected_tasks=None,
+    parent_stage=None,
+    include_children=False):
+        if isinstance(selected_tasks, str):
+            selected_tasks = json.loads(selected_tasks)
+
+        created = []
+        # frappe.msgprint(stage)
+
+        for stage_name in selected_tasks:
+
+            old_doc = frappe.get_doc("Task", stage_name)
+
+            new_doc = frappe.get_doc({
+                "doctype": "Task",
+                "subject": old_doc.subject,
+                "custom_is_task": 1,
+                "is_group":1,
+                "custom_boq_name":boq_name,
+                "parent_task":parent_stage
+            })
+
+            new_doc.insert(ignore_permissions=True)
+
+            created.append(new_doc.name)
+
+        return created
+
+@frappe.whitelist()
+def create_subtask(boq_name=None, selected_stages=None, values=None,task=None):
+        if isinstance(selected_stages, str):
+            selected_stages = json.loads(selected_stages)
+
+        created = []
+
+        for stage_name in selected_stages:
+
+            old_doc = frappe.get_doc("Task", stage_name)
+
+            new_doc = frappe.get_doc({
+                "doctype": "Task",
+                "subject": old_doc.subject,
+                "custom_is_subtask": 1,
+                "custom_boq_name":boq_name,
+                "parent_task":task
+            })
+
+            new_doc.insert(ignore_permissions=True)
+
+            created.append(new_doc.name)
+
+        return created

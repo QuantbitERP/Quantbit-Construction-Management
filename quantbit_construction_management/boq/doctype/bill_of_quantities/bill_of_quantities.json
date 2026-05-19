@@ -9,6 +9,10 @@
  "engine": "InnoDB",
  "field_order": [
   "tab_3_tab",
+  "project",
+  "version",
+  "column_break_jhhi",
+  "title",
   "data_import_section",
   "document_type",
   "download_template",
@@ -22,12 +26,9 @@
   "section_break_swub",
   "naming_series",
   "section_identity",
-  "project",
   "currency",
   "contract_type",
   "col_break_ident1",
-  "title",
-  "version",
   "contract_value",
   "section_break_ekvb",
   "tasks_details",
@@ -250,13 +251,17 @@
   {
    "fieldname": "column_break_uzyx",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_jhhi",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-14 15:38:47.776629",
+ "modified": "2026-05-19 16:42:15.545101",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "Bill of Quantities",
