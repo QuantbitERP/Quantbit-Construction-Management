@@ -7,17 +7,18 @@
  "engine": "InnoDB",
  "field_order": [
   "task",
+  "task_subject",
   "item_type",
-  "cost_code",
   "column_break_pkiw",
   "subtask",
-  "uom",
-  "column_break_dykd",
   "subtask_name",
-  "rate",
-  "column_break_byoq",
+  "cost_code",
+  "column_break_dykd",
   "item_code",
+  "uom",
+  "column_break_byoq",
   "qty",
+  "rate",
   "column_break_htlu",
   "item_name",
   "amount"
@@ -87,9 +88,13 @@
   {
    "fieldname": "subtask_name",
    "fieldtype": "Data",
-   "label": "Subtask Name "
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Subtask Name ",
+   "reqd": 1
   },
   {
+   "fetch_from": "item_code.item_name",
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -119,13 +124,21 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Amount"
+  },
+  {
+   "fieldname": "task_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task Subject",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-15 17:39:40.691761",
+ "modified": "2026-05-19 15:44:12.979085",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender Item",
