@@ -48,7 +48,7 @@ frappe.ui.form.on("Bill of Quantities", {
         });
 
         // Display human-readable Subjects instead of raw Task IDs in the grid columns
-        frm.fields_dict.boq_items.grid.get_docfield("task").formatter = function(value, df, active_doc, row) {
+        frm.fields_dict.boq_items.grid.get_docfield("task").formatter = function (value, df, active_doc, row) {
             if (!value) return "";
             let task_row = (frm.doc.tasks_details || []).find(d => d.task === value);
             if (task_row && task_row.task_subject) {
@@ -57,7 +57,7 @@ frappe.ui.form.on("Bill of Quantities", {
             return value;
         };
 
-        frm.fields_dict.boq_items.grid.get_docfield("subtask").formatter = function(value, df, active_doc, row) {
+        frm.fields_dict.boq_items.grid.get_docfield("subtask").formatter = function (value, df, active_doc, row) {
             if (!value) return "";
             if (active_doc && active_doc.subtask_name) {
                 return active_doc.subtask_name;
@@ -703,16 +703,25 @@ function attach_events(frm, all_tasks) {
                 {
                     label: "Select Existing Stage",
                     fieldname: "existing_stage",
-                    fieldtype: "Link",
-                    options: "Task",
+                    fieldtype: "MultiCheck",
+                    columns: 3,
+                    options: []
 
-                    get_query() {
-                        return {
-                            filters: {
-                                custom_is_stage: 1
-                            }
-                        };
-                    }
+                },
+                {
+                    label: "Include Dependencies",
+                    fieldname: "include_dependencies",
+                    fieldtype: "Check",
+                    default: 0,
+                    depends_on: "eval:doc.existing_stage"
+                },
+
+                {
+                    label: "Include Subtasks",
+                    fieldname: "include_children",
+                    fieldtype: "Check",
+                    default: 0,
+                    depends_on: "eval:doc.existing_stage"
                 },
 
                 {
@@ -750,51 +759,31 @@ function attach_events(frm, all_tasks) {
 
             primary_action(values) {
 
-                // CASE 1: attach existing template stage
-                if (values.existing_stage) {
-
+                if (values.existing_stage && values.existing_stage.length) {
                     frappe.call({
-
-                        method: "frappe.client.set_value",
-
+                        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_stage_task",
                         args: {
-
-                            doctype: "Task",
-
-                            name: values.existing_stage,
-
-                            fieldname: {
-
-                                custom_boq_name: frm.doc.name,
-
-                                custom_is_stage: 1,
-
-                                is_group: 1
-
-                            }
-
+                            boq_name: frm.doc.name,
+                            selected_stages: values.existing_stage,
+                            values: values
                         },
 
-                        callback: function () {
+                        freeze: true,
+
+                        callback() {
 
                             frappe.show_alert({
-
-                                message: __("Existing Stage Linked"),
-
+                                message: __("Stages linked successfully"),
                                 indicator: "green"
-
                             });
 
                             d.hide();
 
                             load_hierarchy(frm);
-
                         }
 
                     });
-
                     return;
-
                 }
 
                 // CASE 2: create new stage
@@ -849,7 +838,61 @@ function attach_events(frm, all_tasks) {
 
         });
 
-        d.show();
+        // LOAD STAGES INTO MULTICHECK atharv
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Task",
+                filters: {
+                    custom_is_stage: 1
+                },
+                fields: ["name", "subject"],
+                limit_page_length: 100
+            },
+            callback: function (r) {
+
+                let options = (r.message || []).map(row => ({
+                    label: row.subject,
+                    value: row.name
+                }));
+
+                d.fields_dict.existing_stage.df.options = options;
+
+                d.fields_dict.existing_stage.refresh();
+
+                d.show();
+                setTimeout(() => {
+
+                    let wrapper = d.fields_dict.existing_stage.$wrapper;
+
+                    // MAIN SCROLLABLE AREA
+                    wrapper.find(".multi-check-container").css({
+                        "max-height": "320px",
+                        "overflow-y": "auto",
+                        "overflow-x": "hidden",
+                        "border": "1px solid #d1d8dd",
+                        "padding": "12px",
+                        "border-radius": "8px",
+                        "background": "#fafafa"
+                    });
+
+                    // 3 COLUMN GRID
+                    wrapper.find(".checkbox-options").css({
+                        "display": "grid",
+                        "grid-template-columns": "repeat(3, 1fr)",
+                        "gap": "8px 20px",
+                        "align-items": "start"
+                    });
+
+                    // EACH CHECKBOX ROW
+                    wrapper.find(".checkbox").css({
+                        "margin-bottom": "6px",
+                        "white-space": "nowrap"
+                    });
+
+                }, 100);
+            }
+        }); d.show();
 
     });
 
@@ -865,23 +908,9 @@ function attach_events(frm, all_tasks) {
                 {
                     label: "Select Existing Task",
                     fieldname: "existing_task",
-                    fieldtype: "Link",
-                    options: "Task",
-
-                    get_query() {
-
-
-                        return {
-
-                            // filters: {
-
-
-
-                            // }
-
-                        };
-
-                    }
+                    fieldtype: "MultiCheck",
+                    columns: 3,
+                    options: []
 
                 },
 
@@ -914,32 +943,33 @@ function attach_events(frm, all_tasks) {
             primary_action_label: "Add",
 
             primary_action(values) {
-
-                if (values.existing_task) {
-
+                if (values.existing_task && values.existing_task.length) {
                     frappe.call({
-                        method: "frappe.client.set_value",
+                        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_task",
                         args: {
-                            doctype: "Task",
-                            name: values.existing_task,
-                            fieldname: {
-                                parent_task: stage,
-                                custom_is_task: 1,
-                                custom_boq_name: frm.doc.name
-                            }
+                            boq_name: frm.doc.name,
+                            selected_tasks: values.existing_task,
+                            parent_stage: stage,
+                            include_children: 1
                         },
+
+                        freeze: true,
+
                         callback() {
 
-                            frappe.show_alert("Existing task linked");
+                            frappe.show_alert({
+                                message: __("Task linked successfully"),
+                                indicator: "green"
+                            });
 
                             d.hide();
 
                             load_hierarchy(frm);
-
                         }
-                    });
 
+                    });
                     return;
+
                 }
 
                 if (!values.subject || !values.task_weight) {
@@ -993,6 +1023,58 @@ function attach_events(frm, all_tasks) {
             }
 
         });
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Task",
+                filters: {
+                    custom_is_task: 1
+                },
+                fields: ["name", "subject"],
+                limit_page_length: 200
+            },
+            callback: function (r) {
+
+                let options = (r.message || []).map(row => ({
+                    label: row.subject,
+                    value: row.name
+                }));
+
+                d.fields_dict.existing_task.df.options = options;
+
+                d.fields_dict.existing_task.refresh();
+
+                d.show();
+
+                setTimeout(() => {
+
+                    let wrapper = d.fields_dict.existing_task.$wrapper;
+
+                    wrapper.find(".multi-check-container").css({
+                        "max-height": "320px",
+                        "overflow-y": "auto",
+                        "overflow-x": "hidden",
+                        "border": "1px solid #d1d8dd",
+                        "padding": "12px",
+                        "border-radius": "8px",
+                        "background": "#fafafa"
+                    });
+
+                    wrapper.find(".checkbox-options").css({
+                        "display": "grid",
+                        "grid-template-columns": "repeat(3, 1fr)",
+                        "gap": "8px 20px",
+                        "align-items": "start"
+                    });
+
+                    wrapper.find(".checkbox").css({
+                        "margin-bottom": "6px",
+                        "white-space": "nowrap"
+                    });
+
+                }, 100);
+            }
+        });
 
         d.show();
 
@@ -1012,8 +1094,9 @@ function attach_events(frm, all_tasks) {
                 {
                     label: "Select Existing Subtask",
                     fieldname: "existing_subtask",
-                    fieldtype: "Link",
-                    options: "Task",
+                    fieldtype: "MultiCheck",
+                    columns: 3,
+                    options: []
 
                 },
 
@@ -1052,38 +1135,32 @@ function attach_events(frm, all_tasks) {
 
             primary_action(values) {
 
-                // CASE 1: attach existing template subtask
-                if (values.existing_subtask) {
+                if (values.existing_subtask && values.existing_subtask.length) {
 
                     frappe.call({
-
-                        method: "frappe.client.set_value",
-
+                        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_subtask",
                         args: {
-                            doctype: "Task",
-                            name: values.existing_subtask,
-                            fieldname: {
-                                parent_task: parent_task,
-                                custom_boq_name: frm.doc.name,
-                                custom_is_subtask: 1
-                            }
+                            boq_name: frm.doc.name,
+                            selected_stages: values.existing_subtask,
+                            values: values,
+                            task: parent_task
                         },
+
+                        freeze: true,
 
                         callback() {
 
                             frappe.show_alert({
-                                message: "Existing subtask linked",
+                                message: __("Subtasks linked successfully"),
                                 indicator: "green"
                             });
 
                             d.hide();
 
                             load_hierarchy(frm);
-
                         }
 
                     });
-
                     return;
                 }
 
@@ -1144,7 +1221,58 @@ function attach_events(frm, all_tasks) {
 
         });
 
-        d.show();
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Task",
+                filters: {
+                    custom_is_subtask: 1
+                },
+                fields: ["name", "subject"],
+                limit_page_length: 200
+            },
+            callback: function (r) {
+
+                let options = (r.message || []).map(row => ({
+                    label: row.subject,
+                    value: row.name
+                }));
+
+                d.fields_dict.existing_subtask.df.options = options;
+
+                d.fields_dict.existing_subtask.refresh();
+
+                d.show();
+
+                setTimeout(() => {
+
+                    let wrapper = d.fields_dict.existing_subtask.$wrapper;
+
+                    wrapper.find(".multi-check-container").css({
+                        "max-height": "320px",
+                        "overflow-y": "auto",
+                        "overflow-x": "hidden",
+                        "border": "1px solid #d1d8dd",
+                        "padding": "12px",
+                        "border-radius": "8px",
+                        "background": "#fafafa"
+                    });
+
+                    wrapper.find(".checkbox-options").css({
+                        "display": "grid",
+                        "grid-template-columns": "repeat(3, 1fr)",
+                        "gap": "8px 20px",
+                        "align-items": "start"
+                    });
+
+                    wrapper.find(".checkbox").css({
+                        "margin-bottom": "6px",
+                        "white-space": "nowrap"
+                    });
+
+                }, 100);
+            }
+        });
 
     });
 
@@ -1556,7 +1684,7 @@ async function update_boq_items_for_subtask(frm, subtask_name) {
                 const child = frm.add_child("boq_items");
                 await frappe.model.set_value(child.doctype, child.name, d);
             }
-            
+
             frm.refresh_field("boq_items");
         }
     });
