@@ -2,13 +2,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-04-29 19:49:26.602945",
-  "name": "Reject",
-  "workflow_action_name": "Reject"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-04-30 00:45:51.939306",
   "name": "Mark Lost",
   "workflow_action_name": "Mark Lost"
@@ -65,13 +58,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-05-04 13:11:46.870578",
-  "name": "Pending Approval From Business Developer",
-  "workflow_action_name": "Pending Approval From Business Developer"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-05-04 13:12:34.206053",
   "name": "Pending For Commercial Approval",
   "workflow_action_name": "Pending For Commercial Approval"
@@ -96,5 +82,19 @@
   "modified": "2026-05-04 13:12:24.527403",
   "name": "Pending For Preliminary Approval",
   "workflow_action_name": "Pending For Preliminary Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-05-19 14:43:52.186747",
+  "name": "Go For Bid",
+  "workflow_action_name": "Go For Bid"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-05-19 14:44:09.118800",
+  "name": "Don't Go For Bid",
+  "workflow_action_name": "Don't Go For Bid"
  }
 ]
