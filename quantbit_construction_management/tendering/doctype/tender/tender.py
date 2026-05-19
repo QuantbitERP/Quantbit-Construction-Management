@@ -39,7 +39,7 @@ class Tender(Document):
 		
 		if (getattr(self, 'workflow_state', None) == "Alloted" and 
 			self.opportunity_from == "Lead" and 
-			self.party_name):
+			self.party_name and not self.customer_name):
 			
 			
 			if frappe.db.exists("Lead", self.party_name):
@@ -62,7 +62,7 @@ class Tender(Document):
 		if existing_customer:
 			
 			customer_doc = frappe.get_doc("Customer", existing_customer)
-			self.customer_name = customer_doc.customer_name
+			self.customer_name = customer_doc.name
 			self.save(ignore_permissions=True)
 			
 			return {
@@ -83,8 +83,8 @@ class Tender(Document):
 		
 		customer.insert(ignore_permissions=True)
 		
-		self.customer_name = customer.customer_name
-		# self.save(ignore_permissions=True)
+		self.customer_name = customer.name
+		self.save(ignore_permissions=True)
 		
 		return {
 			'customer': customer.name,

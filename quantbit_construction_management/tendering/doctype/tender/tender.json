@@ -857,7 +857,7 @@
   {
    "fieldname": "corriendum_details",
    "fieldtype": "Table",
-   "label": "Corriendum Details",
+   "label": "Corrigendum Details",
    "options": "Tender Corrigendum"
   },
   {
@@ -869,7 +869,8 @@
    "fieldname": "confidential_documents_details",
    "fieldtype": "Table",
    "label": "Confidential Documents Details",
-   "options": "Tender Confidential Documents"
+   "options": "Tender Confidential Documents",
+   "permlevel": 4
   },
   {
    "fieldname": "competitor_tab",
@@ -1035,7 +1036,7 @@
    "link_fieldname": "custom_reference_doc_name"
   }
  ],
- "modified": "2026-05-15 15:05:26.219322",
+ "modified": "2026-05-19 15:18:14.517364",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender",

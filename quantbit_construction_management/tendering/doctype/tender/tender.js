@@ -3,46 +3,50 @@
 
 
 frappe.ui.form.on("Tender", {
-    refresh:function(frm){
-        frm.set_query("opportunity_from", function () {
-			return {
-				filters: {
-					name: ["in", ["Customer", "Lead"]],
-				},
-			};
-		});
+    setup: function (frm) {
+        frm.add_fetch("task", "subject", "task_subject");
+    },
 
-        
+    refresh: function (frm) {
+        frm.set_query("opportunity_from", function () {
+            return {
+                filters: {
+                    name: ["in", ["Customer", "Lead"]],
+                },
+            };
+        });
+
+
         if (frm.doc.show_create_customer_button == 1) {
-            frm.add_custom_button(__('Create Customer'), function() {
+            frm.add_custom_button(__('Create Customer'), function () {
                 create_customer_from_lead(frm);
             });
         }
 
-        
-        
+
+
         if (frm.doc.workflow_state == "Alloted") {
-            frm.add_custom_button(__('Create Project'), function() {
+            frm.add_custom_button(__('Create Project'), function () {
                 show_project_creation_dialog(frm);
             });
         }
     },
-    total_ctc: function(frm) {
+    total_ctc: function (frm) {
         calculate_contract_values(frm);
     },
 
-    profit_on_ctc: function(frm) {
+    profit_on_ctc: function (frm) {
         calculate_contract_values(frm);
     },
-    
-    boq: function(frm) {
+
+    boq: function (frm) {
         if (frm.doc.boq) {
             frappe.call({
                 method: "quantbit_construction_management.tendering.doctype.tender.tender.get_boq_details",
                 args: {
                     boq: frm.doc.boq
                 },
-                callback: function(r) {
+                callback: function (r) {
                     if (r.message) {
                         frm.clear_table("boq_details");
                         r.message.forEach(item => {
@@ -84,18 +88,18 @@ function create_customer_from_lead(frm) {
     frappe.call({
         method: 'create_customer_from_lead',
         doc: frm.doc,
-        callback: function(r) {
+        callback: function (r) {
             if (r.message) {
                 frappe.show_alert({
                     message: r.message.message,
                     indicator: 'green'
                 });
-                
-                
+
+
                 frm.reload_doc();
             }
         },
-        error: function(r) {
+        error: function (r) {
             frappe.show_alert({
                 message: __('Error creating customer: ') + (r.responseJSON ? r.responseJSON.exc_type : r.statusText),
                 indicator: 'red'
@@ -108,7 +112,7 @@ function create_customer_from_lead(frm) {
 window.show_project_creation_dialog = show_project_creation_dialog;
 
 function show_project_creation_dialog(frm) {
-                
+
     var d = new frappe.ui.Dialog({
         title: 'Create Project',
         fields: [
@@ -118,17 +122,17 @@ function show_project_creation_dialog(frm) {
                 fieldtype: 'Data',
                 reqd: 1,
                 default: frm.doc.name,
-                change: function() {
+                change: function () {
                     var value = d.get_value('project_name');
                 }
             }
         ]
     });
-    
-    
-    d.set_primary_action('Create Project Document', function() {
+
+
+    d.set_primary_action('Create Project Document', function () {
         var project_name = d.get_value('project_name');
-        
+
         if (project_name && project_name.trim() !== '') {
             frappe.call({
                 method: 'quantbit_construction_management.tendering.doctype.tender.tender.create_project_from_tender',
@@ -136,14 +140,14 @@ function show_project_creation_dialog(frm) {
                     tender_name: frm.doc.name,
                     project_name: project_name
                 },
-                callback: function(response) {
+                callback: function (response) {
                     if (response && response.message) {
                         frappe.show_alert({
                             message: response.message.message,
                             indicator: 'green'
                         });
                         d.hide();
-                        
+
                         frm.reload_doc();
                     } else {
                         frappe.show_alert({
@@ -152,7 +156,7 @@ function show_project_creation_dialog(frm) {
                         });
                     }
                 },
-                error: function(r) {
+                error: function (r) {
                     frappe.show_alert({
                         message: __('Error creating project: ') + (r.responseJSON ? r.responseJSON.exc_type : r.statusText),
                         indicator: 'red'
@@ -166,6 +170,21 @@ function show_project_creation_dialog(frm) {
             });
         }
     });
-    
+
     d.show();
 }
+
+frappe.ui.form.on("Tender Item", {
+    task: function (frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+
+        if (row.task && !row.task_subject) {
+            frappe.db.get_value("Task", row.task, "subject")
+                .then(r => {
+                    if (r.message && r.message.subject) {
+                        frappe.model.set_value(cdt, cdn, "task_subject", r.message.subject);
+                    }
+                });
+        }
+    }
+});
