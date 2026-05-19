@@ -7,17 +7,17 @@
  "engine": "InnoDB",
  "field_order": [
   "description",
-  "column_break_mwuu",
+  "section_break_mmey",
   "comments",
-  "column_break_qrvr",
+  "column_break_mwuu",
   "attachments",
-  "column_break_wyac",
+  "column_break_qrvr",
   "team_remarks"
  ],
  "fields": [
   {
    "fieldname": "description",
-   "fieldtype": "Data",
+   "fieldtype": "Text Editor",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Description"
@@ -52,15 +52,15 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_wyac",
-   "fieldtype": "Column Break"
+   "fieldname": "section_break_mmey",
+   "fieldtype": "Section Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-13 14:48:04.823645",
+ "modified": "2026-05-19 14:42:04.486185",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Technical Qualification Details",
