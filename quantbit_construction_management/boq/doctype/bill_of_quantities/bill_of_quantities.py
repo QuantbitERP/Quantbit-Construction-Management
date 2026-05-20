@@ -332,3 +332,21 @@ def create_subtask(boq_name=None, selected_stages=None, values=None,task=None):
             created.append(new_doc.name)
 
         return created
+
+@frappe.whitelist()
+def delete_boq_tasks(boq_name):
+
+    tasks = frappe.get_all(
+        "Task",
+        filters={
+            "custom_boq_name": boq_name
+        },
+        pluck="name"
+    )
+
+    for task in tasks:
+        frappe.delete_doc("Task", task, force=1)
+
+    frappe.db.commit()
+
+    return True
