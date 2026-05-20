@@ -68,6 +68,7 @@ def get_boq_items_from_task(task_name):
 
             boq_items.append({
                 "task": task_name,
+                "task_subject":task_subject,
                 "subtask": task.name,
                 "subtask_name": task.subject,
 
