@@ -438,11 +438,17 @@ task: function(frm, cdt, cdn) {
         callback: function(r) {
 
             if (!r.message) return;
+            console.log("execustion check 1")
             console.log(r.message)
             // MATERIALS
             r.message.materials.forEach(d => {
 
                 let row = frm.add_child("material_deliveries");
+
+                row.parent_task = d.parent_task;
+                row.parent_task_subject = d.parent_task_subject;
+                row.task = d.task;
+                row.task_subject = d.task_subject;
                 row.item = d.item;
                 row.item_type = d.item_type;
                 row.unit = d.uom;
@@ -463,6 +469,7 @@ task: function(frm, cdt, cdn) {
                 let child = frm.add_child("manpower_log");
 
                 frappe.model.set_value(child.doctype, child.name, "parent_task", d.parent_task);
+                frappe.model.set_value(child.doctype, child.name, "parent_task_subject", d.parent_task_subject);
                 frappe.model.set_value(child.doctype, child.name, "task", d.task);
                 frappe.model.set_value(child.doctype, child.name, "task_subject", d.task_subject);
                 frappe.model.set_value(child.doctype, child.name, "item_type", d.item_type);
@@ -491,6 +498,7 @@ task: function(frm, cdt, cdn) {
 
                 let row = frm.add_child("equipment_log");
                 row.parent_task = d.parent_task;
+                row.parent_task_subject = d.parent_task_subject;
                 row.task = d.task;
                 row.task_subject = d.task_subject;
                 row.item = d.item;
@@ -507,3 +515,125 @@ task: function(frm, cdt, cdn) {
 
 
 });
+
+frappe.ui.form.on("Task Summary", {
+    task(frm, cdt, cdn) {
+        sync_all_task_tables(frm);
+    },
+
+    task_remove(frm, cdt, cdn) {
+        sync_all_task_tables(frm);
+    }
+});
+
+function sync_all_task_tables(frm) {
+    sync_activity_progress(frm);
+    sync_bom_tables(frm);
+}
+
+function get_selected_parent_tasks(frm) {
+    return (frm.doc.task || [])
+        .map(r => r.task)
+        .filter(Boolean);
+}
+
+function sync_activity_progress(frm) {
+    if (!frm.doc.task || !frm.doc.task.length) {
+        frm.clear_table("activity_progress");
+        frm.refresh_field("activity_progress");
+        return;
+    }
+
+    frappe.call({
+        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",
+        args: {
+            doc: frm.doc
+        },
+        callback(r) {
+            if (!r.message) return;
+
+            let new_data = r.message.activity_progress || [];
+            merge_child_table(frm, "activity_progress", new_data, ["parent_task", "task"]);
+
+            frm.refresh_field("activity_progress");
+        }
+    });
+}
+
+function sync_bom_tables(frm) {
+    let tasks = get_selected_parent_tasks(frm);
+
+    if (!tasks.length) {
+        frm.clear_table("material_deliveries");
+        frm.clear_table("manpower_log");
+        frm.clear_table("equipment_log");
+
+        frm.refresh_field("material_deliveries");
+        frm.refresh_field("manpower_log");
+        frm.refresh_field("equipment_log");
+        return;
+    }
+
+    frappe.call({
+        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_multiple_task_bom_details",
+        args: {
+            tasks: tasks
+        },
+        callback(r) {
+            if (!r.message) return;
+
+            merge_child_table(frm, "material_deliveries", r.message.materials || [], ["parent_task", "task", "item"]);
+            merge_child_table(frm, "manpower_log", r.message.manpower || [], ["parent_task", "task", "tradecategory"]);
+            merge_child_table(frm, "equipment_log", r.message.equipment || [], ["parent_task", "task", "item"]);
+
+            frm.refresh_field("material_deliveries");
+            frm.refresh_field("manpower_log");
+            frm.refresh_field("equipment_log");
+        }
+    });
+}
+
+function merge_child_table(frm, table_field, new_data, key_fields) {
+    let existing = frm.doc[table_field] || [];
+
+    let new_keys = new Set(
+        new_data.map(row => make_key(row, key_fields))
+    );
+
+    let old_rows_by_key = {};
+
+    existing.forEach(row => {
+        let key = make_key(row, key_fields);
+        if (new_keys.has(key)) {
+            old_rows_by_key[key] = row;
+        }
+    });
+
+    frm.clear_table(table_field);
+
+    new_data.forEach(new_row => {
+        let key = make_key(new_row, key_fields);
+        let old_row = old_rows_by_key[key] || {};
+
+        let child = frm.add_child(table_field);
+
+        Object.keys(new_row).forEach(field => {
+            child[field] = new_row[field];
+        });
+
+        // preserve manually filled values
+        Object.keys(old_row).forEach(field => {
+            if (
+                !["name", "idx", "doctype", "parent", "parenttype", "parentfield"].includes(field)
+                && old_row[field]
+                && !child[field]
+            ) {
+                child[field] = old_row[field];
+            }
+        });
+    });
+}
+
+function make_key(row, fields) {
+    return fields.map(f => row[f] || "").join("||");
+}

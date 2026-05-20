@@ -431,6 +431,7 @@ def update_daily_activity_progress_table(doc):
 			new_rows.append({
 
 				"parent_task": parent_row.task,
+				"parent_task_subject" : parent_task.subject,
 				"task": sub.task,
 				"task_subject":sub_task.subject,
 				"construction_type": sub_task.custom_construction_type,
@@ -458,6 +459,52 @@ def update_task_progress_from_dpr(task, achieved_qty, total_qty):
 
 	update_parent_progress(task)
 
+@frappe.whitelist()
+def get_multiple_task_bom_details(tasks):
+	tasks = frappe.parse_json(tasks)
+
+	materials = []
+	manpower = []
+	equipment = []
+	seen = set()
+
+	for parent_task in tasks:
+		data = get_task_bom_details(parent_task)
+
+		for row in data.get("materials", []):
+			key = (row.get("parent_task"), row.get("task"), row.get("item"))
+			if key not in seen:
+				seen.add(key)
+				materials.append(row)
+
+		for row in data.get("manpower", []):
+			row["tradecategory"] = row.get("item")
+
+			if row.get("item"):
+				row["daily_wages"] = frappe.db.get_value(
+					"Item",
+					row.get("item"),
+					"custom_daily_wages"
+				)
+
+			key = (row.get("parent_task"), row.get("task"), row.get("tradecategory"))
+			if key not in seen:
+				seen.add(key)
+				manpower.append(row)
+
+		for row in data.get("equipment", []):
+			row["equipment_name"] = row.get("item")
+
+			key = (row.get("parent_task"), row.get("task"), row.get("item"))
+			if key not in seen:
+				seen.add(key)
+				equipment.append(row)
+
+	return {
+		"materials": materials,
+		"manpower": manpower,
+		"equipment": equipment
+	}
 
 def update_parent_progress(task):
 
@@ -549,11 +596,14 @@ def get_task_bom_details(task):
 	for task_name in all_tasks:
 
 		doc = frappe.get_doc("Task", task_name)
+  
+		parent_task_subject = frappe.db.get_value("Task", doc.parent_task, "subject")
 
 		for d in doc.custom_bom_details:
 
 			row = {
 				"parent_task": doc.parent_task,
+				"parent_task_subject" : parent_task_subject,
 	            "task": task_name,
 	            "task_subject": doc.subject,
 				"item": d.item,
