@@ -719,7 +719,8 @@
   {
    "fieldname": "jvconsortium",
    "fieldtype": "Select",
-   "label": "JV/Consortium"
+   "label": "JV/Consortium",
+   "options": "Allowed\nNot Allowed"
   },
   {
    "fieldname": "contract_type",
@@ -1036,7 +1037,7 @@
    "link_fieldname": "custom_reference_doc_name"
   }
  ],
- "modified": "2026-05-19 15:18:14.517364",
+ "modified": "2026-05-20 13:39:46.541931",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender",

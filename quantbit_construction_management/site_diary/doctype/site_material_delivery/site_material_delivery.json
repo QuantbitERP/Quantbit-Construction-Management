@@ -6,12 +6,16 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "parent_task",
+  "parent_task_subject",
+  "task",
+  "task_subject",
   "item",
   "item_type",
-  "quantity",
   "unit",
-  "description",
   "column_break_mpwl",
+  "description",
+  "quantity",
   "supplier",
   "delivery_note",
   "inspection_required",
@@ -124,13 +128,39 @@
    "in_standard_filter": 1,
    "label": "Item Type",
    "options": "Item Type"
+  },
+  {
+   "fieldname": "parent_task",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Parent Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "parent_task_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Parent Task Subject"
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Task Subject"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-14 23:06:40.352760",
+ "modified": "2026-05-20 13:05:41.236720",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Material Delivery",
