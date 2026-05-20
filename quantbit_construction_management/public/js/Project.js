@@ -204,7 +204,7 @@ function load_hierarchy(frm) {
             fields: [
                 "name", "subject", "parent_task", "status", "priority",
                 "description", "task_weight", "custom_is_stage",
-                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date","progress"
+                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date","progress","custom_total_labour_cost","custom_total_equipment_cost"
             ],
             order_by: "creation asc",
             limit_page_length: 1000
@@ -238,6 +238,32 @@ function load_hierarchy(frm) {
                         }
                     });
                 });
+            });
+
+            Object.values(stages).forEach(stage => {
+
+                let stage_labour_total = 0;
+                let stage_equipment_total = 0;
+
+                stage.tasks.forEach(taskObj => {
+
+                    let task_labour_total = 0;
+                    let task_equipment_total = 0;
+
+                    taskObj.subtasks.forEach(sub => {
+                        task_labour_total += flt(sub.custom_total_labour_cost || 0);
+                        task_equipment_total += flt(sub.custom_total_equipment_cost || 0);
+                    });
+
+                    taskObj.data.custom_total_labour_cost = task_labour_total;
+                    taskObj.data.custom_total_equipment_cost = task_equipment_total;
+
+                    stage_labour_total += task_labour_total;
+                    stage_equipment_total += task_equipment_total;
+                });
+
+                stage.data.custom_total_labour_cost = stage_labour_total;
+                stage.data.custom_total_equipment_cost = stage_equipment_total;
             });
 
             let html = `<div style="padding:15px;">
@@ -358,6 +384,18 @@ function render_row(item, type, is_expanded) {
     </div>
     `;
 
+    let cost_html = "";
+
+    if (type === "stage" || type === "task" || type === "subtask") {
+        cost_html = `
+            <div style="font-size:11px; margin-top:4px; opacity:0.9;">
+                Labour Cost: ₹ ${flt(item.custom_total_labour_cost || 0).toFixed(2)}
+                &nbsp; | &nbsp;
+                Equipment Cost: ₹ ${flt(item.custom_total_equipment_cost || 0).toFixed(2)}
+            </div>
+        `;
+    }
+
     return `
     <div class="hierarchy-row" data-name="${item.name}" data-type="${type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:${color}; border-left: 6px solid ${border_color}; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
       
@@ -375,7 +413,8 @@ function render_row(item, type, is_expanded) {
         <div>
           <div style="font-weight:600; font-size:${type === 'stage' ? '16px' : '14px'};">${item.subject}</div>
           <div style="font-size:11px; opacity:0.7;">${item.name}</div>
-           ${progress_bar}
+            ${progress_bar}
+            ${cost_html}
         </div>
       </div>
 
