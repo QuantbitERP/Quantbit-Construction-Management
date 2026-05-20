@@ -320,7 +320,8 @@ function validate_total_weight(frm, new_weight, exclude_task = null) {
             doctype: "Task",
             filters: {
                 custom_boq_name: frm.doc.name,
-                custom_is_task: 1
+                custom_is_task: 1,
+
             },
             fields: ["task_weight"]
         }
@@ -416,7 +417,10 @@ function load_hierarchy(frm) {
         method: "frappe.client.get_list",
         args: {
             doctype: "Task",
-            filters: { custom_boq_name: frm.doc.name },
+            filters: {
+                custom_boq_name: frm.doc.name
+
+            },
             fields: [
                 "name", "subject", "parent_task", "status", "priority",
                 "description", "task_weight", "custom_is_stage",
@@ -570,7 +574,7 @@ function calculate_project_progress(tasks) {
 
 function render_row(item, type, is_expanded) {
     let margin = type === "stage" ? "0px" : (type === "task" ? "25px" : "60px");
-    let bg = type === "stage" ? "#1E88E5" : (type === "task" ? "#E3F2FD" : "#F5F5F5");
+    let bg = type === "stage" ? "#1a365d" : (type === "task" ? "#f6e05e" : "#edf2f7");
     let color = type === "stage" ? "white" : "#333";
     let btnClass = type === "stage" ? "btn-light" : "btn-default";
 
@@ -613,7 +617,8 @@ function render_row(item, type, is_expanded) {
         <button class="btn ${btnClass} btn-xs redirect-item" data-name="${item.name}" title="Open Form View"> Redirect</button>
         <button class="btn ${btnClass} btn-xs edit-item" data-name="${item.name}">✏ Edit</button>
         <button class="btn ${btnClass} btn-xs assign-item" data-name="${item.name}">👤 Assign</button>
-        ${type === "subtask" ? `<button class="btn btn-info btn-xs show-bom" data-name="${item.name}">📦 BOM</button>` : ""}
+        <button class="btn ${btnClass} btn-xs delete-item" data-name="${item.name}">🗑 Delete</button>     
+        ${type === "subtask" ? `<button class="btn btn-light btn-xs show-bom" data-name="${item.name}">📦 BOQ</button>` : ""}
         ${type === "stage" ? `<button class="btn btn-light btn-xs add-task" data-stage="${item.name}">+ Task</button>` : ""}
         ${type === "task" ? `<button class="btn btn-default btn-xs add-subtask" data-task="${item.name}">+ Subtask</button>` : ""}
           
@@ -704,24 +709,9 @@ function attach_events(frm, all_tasks) {
                     label: "Select Existing Stage",
                     fieldname: "existing_stage",
                     fieldtype: "MultiCheck",
-                    columns: 3,
+                    columns: 1,
                     options: []
 
-                },
-                {
-                    label: "Include Dependencies",
-                    fieldname: "include_dependencies",
-                    fieldtype: "Check",
-                    default: 0,
-                    depends_on: "eval:doc.existing_stage"
-                },
-
-                {
-                    label: "Include Subtasks",
-                    fieldname: "include_children",
-                    fieldtype: "Check",
-                    default: 0,
-                    depends_on: "eval:doc.existing_stage"
                 },
 
                 {
@@ -745,6 +735,12 @@ function attach_events(frm, all_tasks) {
                     label: "Weight",
                     fieldname: "task_weight",
                     fieldtype: "Float"
+                },
+                {
+                    label: "Is Template",
+                    fieldname: "is_template",
+                    fieldtype: "Check",
+                    default: 0
                 },
 
                 {
@@ -795,6 +791,97 @@ function attach_events(frm, all_tasks) {
 
                 }
 
+                validate_total_weight(frm, values.task_weight)
+                    .then(result => {
+
+                        if (!result.valid) {
+
+                            frappe.msgprint({
+                                title: __("Weight Limit Exceeded"),
+                                message: __("Stage weight exceeds 100%"),
+                                indicator: "red"
+                            });
+
+                            return;
+                        }
+
+                        let main_doc = {
+                            doctype: "Task",
+                            subject: values.subject,
+                            custom_boq_name: frm.doc.name,
+                            custom_is_stage: 1,
+                            is_group: 1,
+                            task_weight: values.task_weight,
+                            description: values.description,
+                            is_template: 0
+                        };
+
+                        // CREATE MAIN STAGE
+                        frappe.call({
+
+                            method: "frappe.client.insert",
+
+                            args: {
+                                doc: main_doc
+                            },
+
+                            callback: function () {
+
+                                // IF TEMPLATE CHECKED
+                                if (values.is_template) {
+
+                                    let template_doc = {
+                                        doctype: "Task",
+                                        subject: values.subject,
+                                        custom_is_stage: 1,
+                                        is_group: 1,
+                                        task_weight: values.task_weight,
+                                        description: values.description,
+                                        is_template: 1
+                                    };
+
+                                    frappe.call({
+
+                                        method: "frappe.client.insert",
+
+                                        args: {
+                                            doc: template_doc
+                                        },
+
+                                        callback: function () {
+
+                                            frappe.show_alert({
+                                                message: __("Stage Created"),
+                                                indicator: "green"
+                                            });
+
+                                            d.hide();
+
+                                            load_hierarchy(frm);
+
+                                        }
+
+                                    });
+
+                                } else {
+
+                                    frappe.show_alert({
+                                        message: __("Stage Created"),
+                                        indicator: "green"
+                                    });
+
+                                    d.hide();
+
+                                    load_hierarchy(frm);
+
+                                }
+
+                            }
+
+                        });
+
+                    });
+
                 function validate_total_weight(frm, new_weight, old_weight = 0, parent_task = null) {
 
                     return new Promise(resolve => {
@@ -838,13 +925,13 @@ function attach_events(frm, all_tasks) {
 
         });
 
-        // LOAD STAGES INTO MULTICHECK atharv
         frappe.call({
             method: "frappe.client.get_list",
             args: {
                 doctype: "Task",
                 filters: {
-                    custom_is_stage: 1
+                    custom_is_stage: 1,
+                    is_template: 1
                 },
                 fields: ["name", "subject"],
                 limit_page_length: 100
@@ -862,31 +949,39 @@ function attach_events(frm, all_tasks) {
 
                 d.show();
                 setTimeout(() => {
-
                     let wrapper = d.fields_dict.existing_stage.$wrapper;
 
-                    // MAIN SCROLLABLE AREA
-                    wrapper.find(".multi-check-container").css({
-                        "max-height": "320px",
-                        "overflow-y": "auto",
-                        "overflow-x": "hidden",
+                    // OUTER BOX
+                    wrapper.find(".control-input-wrapper").css({
                         "border": "1px solid #d1d8dd",
-                        "padding": "12px",
                         "border-radius": "8px",
-                        "background": "#fafafa"
+                        "background": "#fafafa",
+                        "padding": "8px",
+                        "height": "250px",
+                        "overflow": "hidden"
                     });
 
-                    // 3 COLUMN GRID
+                    // SCROLLABLE AREA
                     wrapper.find(".checkbox-options").css({
-                        "display": "grid",
-                        "grid-template-columns": "repeat(3, 1fr)",
-                        "gap": "8px 20px",
-                        "align-items": "start"
+                        "height": "220px",
+                        "overflow-y": "scroll",
+                        "overflow-x": "hidden",
+
+                        // LEFT SIDE SCROLLBAR
+                        "direction": "rtl",
+
+                        // LAYOUT
+                        "display": "flex",
+                        "flex-direction": "column",
+                        "gap": "8px",
+
+                        "padding-left": "5px"
                     });
 
-                    // EACH CHECKBOX ROW
+                    // TEXT BACK TO NORMAL
                     wrapper.find(".checkbox").css({
-                        "margin-bottom": "6px",
+                        "direction": "ltr",
+                        "margin-bottom": "4px",
                         "white-space": "nowrap"
                     });
 
@@ -909,7 +1004,7 @@ function attach_events(frm, all_tasks) {
                     label: "Select Existing Task",
                     fieldname: "existing_task",
                     fieldtype: "MultiCheck",
-                    columns: 3,
+                    columns: 1,
                     options: []
 
                 },
@@ -930,6 +1025,12 @@ function attach_events(frm, all_tasks) {
                     label: "Weight",
                     fieldname: "task_weight",
                     fieldtype: "Float"
+                },
+                {
+                    label: "Is Template",
+                    fieldname: "is_template",
+                    fieldtype: "Check",
+                    default: 0
                 },
 
                 {
@@ -989,30 +1090,75 @@ function attach_events(frm, all_tasks) {
                             return;
                         }
 
+                        let main_doc = {
+                            doctype: "Task",
+                            subject: values.subject,
+                            custom_boq_name: frm.doc.name,
+                            parent_task: stage,
+                            custom_is_task: 1,
+                            is_group: 1,
+                            task_weight: values.task_weight,
+                            description: values.description,
+                            is_template: 0
+                        };
+
                         frappe.call({
 
                             method: "frappe.client.insert",
 
                             args: {
-                                doc: {
-                                    doctype: "Task",
-                                    subject: values.subject,
-                                    custom_boq_name: frm.doc.name,
-                                    parent_task: stage,
-                                    custom_is_task: 1,
-                                    is_group: 1,
-                                    task_weight: values.task_weight,
-                                    description: values.description
-                                }
+                                doc: main_doc
                             },
 
-                            callback() {
+                            callback: function () {
 
-                                frappe.show_alert("Task Created");
+                                if (values.is_template) {
 
-                                d.hide();
+                                    let template_doc = {
+                                        doctype: "Task",
+                                        subject: values.subject,
+                                        custom_is_task: 1,
+                                        is_group: 1,
+                                        task_weight: values.task_weight,
+                                        description: values.description,
+                                        is_template: 1
+                                    };
 
-                                load_hierarchy(frm);
+                                    frappe.call({
+
+                                        method: "frappe.client.insert",
+
+                                        args: {
+                                            doc: template_doc
+                                        },
+
+                                        callback: function () {
+
+                                            frappe.show_alert({
+                                                message: __("Task Created"),
+                                                indicator: "green"
+                                            });
+
+                                            d.hide();
+
+                                            load_hierarchy(frm);
+
+                                        }
+
+                                    });
+
+                                } else {
+
+                                    frappe.show_alert({
+                                        message: __("Task Created"),
+                                        indicator: "green"
+                                    });
+
+                                    d.hide();
+
+                                    load_hierarchy(frm);
+
+                                }
 
                             }
 
@@ -1028,7 +1174,8 @@ function attach_events(frm, all_tasks) {
             args: {
                 doctype: "Task",
                 filters: {
-                    custom_is_task: 1
+                    custom_is_task: 1,
+                    is_template: 1
                 },
                 fields: ["name", "subject"],
                 limit_page_length: 200
@@ -1050,25 +1197,37 @@ function attach_events(frm, all_tasks) {
 
                     let wrapper = d.fields_dict.existing_task.$wrapper;
 
-                    wrapper.find(".multi-check-container").css({
-                        "max-height": "320px",
-                        "overflow-y": "auto",
-                        "overflow-x": "hidden",
+                    // OUTER BOX
+                    wrapper.find(".control-input-wrapper").css({
                         "border": "1px solid #d1d8dd",
-                        "padding": "12px",
                         "border-radius": "8px",
-                        "background": "#fafafa"
+                        "background": "#fafafa",
+                        "padding": "8px",
+                        "height": "250px",
+                        "overflow": "hidden"
                     });
 
+                    // SCROLLABLE AREA
                     wrapper.find(".checkbox-options").css({
-                        "display": "grid",
-                        "grid-template-columns": "repeat(3, 1fr)",
-                        "gap": "8px 20px",
-                        "align-items": "start"
+                        "height": "220px",
+                        "overflow-y": "scroll",
+                        "overflow-x": "hidden",
+
+                        // LEFT SCROLLBAR
+                        "direction": "rtl",
+
+                        // LAYOUT
+                        "display": "flex",
+                        "flex-direction": "column",
+                        "gap": "8px",
+
+                        "padding-left": "5px"
                     });
 
+                    // TEXT NORMAL
                     wrapper.find(".checkbox").css({
-                        "margin-bottom": "6px",
+                        "direction": "ltr",
+                        "margin-bottom": "4px",
                         "white-space": "nowrap"
                     });
 
@@ -1095,7 +1254,7 @@ function attach_events(frm, all_tasks) {
                     label: "Select Existing Subtask",
                     fieldname: "existing_subtask",
                     fieldtype: "MultiCheck",
-                    columns: 3,
+                    columns: 1,
                     options: []
 
                 },
@@ -1121,6 +1280,12 @@ function attach_events(frm, all_tasks) {
                     label: "Weight",
                     fieldname: "task_weight",
                     fieldtype: "Float"
+                },
+                {
+                    label: "Is Template",
+                    fieldname: "is_template",
+                    fieldtype: "Check",
+                    default: 0
                 },
 
                 {
@@ -1184,32 +1349,73 @@ function attach_events(frm, all_tasks) {
 
                         }
 
+                        let main_doc = {
+                            doctype: "Task",
+                            subject: values.subject,
+                            custom_boq_name: frm.doc.name,
+                            parent_task: parent_task,
+                            custom_is_subtask: 1,
+                            task_weight: values.task_weight,
+                            description: values.description,
+                            is_template: 0
+                        };
+
                         frappe.call({
 
                             method: "frappe.client.insert",
 
                             args: {
-                                doc: {
-                                    doctype: "Task",
-                                    subject: values.subject,
-                                    custom_boq_name: frm.doc.name,
-                                    parent_task: parent_task,
-                                    custom_is_subtask: 1,
-                                    task_weight: values.task_weight,
-                                    description: values.description
-                                }
+                                doc: main_doc
                             },
 
-                            callback() {
+                            callback: function () {
 
-                                frappe.show_alert({
-                                    message: "Subtask Created",
-                                    indicator: "green"
-                                });
+                                if (values.is_template) {
 
-                                d.hide();
+                                    let template_doc = {
+                                        doctype: "Task",
+                                        subject: values.subject,
+                                        custom_is_subtask: 1,
+                                        task_weight: values.task_weight,
+                                        description: values.description,
+                                        is_template: 1
+                                    };
 
-                                load_hierarchy(frm);
+                                    frappe.call({
+
+                                        method: "frappe.client.insert",
+
+                                        args: {
+                                            doc: template_doc
+                                        },
+
+                                        callback: function () {
+
+                                            frappe.show_alert({
+                                                message: __("Subtask + Template Created"),
+                                                indicator: "green"
+                                            });
+
+                                            d.hide();
+
+                                            load_hierarchy(frm);
+
+                                        }
+
+                                    });
+
+                                } else {
+
+                                    frappe.show_alert({
+                                        message: __("Subtask Created"),
+                                        indicator: "green"
+                                    });
+
+                                    d.hide();
+
+                                    load_hierarchy(frm);
+
+                                }
 
                             }
 
@@ -1226,7 +1432,8 @@ function attach_events(frm, all_tasks) {
             args: {
                 doctype: "Task",
                 filters: {
-                    custom_is_subtask: 1
+                    custom_is_subtask: 1,
+                    is_template: 1
                 },
                 fields: ["name", "subject"],
                 limit_page_length: 200
@@ -1248,25 +1455,37 @@ function attach_events(frm, all_tasks) {
 
                     let wrapper = d.fields_dict.existing_subtask.$wrapper;
 
-                    wrapper.find(".multi-check-container").css({
-                        "max-height": "320px",
-                        "overflow-y": "auto",
-                        "overflow-x": "hidden",
+                    // OUTER BOX
+                    wrapper.find(".control-input-wrapper").css({
                         "border": "1px solid #d1d8dd",
-                        "padding": "12px",
                         "border-radius": "8px",
-                        "background": "#fafafa"
+                        "background": "#fafafa",
+                        "padding": "8px",
+                        "height": "250px",
+                        "overflow": "hidden"
                     });
 
+                    // SCROLLABLE AREA
                     wrapper.find(".checkbox-options").css({
-                        "display": "grid",
-                        "grid-template-columns": "repeat(3, 1fr)",
-                        "gap": "8px 20px",
-                        "align-items": "start"
+                        "height": "220px",
+                        "overflow-y": "scroll",
+                        "overflow-x": "hidden",
+
+                        // LEFT SCROLLBAR
+                        "direction": "rtl",
+
+                        // LAYOUT
+                        "display": "flex",
+                        "flex-direction": "column",
+                        "gap": "8px",
+
+                        "padding-left": "5px"
                     });
 
+                    // TEXT NORMAL
                     wrapper.find(".checkbox").css({
-                        "margin-bottom": "6px",
+                        "direction": "ltr",
+                        "margin-bottom": "4px",
                         "white-space": "nowrap"
                     });
 
@@ -1501,6 +1720,111 @@ function attach_events(frm, all_tasks) {
         });
     });
 
+    // DELETE ITEM
+    // DELETE ITEM
+    wrapper.find(".delete-item").off("click").on("click", function (e) {
+
+        e.stopPropagation();
+
+        let docname = $(this).data("name");
+
+        let type = $(this).data("type");
+
+        // CHECK CHILDREN
+        let has_children = all_tasks.some(t => t.parent_task === docname);
+
+        if (has_children) {
+
+            frappe.msgprint({
+                title: __("Cannot Delete"),
+                message: __("This item has children (Tasks or Subtasks). Please delete children first."),
+                indicator: "orange"
+            });
+
+            return;
+        }
+
+        frappe.confirm(
+
+            __("Are you sure you want to delete this {0}?", [type]),
+
+            function () {
+
+                // STEP 1: DELETE DEPENDENCIES
+                frappe.call({
+
+                    method: "frappe.client.get_list",
+
+                    args: {
+                        doctype: "Task Depends On",
+                        filters: {
+                            task: docname
+                        },
+                        fields: ["name"]
+                    },
+
+                    callback: function (r) {
+
+                        let dependency_rows = r.message || [];
+
+                        let promises = [];
+
+                        dependency_rows.forEach(dep => {
+
+                            promises.push(
+
+                                frappe.call({
+                                    method: "frappe.client.delete",
+                                    args: {
+                                        doctype: "Task Depends On",
+                                        name: dep.name
+                                    }
+                                })
+
+                            );
+
+                        });
+
+                        Promise.all(promises).then(() => {
+
+                            // STEP 2: DELETE TASK
+                            frappe.call({
+
+                                method: "frappe.client.delete",
+
+                                args: {
+                                    doctype: "Task",
+                                    name: docname
+                                },
+
+                                freeze: true,
+                                freeze_message: __("Deleting..."),
+
+                                callback: function () {
+
+                                    frappe.show_alert({
+                                        message: __("{0} deleted successfully", [type]),
+                                        indicator: "red"
+                                    });
+
+                                    load_hierarchy(frm);
+
+                                }
+
+                            });
+
+                        });
+
+                    }
+
+                });
+
+            }
+
+        );
+
+    });
+
     // SHOW BOM DIALOG
     wrapper.find(".show-bom").off("click").on("click", function (e) {
         e.stopPropagation();
@@ -1522,7 +1846,7 @@ function show_bom_dialog(frm, task_name) {
         console.log("Task Doc Loaded:", task_doc);
 
         let d = new frappe.ui.Dialog({
-            title: __("BOM Details: {0}", [task_doc.subject || task_name]),
+            title: __("BOQ Details: {0}", [task_doc.subject || task_name]),
             size: "large",
             fields: [
                 {
@@ -1540,20 +1864,6 @@ function show_bom_dialog(frm, task_name) {
                             columns: 2
                         },
                         {
-                            fieldname: "item_name",
-                            fieldtype: "Data",
-                            label: __("Item Name"),
-                            in_list_view: 1,
-                            columns: 3
-                        },
-                        {
-                            fieldname: "qty",
-                            fieldtype: "Float",
-                            label: __("Qty"),
-                            in_list_view: 1,
-                            columns: 2
-                        },
-                        {
                             fieldname: "uom",
                             fieldtype: "Link",
                             options: "UOM",
@@ -1562,9 +1872,24 @@ function show_bom_dialog(frm, task_name) {
                             columns: 2
                         },
                         {
+                            fieldname: "qty",
+                            fieldtype: "Float",
+                            label: __("Qty"),
+                            in_list_view: 1,
+                            columns: 2
+                        },
+
+                        {
                             fieldname: "rate",
                             fieldtype: "Float",
                             label: __("Rate"),
+                            in_list_view: 1,
+                            columns: 2
+                        },
+                        {
+                            fieldname: "amount",
+                            fieldtype: "Float",
+                            label: __("Amount"),
                             in_list_view: 1,
                             columns: 2
                         }
@@ -1602,8 +1927,30 @@ function show_bom_dialog(frm, task_name) {
             d.fields_dict.custom_bom_details.df.data = task_doc.custom_bom_details;
             d.fields_dict.custom_bom_details.grid.refresh();
         }
-
         d.show();
+        d.fields_dict.custom_bom_details.grid.wrapper.on(
+            "focusout",
+            ".input-sm",
+            function () {
+
+                let grid_row = $(this).closest(".grid-row");
+
+                let row_name = grid_row.attr("data-name");
+
+                if (!row_name) return;
+
+                let row = locals["Task BOQ Details"][row_name];
+
+                if (!row) return;
+
+                row.amount = flt(row.qty) * flt(row.rate);
+
+                // IMPORTANT
+                d.fields_dict.custom_bom_details.grid.grid_rows_by_docname[row_name]
+                    .refresh_field("amount");
+
+            }
+        );
     });
 }
 

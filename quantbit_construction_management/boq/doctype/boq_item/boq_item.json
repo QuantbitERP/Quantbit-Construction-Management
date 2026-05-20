@@ -8,10 +8,11 @@
  "field_order": [
   "section_identity",
   "task",
+  "task_subject",
   "subtask",
   "subtask_name",
-  "item_code",
   "col_break_ident1",
+  "item_code",
   "item_no",
   "item_type",
   "cost_code",
@@ -242,13 +243,20 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Subtask Name"
+  },
+  {
+   "fieldname": "task_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task Subject"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-16 09:00:07.129594",
+ "modified": "2026-05-20 11:38:41.903237",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "BOQ Item",
