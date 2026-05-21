@@ -68,7 +68,6 @@
   {
    "fieldname": "task",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Task",
    "link_filters": "[[\"Task\",\"custom_is_task\",\"=\",1]]",
@@ -78,8 +77,6 @@
   {
    "fieldname": "subtask",
    "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Subtask",
    "link_filters": "[[\"Task\",\"custom_is_subtask\",\"=\",1]]",
    "options": "Task",
@@ -138,7 +135,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-19 15:44:12.979085",
+ "modified": "2026-05-21 15:15:19.882306",
  "modified_by": "Administrator",
  "module": "Tendering",
  "name": "Tender Item",

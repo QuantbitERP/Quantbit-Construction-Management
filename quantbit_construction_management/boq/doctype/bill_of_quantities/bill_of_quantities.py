@@ -104,12 +104,14 @@ def get_boq_items_from_subtask(subtask_name):
     else:
         task_id = task_doc.name
         subtask_id = ""
+    task_subject = frappe.db.get_value("Task", task_id, "subject")
 
     bom_rows = task_doc.get("custom_bom_details") or []
     for row in bom_rows:
         boq_items.append({
             "task": task_id,
             "subtask": subtask_id,
+            "task_subject": task_subject,
             "subtask_name": task_doc.subject,
             "item_code": row.item,
             "item_no": row.item_name,
