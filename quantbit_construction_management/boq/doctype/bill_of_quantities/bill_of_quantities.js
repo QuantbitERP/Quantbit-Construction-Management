@@ -1,5 +1,30 @@
 frappe.ui.form.on("Bill of Quantities", {
+
     refresh(frm) {
+        if (
+            frm.doc.import_file &&
+            (frm.doc.tasks_details || []).length
+        ) {
+
+            frm.set_df_property("import_file", "read_only", 1);
+
+            setTimeout(() => {
+
+                frm.fields_dict.import_file.$wrapper
+                    .find('[data-action="clear_attachment"]')
+                    .hide();
+
+                frm.fields_dict.import_file.$wrapper
+                    .find(".close")
+                    .hide();
+
+                frm.fields_dict.import_file.$wrapper
+                    .find(".attached-file .btn")
+                    .hide();
+
+            }, 500);
+        }
+
         if (!frm.doc.document_type) {
             frm.set_value("document_type", "Task");
         }
@@ -8,7 +33,16 @@ frappe.ui.form.on("Bill of Quantities", {
         }
         render_combined_boq(frm);
 
-        if (frm.doc.import_file) {
+        // if (frm.doc.import_file && frm.doc.docstatus !== 1) 
+        let has_imported_tasks =
+            (frm.doc.tasks_details || []).length > 0;
+
+        if (
+            frm.doc.import_file &&
+            !has_imported_tasks &&
+            frm.doc.docstatus !== 1
+        ) {
+
             frm.add_custom_button(__("Import Tasks"), () => {
                 frappe.call({
                     method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.import_boq_tasks",
@@ -20,11 +54,42 @@ frappe.ui.form.on("Bill of Quantities", {
                     freeze_message: __("Importing Tasks hierarchically..."),
                     callback: function (r) {
                         if (!r.exc) {
-                            frappe.msgprint({
-                                title: __('Success'),
-                                indicator: 'green',
-                                message: __('Tasks imported successfully.')
+
+                            frappe.show_alert({
+                                message: __("Tasks imported successfully."),
+                                indicator: "green"
                             });
+
+                            // MARK IMPORTED
+                            frm.import_completed = true;
+
+                            // REMOVE BUTTON
+                            frm.remove_custom_button(__("Import Tasks"));
+
+                            // READONLY ATTACH
+                            frm.set_df_property("import_file", "read_only", 1);
+
+                            // HIDE CLEAR BUTTON
+                            setTimeout(() => {
+
+                                // HIDE CLEAR BUTTON
+                                frm.fields_dict.import_file.$wrapper
+                                    .find('[data-action="clear_attachment"]')
+                                    .hide();
+
+                                // HIDE REMOVE ICON
+                                frm.fields_dict.import_file.$wrapper
+                                    .find(".close")
+                                    .hide();
+
+                                // HIDE CLEAR TEXT
+                                frm.fields_dict.import_file.$wrapper
+                                    .find(".attached-file .btn")
+                                    .hide();
+
+                            }, 500);
+
+                            // RELOAD DOC
                             frm.reload_doc();
                         }
                     }
@@ -67,6 +132,64 @@ frappe.ui.form.on("Bill of Quantities", {
 
         sync_tasks_details(frm);
     },
+
+    import_file(frm) {
+        let imported_already =
+            (frm.doc.tasks_details || []).length > 0;
+        // FILE UPLOADED
+        if (frm.doc.import_file) {
+
+            frm.set_df_property("import_file", "read_only", 0);
+
+            frm.trigger("refresh");
+
+            return;
+        }
+
+        // FILE CLEARED
+        if (
+            !frm.doc.import_file &&
+            (frm.doc.tasks_details || []).length
+        ) {
+
+            frappe.confirm(
+
+                __("Remove imported tasks and BOQ items?"),
+
+                function () {
+
+                    frappe.call({
+
+                        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.delete_boq_tasks",
+
+                        args: {
+                            boq_name: frm.doc.name
+                        },
+
+                        callback: function () {
+
+                            frm.clear_table("tasks_details");
+                            frm.clear_table("boq_items");
+
+                            frm.refresh_field("tasks_details");
+                            frm.refresh_field("boq_items");
+
+                            load_hierarchy(frm);
+
+                            frappe.show_alert({
+                                message: __("Imported tasks removed"),
+                                indicator: "red"
+                            });
+
+                            frm.refresh();
+                        }
+                    });
+
+                }
+            );
+        }
+    },
+
     download_template: function (frm) {
         open_url_post("/api/method/quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.download_boq_task_template", {});
     }
@@ -574,7 +697,7 @@ function calculate_project_progress(tasks) {
 
 function render_row(item, type, is_expanded) {
     let margin = type === "stage" ? "0px" : (type === "task" ? "25px" : "60px");
-    let bg = type === "stage" ? "#1a365d" : (type === "task" ? "#f6e05e" : "#edf2f7");
+    let bg = type === "stage" ? "#1a365d" : (type === "task" ? "#e9c46a" : "#fdf6e3");
     let color = type === "stage" ? "white" : "#333";
     let btnClass = type === "stage" ? "btn-light" : "btn-default";
 
@@ -613,20 +736,62 @@ function render_row(item, type, is_expanded) {
         </div>
       </div>
 
-      <div style="display:flex; gap:5px; align-items:center;">
-        <button class="btn ${btnClass} btn-xs redirect-item" data-name="${item.name}" title="Open Form View"> Redirect</button>
-        <button class="btn ${btnClass} btn-xs edit-item" data-name="${item.name}">✏ Edit</button>
-        <button class="btn ${btnClass} btn-xs assign-item" data-name="${item.name}">👤 Assign</button>
-        <button class="btn ${btnClass} btn-xs delete-item" data-name="${item.name}">🗑 Delete</button>     
-        ${type === "subtask" ? `<button class="btn btn-light btn-xs show-bom" data-name="${item.name}">📦 BOQ</button>` : ""}
-        ${type === "stage" ? `<button class="btn btn-light btn-xs add-task" data-stage="${item.name}">+ Task</button>` : ""}
-        ${type === "task" ? `<button class="btn btn-default btn-xs add-subtask" data-task="${item.name}">+ Subtask</button>` : ""}
-          
-        <button class="btn btn-warning btn-xs show-weight" 
-          data-name="${item.name}" 
-          title="Weight">
-          ${item.task_weight || 0}%
-        </button>
+    <div style="display:flex; gap:5px; align-items:center;">
+    
+           <button class="btn ${btnClass} btn-xs redirect-item"
+                data-name="${item.name}"
+                title="Open Form View"
+                ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                Redirect
+            </button>
+
+            <button class="btn ${btnClass} btn-xs edit-item"
+                data-name="${item.name}"
+                ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                ✏ Edit
+            </button>
+
+            <button class="btn ${btnClass} btn-xs assign-item"
+                data-name="${item.name}"
+                ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                👤 Assign
+            </button>
+
+            <button class="btn ${btnClass} btn-xs delete-item"
+                data-name="${item.name}"
+                ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                🗑 Delete
+            </button>
+
+            ${type === "subtask"
+            ? `<button class="btn btn-light btn-xs show-bom"
+                    data-name="${item.name}"
+                    ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                    📦 BOQ
+                </button>`
+            : ""}
+
+            ${type === "stage"
+            ? `<button class="btn btn-light btn-xs add-task"
+                    data-stage="${item.name}"
+                    ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                    + Task
+                </button>`
+            : ""}
+
+            ${type === "task"
+            ? `<button class="btn btn-default btn-xs add-subtask"
+                    data-task="${item.name}"
+                    ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                    + Subtask
+                </button>`
+            : ""}
+
+            <button class="btn btn-warning btn-xs show-weight"
+                data-name="${item.name}"
+                title="Weight">
+                ${item.task_weight || 0}%
+            </button>
       </div>
     </div>`;
 
@@ -1928,27 +2093,42 @@ function show_bom_dialog(frm, task_name) {
             d.fields_dict.custom_bom_details.grid.refresh();
         }
         d.show();
-        d.fields_dict.custom_bom_details.grid.wrapper.on(
+
+        let grid = d.fields_dict.custom_bom_details.grid;
+
+        grid.wrapper.on(
             "focusout",
-            ".input-sm",
+            'input[data-fieldname="qty"], input[data-fieldname="rate"]',
             function () {
 
-                let grid_row = $(this).closest(".grid-row");
-
-                let row_name = grid_row.attr("data-name");
+                let row_name = $(this)
+                    .closest(".grid-row")
+                    .attr("data-name");
 
                 if (!row_name) return;
 
-                let row = locals["Task BOQ Details"][row_name];
+                let grid_row = grid.get_row(row_name);
 
-                if (!row) return;
+                if (!grid_row || !grid_row.doc) return;
 
-                row.amount = flt(row.qty) * flt(row.rate);
+                let row = grid_row.doc;
 
-                // IMPORTANT
-                d.fields_dict.custom_bom_details.grid.grid_rows_by_docname[row_name]
-                    .refresh_field("amount");
+                // get latest values directly from inputs
+                let qty = flt(
+                    grid_row.columns.qty.field.get_value()
+                );
 
+                let rate = flt(
+                    grid_row.columns.rate.field.get_value()
+                );
+
+                // set values
+                row.qty = qty;
+                row.rate = rate;
+                row.amount = qty * rate;
+
+                // refresh only amount field
+                grid_row.refresh_field("amount");
             }
         );
     });
