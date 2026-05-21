@@ -286,8 +286,17 @@ async function fetch_items_for_task(frm, row) {
                     return;
                 }
                 for (let d of items) {
+                    //check existing rows
+                    const exists = (frm.doc.boq_items || []).some(R =>
+                        R.task === d.task &&
+                        R.subtask === d.subtask &&
+                        R.item_code === d.item_code
+                    );
+                    if (exists) continue;
+
                     const child = frm.add_child("boq_items");
-                    await frappe.model.set_value(child.doctype, child.name, d);
+                    Object.assign(child, d);
+                    // await frappe.model.set_value(child.doctype, child.name, d);
                 }
                 frm.refresh_field("boq_items");
                 frappe.show_alert({
@@ -1886,14 +1895,15 @@ function attach_events(frm, all_tasks) {
     });
 
     // DELETE ITEM
-    // DELETE ITEM
     wrapper.find(".delete-item").off("click").on("click", function (e) {
 
         e.stopPropagation();
 
         let docname = $(this).data("name");
 
-        let type = $(this).data("type");
+        let row = $(this).closest(".hierarchy-row");
+
+        let type = row.data("type");
 
         // CHECK CHILDREN
         let has_children = all_tasks.some(t => t.parent_task === docname);
@@ -1910,12 +1920,62 @@ function attach_events(frm, all_tasks) {
         }
 
         frappe.confirm(
-
             __("Are you sure you want to delete this {0}?", [type]),
 
             function () {
 
-                // STEP 1: DELETE DEPENDENCIES
+                // =====================================
+                // REMOVE MATCHING SUBTASK ROWS ONLY
+                // =====================================
+
+                let boq_index = (frm.doc.boq_items || []).length;
+
+                while (boq_index--) {
+
+                    let boq_row = frm.doc.boq_items[boq_index];
+
+                    // MATCH CLICKED TASK/SUBTASK ID
+                    if (
+                        boq_row.subtask &&
+                        boq_row.subtask === docname
+                    ) {
+
+                        let removed = frm.doc.boq_items.splice(boq_index, 1)[0];
+
+                        frappe.model.clear_doc(
+                            removed.doctype,
+                            removed.name
+                        );
+                    }
+                }
+
+                frm.refresh_field("boq_items");
+
+                // =====================================
+                // REMOVE TASK ROW FROM tasks_details
+                // =====================================
+
+                let task_index = (frm.doc.tasks_details || []).findIndex(
+                    d => d.task === docname
+                );
+
+                if (task_index !== -1) {
+
+                    let removed_task =
+                        frm.doc.tasks_details.splice(task_index, 1)[0];
+
+                    frappe.model.clear_doc(
+                        removed_task.doctype,
+                        removed_task.name
+                    );
+
+                    frm.refresh_field("tasks_details");
+                }
+
+                // =====================================
+                // DELETE DEPENDENCIES
+                // =====================================
+
                 frappe.call({
 
                     method: "frappe.client.get_list",
@@ -1952,7 +2012,7 @@ function attach_events(frm, all_tasks) {
 
                         Promise.all(promises).then(() => {
 
-                            // STEP 2: DELETE TASK
+                            // DELETE TASK / SUBTASK
                             frappe.call({
 
                                 method: "frappe.client.delete",
@@ -1985,7 +2045,6 @@ function attach_events(frm, all_tasks) {
                 });
 
             }
-
         );
 
     });
@@ -2192,31 +2251,52 @@ async function update_boq_items_for_subtask(frm, subtask_name) {
         args: { subtask_name: subtask_name },
         freeze: true,
         freeze_message: __("Updating BOQ items..."),
+
         callback: async function (r) {
+
             if (r.exc) return;
 
-            // Remove existing items for this subtask from the array properly
+            // REMOVE OLD ROWS OF THIS SUBTASK ONLY
             let i = (frm.doc.boq_items || []).length;
+
             while (i--) {
+
                 let row = frm.doc.boq_items[i];
-                if (row.subtask === subtask_name || row.task === subtask_name || row.subtask_name === subtask_name) {
-                    let item = frm.doc.boq_items.splice(i, 1)[0];
-                    frappe.model.clear_doc("BOQ Item", item.name);
+
+                if (row.subtask === subtask_name) {
+
+                    let removed = frm.doc.boq_items.splice(i, 1)[0];
+
+                    frappe.model.clear_doc(
+                        removed.doctype,
+                        removed.name
+                    );
                 }
             }
 
-            // Add updated items
+            // ADD UPDATED ROWS
             const items = r.message || [];
+
             for (let d of items) {
+
+                const already_exists = (frm.doc.boq_items || []).some(row =>
+                    row.task === d.task &&
+                    row.subtask === d.subtask &&
+                    row.item_code === d.item_code
+                );
+
+                // PREVENT DUPLICATE
+                if (already_exists) continue;
+
                 const child = frm.add_child("boq_items");
-                await frappe.model.set_value(child.doctype, child.name, d);
+
+                Object.assign(child, d);
             }
 
             frm.refresh_field("boq_items");
         }
     });
 }
-
 // Ensure BOM Dialog auto-fetches Item Name and UOM when Item is selected
 frappe.ui.form.on("Task BOQ Details", {
     item: function (frm, cdt, cdn) {
