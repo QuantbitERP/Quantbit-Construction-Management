@@ -178,16 +178,12 @@
    "columns": 3,
    "fieldname": "task",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Task"
   },
   {
    "columns": 3,
    "fieldname": "subtask",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Subtask"
   },
   {
@@ -256,7 +252,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-20 11:38:41.903237",
+ "modified": "2026-05-21 14:48:07.070920",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "BOQ Item",
