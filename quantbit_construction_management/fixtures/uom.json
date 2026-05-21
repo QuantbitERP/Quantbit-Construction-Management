@@ -2177,19 +2177,6 @@
   "docstatus": 0,
   "doctype": "UOM",
   "enabled": 1,
-  "modified": "2026-03-10 12:16:15.229338",
-  "must_be_whole_number": 1,
-  "name": "Nos",
-  "symbol": null,
-  "uom_name": "Nos"
- },
- {
-  "category": null,
-  "common_code": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "UOM",
-  "enabled": 1,
   "modified": "2026-03-10 12:16:15.230789",
   "must_be_whole_number": 0,
   "name": "Ounce",
@@ -3300,5 +3287,18 @@
   "name": "Square Foot",
   "symbol": null,
   "uom_name": "Square Foot"
+ },
+ {
+  "category": null,
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-03-10 12:16:15.229338",
+  "must_be_whole_number": 1,
+  "name": "Nos",
+  "symbol": null,
+  "uom_name": "Nos"
  }
 ]

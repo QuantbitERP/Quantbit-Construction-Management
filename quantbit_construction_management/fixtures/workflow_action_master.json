@@ -82,19 +82,5 @@
   "modified": "2026-05-04 13:12:24.527403",
   "name": "Pending For Preliminary Approval",
   "workflow_action_name": "Pending For Preliminary Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-05-19 14:43:52.186747",
-  "name": "Go For Bid",
-  "workflow_action_name": "Go For Bid"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-05-19 14:44:09.118800",
-  "name": "Don't Go For Bid",
-  "workflow_action_name": "Don't Go For Bid"
  }
 ]
