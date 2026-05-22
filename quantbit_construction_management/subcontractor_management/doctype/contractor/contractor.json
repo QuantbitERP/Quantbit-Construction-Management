@@ -10,7 +10,9 @@
   "column_break_isbv",
   "supplier_name",
   "column_break_gulr",
-  "contractor_type"
+  "contractor_type",
+  "section_break_fner",
+  "site_diary_contractor_item_details"
  ],
  "fields": [
   {
@@ -38,12 +40,22 @@
    "fieldtype": "Select",
    "label": "Contractor Type ",
    "options": "Individual\nContract"
+  },
+  {
+   "fieldname": "section_break_fner",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "site_diary_contractor_item_details",
+   "fieldtype": "Table",
+   "label": "Site Diary Contractor Item Details",
+   "options": "Site Diary Contractor Item Details"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-12 18:04:14.366553",
+ "modified": "2026-05-22 16:42:48.980397",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor",

@@ -62,7 +62,96 @@ after_save(frm) {
 		project: frm.doc.project
 	});
 
-}
+},
+get_site_diary_details: function(frm) {
+
+        if (!frm.doc.project || !frm.doc.site_date) {
+            frappe.msgprint("Please select Project and Site Date");
+            return;
+        }
+
+        frappe.call({
+            method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_site_diary_details",
+            args: {
+                project: frm.doc.project,
+                site_date: frm.doc.site_date
+            },
+            callback: function(r) {
+
+                if (r.message) {
+
+                    // Clear old rows
+                    frm.clear_table("manpower_log");
+                    frm.clear_table("equipment_log");
+
+                    // Manpower
+                    (r.message.manpower || []).forEach(function(d) {
+                        console.log(d);
+                        let row = frm.add_child("manpower_log");
+
+                        row.parent_task = d.task;
+                        row.task = d.subtask;
+                        row.contratcor = d.contratcor;
+                        row.daily_wages = d.rate;
+                        row.tradecategory = d.equipment_item;
+                        row.total_wage = d.amount;
+                        row.contratcor = d.contractor;
+                        if(d.skill_type == 'Skilled'){
+                            row.skilled = d.quantity;
+                        }else{
+                            row.unskilled = d.quantity;
+                        }
+                        frappe.db.get_value("Task", d.task, "subject")
+                        .then(r => {
+
+                            if (r.message) {
+                                row.parent_task_subject = r.message.subject;
+                            }
+                        });
+                        frappe.db.get_value("Task", d.subtask,"subject").then(r => {
+                            if (r.message) {
+                                row.task_subject = r.message.subject;
+                            }
+                        });
+                    });
+
+                    // Equipment
+                    (r.message.equipment || []).forEach(function(d) {
+                        console.log(d);
+                        let row = frm.add_child("equipment_log");
+
+                        row.parent_task = d.task;
+                        row.task = d.subtask;
+                        row.item = d.equipment_item;
+                        row.rate = d.rate;
+                        row.total_amount = d.amount;
+                        row.quantity = d.quantity;
+                        row.contractor = d.contractor;
+                        row.working_hours = d.working_hrs;
+
+                              frappe.db.get_value("Task", d.task, "subject")
+                        .then(r => {
+
+                            if (r.message) {
+                                row.parent_task_subject = r.message.subject;
+                            }
+                        });
+                        frappe.db.get_value("Task", d.subtask,"subject").then(r => {
+                            if (r.message) {
+                                row.task_subject = r.message.subject;
+                            }
+                        });
+                    });
+
+                    frm.refresh_field("manpower_log");
+                    frm.refresh_field("equipment_log");
+
+                    frappe.msgprint("Data fetched successfully");
+                }
+            }
+        });
+
+    }
 
 
 });

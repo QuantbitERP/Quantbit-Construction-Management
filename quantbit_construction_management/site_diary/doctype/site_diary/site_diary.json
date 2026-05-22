@@ -16,6 +16,7 @@
   "shift",
   "site_engineer",
   "site_engineer_name",
+  "get_site_diary_details",
   "column_break_qhff",
   "weather_am",
   "weather_pm",
@@ -271,13 +272,18 @@
    "fieldname": "warehouse",
    "fieldtype": "Data",
    "label": "Warehouse"
+  },
+  {
+   "fieldname": "get_site_diary_details",
+   "fieldtype": "Button",
+   "label": "Get Site Diary Details"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-14 13:09:19.397174",
+ "modified": "2026-05-22 17:00:48.579207",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Diary",
