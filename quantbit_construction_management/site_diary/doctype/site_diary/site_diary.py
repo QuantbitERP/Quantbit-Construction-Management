@@ -628,3 +628,54 @@ def get_task_bom_details(task):
 		"manpower": manpower,
 		"equipment": equipment
 	}
+
+import frappe
+
+
+@frappe.whitelist()
+def get_site_diary_details(project, site_date):
+
+    manpower_data = frappe.db.sql("""
+        SELECT
+            mud.task,
+            mud.subtask,
+			mud.equipment_item,
+			mud.contractor,
+			mud.uom,
+            mud.quantity,
+            mud.rate,
+            mud.amount,
+			mud.skill_type
+        FROM `tabManpower Usage Details` mud
+        INNER JOIN `tabManpower Usage` mu
+            ON mu.name = mud.parent
+        WHERE mu.project = %s
+        AND mu.site_date = %s
+        AND mu.docstatus = 1
+    """, (project, site_date), as_dict=True)
+
+
+    equipment_data = frappe.db.sql("""
+        SELECT
+            eud.task,
+            eud.subtask,
+            eud.equipment_item,
+            eud.contractor,
+            eud.rate,
+            eud.amount,
+			eud.uom,
+			eud.quantity,
+			eud.working_hrs
+        FROM `tabEquipment Usage Details` eud
+        INNER JOIN `tabEquipment Usage` eu
+            ON eu.name = eud.parent
+        WHERE eu.project = %s
+        AND eu.site_date = %s
+        AND eu.docstatus = 1
+    """, (project, site_date), as_dict=True)
+
+
+    return {
+        "manpower": manpower_data,
+        "equipment": equipment_data
+    }
