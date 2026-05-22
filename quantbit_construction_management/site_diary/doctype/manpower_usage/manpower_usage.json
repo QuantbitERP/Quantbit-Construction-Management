@@ -1,0 +1,100 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-22 11:39:08.415844",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_hd2h",
+  "project",
+  "site_engineer",
+  "column_break_ltvx",
+  "site_date",
+  "task",
+  "section_break_smcj",
+  "manpower_usage",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_hd2h",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Manpower Usage",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "site_date",
+   "fieldtype": "Date",
+   "label": "Site Date"
+  },
+  {
+   "fieldname": "site_engineer",
+   "fieldtype": "Link",
+   "label": "Site Engineer",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "section_break_smcj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "manpower_usage",
+   "fieldtype": "Table",
+   "label": "Manpower Usage",
+   "options": "Manpower Usage Details"
+  },
+  {
+   "fieldname": "column_break_ltvx",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-05-22 12:05:18.755485",
+ "modified_by": "Administrator",
+ "module": "Site Diary",
+ "name": "Manpower Usage",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
