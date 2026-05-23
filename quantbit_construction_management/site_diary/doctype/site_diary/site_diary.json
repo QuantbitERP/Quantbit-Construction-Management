@@ -35,6 +35,8 @@
   "section_break_rikz",
   "task",
   "activity_progress",
+  "section_break_wnce",
+  "material_received",
   "section_break_wcbr",
   "material_deliveries",
   "section_break_rgpc",
@@ -110,7 +112,7 @@
   {
    "fieldname": "material_deliveries",
    "fieldtype": "Table",
-   "label": "Material Deliveries",
+   "label": "Material Consumed",
    "options": "Site Material Delivery"
   },
   {
@@ -277,13 +279,23 @@
    "fieldname": "get_site_diary_details",
    "fieldtype": "Button",
    "label": "Get Site Diary Details"
+  },
+  {
+   "fieldname": "section_break_wnce",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "material_received",
+   "fieldtype": "Table",
+   "label": "Material Received",
+   "options": "Material Received"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-22 17:00:48.579207",
+ "modified": "2026-05-23 10:27:32.507399",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Diary",
