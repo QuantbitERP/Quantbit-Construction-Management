@@ -11,15 +11,38 @@ frappe.ui.form.on("Equipment Usage", {
             };
         });
         
-         frm.set_query("subtask","equipment_usage_details", function() {
-            return {
-                filters: {
-                    parent_task: frm.doc.task,
-                    custom_is_subtask: 1
-                }
-            };
-        });
+        frm.fields_dict.equipment_usage_details.grid.get_field('subtask').get_query = function(doc, cdt, cdn) {
+
+                    let row = locals[cdt][cdn];
+
+                    return {
+                        filters: {
+                            parent_task: row.task,
+                            custom_is_subtask: 1
+                        }
+                    };
+                };
 	},
+     onload(frm) {
+        if (frm.is_new() && !frm.doc.site_date) {
+            frm.set_value("site_date", frappe.datetime.get_today());
+        }
+
+
+        if (frm.is_new() && !frm.doc.site_engineer) {
+
+            frappe.db.get_value(
+                "Employee",
+                { user_id: frappe.session.user },
+                "employee_name",
+                (r) => {
+                    if (r && r.name) {
+                        frm.set_value("site_engineer", r.name);
+                    }
+                }
+            );
+        }
+    }
 });
 
 frappe.ui.form.on("Equipment Usage Details", {
@@ -31,7 +54,14 @@ frappe.ui.form.on("Equipment Usage Details", {
     },
     working_hrs: function(frm, cdt, cdn) {
         calculate_amount(frm, cdt, cdn);
+    },
+    contractor: function(frm, cdt, cdn) {
+        validate_equipment(frm, cdt, cdn);
+    },
+    equipment_item: function(frm, cdt, cdn) {
+        validate_equipment(frm, cdt, cdn);
     }
+
 
 
 });
@@ -42,4 +72,48 @@ function calculate_amount(frm, cdt, cdn) {
     row.amount = (row.quantity || 0) * (row.rate || 0)* (row.working_hrs || 0);
 
     frm.refresh_field("equipment_usage_details");
+}
+
+function validate_equipment(frm, cdt, cdn) {
+
+    let row = locals[cdt][cdn];
+
+    if (!row.contractor || !row.equipment_item) {
+        return;
+    }
+
+    frappe.call({
+        method: "frappe.client.get",
+        args: {
+            doctype: "Contractor",
+            name: row.contractor
+        },
+        callback: function(r) {
+
+            if (r.message) {
+
+                let contractor_doc = r.message;
+
+                let item_row = contractor_doc.site_diary_contractor_item_details.find(d =>
+                    d.item === row.equipment_item
+                );
+
+                if (!item_row) {
+
+                    frappe.throw({
+                        title: __("Validation Error"),
+                        message: __(`Equipment ${row.equipment_item} does not exist for this contractor`),
+                        indicator: "red"
+                    });
+
+                    frappe.model.set_value(cdt, cdn, "rate", 0);
+
+                } else {
+
+                    // Fetch rate from contractor child table
+                    frappe.model.set_value(cdt, cdn, "rate", item_row.rate || 0);
+                }
+            }
+        }
+    });
 }

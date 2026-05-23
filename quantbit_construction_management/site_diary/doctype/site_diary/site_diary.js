@@ -113,7 +113,7 @@ get_site_diary_details: function(frm) {
                                 row.task_subject = r.message.subject;
                             }
                         });
-                    });
+                    }); 
 
                     // Equipment
                     (r.message.equipment || []).forEach(function(d) {
