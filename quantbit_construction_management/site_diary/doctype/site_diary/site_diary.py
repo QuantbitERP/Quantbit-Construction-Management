@@ -629,9 +629,6 @@ def get_task_bom_details(task):
 		"equipment": equipment
 	}
 
-import frappe
-
-
 @frappe.whitelist()
 def get_site_diary_details(project, site_date):
 
@@ -639,13 +636,13 @@ def get_site_diary_details(project, site_date):
         SELECT
             mud.task,
             mud.subtask,
-			mud.equipment_item,
-			mud.contractor,
-			mud.uom,
+            mud.equipment_item,
+            mud.contractor,
+            mud.uom,
             mud.quantity,
             mud.rate,
             mud.amount,
-			mud.skill_type
+            mud.skill_type
         FROM `tabManpower Usage Details` mud
         INNER JOIN `tabManpower Usage` mu
             ON mu.name = mud.parent
@@ -663,9 +660,9 @@ def get_site_diary_details(project, site_date):
             eud.contractor,
             eud.rate,
             eud.amount,
-			eud.uom,
-			eud.quantity,
-			eud.working_hrs
+            eud.uom,
+            eud.quantity,
+            eud.working_hrs
         FROM `tabEquipment Usage Details` eud
         INNER JOIN `tabEquipment Usage` eu
             ON eu.name = eud.parent
@@ -675,7 +672,178 @@ def get_site_diary_details(project, site_date):
     """, (project, site_date), as_dict=True)
 
 
+    visitors_data = frappe.db.sql("""
+        SELECT
+            pv.project,
+            pv.site_date,
+            pv.visitor_name,
+            pv.accompanied_by,
+            pv.time_in,
+            pv.time_out,
+            pv.safety_inducted,
+            pv.purpose,
+            pv.company,
+			pv.notes
+        FROM `tabProject Visitor` pv
+        WHERE pv.project = %s
+        AND pv.site_date = %s
+        AND pv.docstatus = 1
+    """, (project, site_date), as_dict=True)
+
+
     return {
         "manpower": manpower_data,
-        "equipment": equipment_data
+        "equipment": equipment_data,
+        "visitor": visitors_data
     }
+
+# @frappe.whitelist()
+# def get_material_deliveries(project, site_date):
+
+#     stock_entries = frappe.db.sql("""
+#         SELECT name
+#         FROM `tabStock Entry`
+#         WHERE stock_entry_type = 'Material Issue'
+#         AND posting_date = %s
+#     """, (site_date,), as_dict=True)
+    
+#     if not stock_entries:
+#         return []
+
+#     entry_names = [d.name for d in stock_entries]
+
+#     data = frappe.db.sql("""
+#         SELECT
+#             se.name as stock_entry,
+#             sei.item_code,
+#             sei.qty,
+#             sei.uom,
+#             sei.s_warehouse,
+#             sei.custom_task as task,
+#             sei.custom_subtask as subtask,
+#             sei.project
+#         FROM `tabStock Entry Detail` sei
+#         INNER JOIN `tabStock Entry` se ON se.name = sei.parent
+#         WHERE se.name IN %(entries)s
+#         AND sei.project = %(project)s
+#     """, {
+#         "entries": tuple(entry_names),
+#         "project": project
+#     }, as_dict=True)
+#     frappe.msgprint(str(data))
+#     # cache item + task lookups
+#     item_cache = {}
+#     task_cache = {}
+
+#     for d in data:
+
+#         if d.item_code not in item_cache:
+#             item_cache[d.item_code] = frappe.db.get_value(
+#                 "Item", d.item_code, "custom_item_type"
+#             )
+#         d.item_type = item_cache[d.item_code]
+
+#         if d.task and d.task not in task_cache:
+#             task_cache[d.task] = frappe.db.get_value(
+#                 "Task", d.task, "subject"
+#             )
+#         d.parent_task_subject = task_cache.get(d.task)
+
+#         if d.subtask and d.subtask not in task_cache:
+#             task_cache[d.subtask] = frappe.db.get_value(
+#                 "Task", d.subtask, "subject"
+#             )
+#         d.task_subject = task_cache.get(d.subtask)
+
+#     return data
+
+import frappe
+
+@frappe.whitelist()
+def get_material_received(project, site_date):
+
+    final_data = []
+
+    # =====================================================
+    # PROJECT WAREHOUSES
+    # =====================================================
+
+    project_doc = frappe.get_doc("Project", project)
+
+    warehouses = []
+
+    if project_doc.get("custom_warehouses"):
+        for row in project_doc.custom_warehouses:
+            if hasattr(row, "warehouse") and row.warehouse:
+                warehouses.append(row.warehouse)
+
+    warehouses = list(set(warehouses))
+
+    # =====================================================
+    # PURCHASE RECEIPTS (OK)
+    # =====================================================
+
+    purchase_receipts = frappe.db.sql("""
+        SELECT
+            pr.name as reference_name,
+            'Purchase Receipt' as reference_type,
+            pri.item_code,
+            pri.item_name,
+            pri.qty,
+            pri.uom,
+            pr.set_warehouse as warehouse,
+            pri.project,
+            pri.rate,
+            pri.amount
+        FROM `tabPurchase Receipt Item` pri
+        INNER JOIN `tabPurchase Receipt` pr
+            ON pr.name = pri.parent
+        WHERE pr.posting_date = %(site_date)s
+        AND pri.project = %(project)s
+        AND pr.set_warehouse IN %(warehouses)s
+		AND pr.docstatus = 1
+    """, {
+        "site_date": site_date,
+        "project": project,
+        "warehouses": tuple(warehouses)
+    }, as_dict=True)
+
+    final_data.extend(purchase_receipts)
+
+    # =====================================================
+    # STOCK ENTRIES (FIXED LOGIC)
+    # =====================================================
+
+    if warehouses:
+
+        stock_entries = frappe.db.sql("""
+            SELECT
+                se.name as reference_name,
+                'Stock Entry' as reference_type,
+                sed.item_code,
+                sed.item_name,
+                sed.qty,
+                sed.uom,
+                sed.s_warehouse as warehouse,
+                sed.t_warehouse,
+                sed.project,
+                sed.basic_rate as rate,
+                sed.amount
+            FROM `tabStock Entry Detail` sed
+            INNER JOIN `tabStock Entry` se
+                ON se.name = sed.parent
+            WHERE se.posting_date = %(site_date)s
+            AND se.stock_entry_type = 'Material Transfer'
+            AND sed.project = %(project)s
+            AND sed.t_warehouse IN %(warehouses)s
+            AND COALESCE(sed.s_warehouse, '') NOT IN %(warehouses)s
+			AND se.docstatus = 1
+        """, {
+            "site_date": site_date,
+            "project": project,
+            "warehouses": tuple(warehouses)
+        }, as_dict=True)
+
+        final_data.extend(stock_entries)
+
+    return final_data

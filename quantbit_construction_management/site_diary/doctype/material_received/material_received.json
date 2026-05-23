@@ -67,23 +67,23 @@
    "options": "UOM"
   },
   {
-   "fieldname": "transaction_type",
+   "fieldname": "transaction",
    "fieldtype": "Link",
    "label": "Transaction Type",
    "options": "DocType"
   },
   {
-   "fieldname": "transaction",
+   "fieldname": "transaction_type",
    "fieldtype": "Dynamic Link",
    "label": "Transaction",
-   "options": "transaction_type"
+   "options": "transaction"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-23 10:25:47.900460",
+ "modified": "2026-05-23 14:56:59.847148",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Material Received",
