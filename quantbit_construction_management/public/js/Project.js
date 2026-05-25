@@ -16,7 +16,7 @@ frappe.ui.form.on('Project', {
         } else {
             frm.set_value('custom_html_view', '');
         }
-    }
+    },
 });
 
 function render_report_view(frm) {

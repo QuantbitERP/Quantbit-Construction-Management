@@ -46,9 +46,6 @@ frappe.ui.form.on("Equipment Usage", {
 });
 
 frappe.ui.form.on("Equipment Usage Details", {
-    rate: function(frm, cdt, cdn) {
-        calculate_amount(frm, cdt, cdn);
-    },
     quantity: function(frm, cdt, cdn) {
         calculate_amount(frm, cdt, cdn);
     },
@@ -99,15 +96,14 @@ function validate_equipment(frm, cdt, cdn) {
                 );
 
                 if (!item_row) {
-
+                    frappe.model.set_value(cdt, cdn, "equipment_item", "");
+                    frappe.model.set_value(cdt, cdn, "contractor", "");
                     frappe.throw({
                         title: __("Validation Error"),
-                        message: __(`Equipment ${row.equipment_item} does not exist for this contractor`),
+                       message: __(`Equipment ${row.equipment_item} does not exist for this contractor, 
+                            Add ${row.equipment_item} in contractor or change the contractor.`),
                         indicator: "red"
                     });
-
-                    frappe.model.set_value(cdt, cdn, "rate", 0);
-
                 } else {
 
                     // Fetch rate from contractor child table

@@ -23,7 +23,8 @@
   "accepted",
   "column_break_rtmo",
   "rejection_reason",
-  "linked_po"
+  "linked_po",
+  "warehouse"
  ],
  "fields": [
   {
@@ -132,7 +133,6 @@
   {
    "fieldname": "parent_task",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Parent Task",
    "options": "Task"
   },
@@ -145,22 +145,27 @@
   {
    "fieldname": "task",
    "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Task",
+   "label": "Subtask",
    "options": "Task"
   },
   {
    "fieldname": "task_subject",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Task Subject"
+   "label": "Subtask Subject"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-20 13:05:41.236720",
+ "modified": "2026-05-23 12:45:30.474216",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Material Delivery",
