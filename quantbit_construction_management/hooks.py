@@ -37,7 +37,7 @@ fixtures = [
     {
         "doctype": "Custom Field",
         "filters": [
-            ["dt", "in", ["Task", "Project","Item","Warehouse", "Stock Entry"]]
+            ["dt", "in", ["Task", "Project","Item","Warehouse", "Stock Entry Detail"]]
         ]
     },
 
@@ -264,7 +264,10 @@ doc_events = {
 	"Opportunity": {
 		"on_update": "quantbit_construction_management.tendering.custom_crm.opportunity.on_update",
 
-	}
+	},
+    "Stock Entry": {
+        "on_submit": "quantbit_construction_management.site_diary.custom_stock.stock_entry.update_task_material_cost"
+    }
 }
 
 # Scheduled Tasks

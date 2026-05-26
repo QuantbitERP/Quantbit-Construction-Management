@@ -11,11 +11,12 @@ class SiteDiary(Document):
 
 	def before_submit(self):
 		self.validate_future_date()
-		self.create_material_issue_entry()
-		self.update_task_labour_cost()
-		self.update_task_equipment_cost()
+		# self.create_material_issue_entry()
+		# self.update_task_labour_cost()
+		# self.update_task_equipment_cost()
 		self.update_task_progress()
-				
+
+	
 	def update_task_progress(self):
 
 		updated_tasks = set()
@@ -30,6 +31,7 @@ class SiteDiary(Document):
 
 		for task in updated_tasks:
 			update_parent_progress(task)
+
 
 
 	def update_task_labour_cost(self):
@@ -377,75 +379,207 @@ class SiteDiary(Document):
 				"""	
 )
 
+# @frappe.whitelist()
+# def update_daily_activity_progress_table(doc):
+
+# 	doc = frappe.get_doc(frappe.parse_json(doc))
+
+# 	new_rows = []
+
+# 	seen = set()
+
+# 	for parent_row in doc.task:
+
+# 		if not parent_row.task:
+# 			continue
+
+# 		parent_task = frappe.get_doc("Task", parent_row.task)
+
+# 		for sub in parent_task.depends_on:
+
+# 			if not sub.task:
+# 				continue
+
+# 			key = (parent_row.task, sub.task)
+
+# 			if key in seen:
+# 				continue
+
+# 			seen.add(key)
+
+# 			sub_task = frappe.get_doc("Task", sub.task)
+
+# 			previous = frappe.db.sql("""
+# 				SELECT total_qty, total_achieved, percent_completed
+# 				FROM `tabDPR Activity Progress`
+# 				WHERE parent_task=%s
+# 				AND task=%s
+# 				ORDER BY creation DESC
+# 				LIMIT 1
+# 			""", (
+# 				parent_row.task,
+# 				sub.task,
+# 			), as_dict=True)
+
+# 			total_achieved = 0
+# 			percent_completed = 0
+# 			total_qty = 0
+
+# 			if previous:
+# 				total_qty = previous[0].total_qty
+# 				total_achieved = previous[0].total_achieved
+# 				percent_completed = previous[0].percent_completed
+
+# 			new_rows.append({
+
+# 				"parent_task": parent_row.task,
+# 				"parent_task_subject" : parent_task.subject,
+# 				"task": sub.task,
+# 				"task_subject":sub_task.subject,
+# 				"construction_type": sub_task.custom_construction_type,
+# 				"total_qty": total_qty,
+# 				"uom": sub_task.custom_uom,
+# 				"total_achieved": total_achieved,
+# 				"percent_completed": percent_completed
+
+# 			})
+
+# 	doc.set("activity_progress", new_rows)
+
+# 	return doc
+
 @frappe.whitelist()
 def update_daily_activity_progress_table(doc):
 
 	doc = frappe.get_doc(frappe.parse_json(doc))
 
 	new_rows = []
-
 	seen = set()
 
-	for parent_row in doc.task:
+	project = doc.project
+	site_date = doc.site_date
 
-		if not parent_row.task:
+	if not project or not site_date:
+		return {"activity_progress": []}
+
+	# =====================================================
+	# MANPOWER USAGE DETAILS
+	# =====================================================
+
+	manpower_data = frappe.db.sql("""
+		SELECT
+			mud.task as parent_task,
+			mud.subtask as task
+		FROM `tabManpower Usage Details` mud
+		INNER JOIN `tabManpower Usage` mu
+			ON mu.name = mud.parent
+		WHERE mu.project = %s
+		AND mu.site_date = %s
+		AND mu.docstatus = 1
+	""", (project, site_date), as_dict=True)
+
+	# =====================================================
+	# EQUIPMENT USAGE DETAILS
+	# =====================================================
+
+	equipment_data = frappe.db.sql("""
+		SELECT
+			eud.task as parent_task,
+			eud.subtask as task
+		FROM `tabEquipment Usage Details` eud
+		INNER JOIN `tabEquipment Usage` eu
+			ON eu.name = eud.parent
+		WHERE eu.project = %s
+		AND eu.site_date = %s
+		AND eu.docstatus = 1
+	""", (project, site_date), as_dict=True)
+
+	combined_data = manpower_data + equipment_data
+
+	for row in combined_data:
+
+		parent_task = row.get("parent_task")
+		task = row.get("task")
+
+		if not parent_task or not task:
 			continue
 
-		parent_task = frappe.get_doc("Task", parent_row.task)
+		key = (parent_task, task)
 
-		for sub in parent_task.depends_on:
+		if key in seen:
+			continue
 
-			if not sub.task:
-				continue
+		seen.add(key)
 
-			key = (parent_row.task, sub.task)
+		parent_task_subject = frappe.db.get_value(
+			"Task",
+			parent_task,
+			"subject"
+		)
 
-			if key in seen:
-				continue
+		task_doc = frappe.db.get_value(
+			"Task",
+			task,
+			[
+				"subject",
+				"custom_construction_type",
+				"custom_uom"
+			],
+			as_dict=True
+		)
 
-			seen.add(key)
+		# ==========================================
+		# FETCH PREVIOUS PROGRESS
+		# ==========================================
 
-			sub_task = frappe.get_doc("Task", sub.task)
+		previous = frappe.db.sql("""
+			SELECT
+				total_qty,
+				total_achieved,
+				percent_completed
+			FROM `tabDPR Activity Progress`
+			WHERE parent_task = %s
+			AND task = %s
+			ORDER BY creation DESC
+			LIMIT 1
+		""", (parent_task, task), as_dict=True)
 
-			previous = frappe.db.sql("""
-				SELECT total_qty, total_achieved, percent_completed
-				FROM `tabDPR Activity Progress`
-				WHERE parent_task=%s
-				AND task=%s
-				ORDER BY creation DESC
-				LIMIT 1
-			""", (
-				parent_row.task,
-				sub.task,
-			), as_dict=True)
+		total_qty = 0
+		total_achieved = 0
+		percent_completed = 0
 
-			total_achieved = 0
-			percent_completed = 0
-			total_qty = 0
+		if previous:
 
-			if previous:
-				total_qty = previous[0].total_qty
-				total_achieved = previous[0].total_achieved
-				percent_completed = previous[0].percent_completed
+			total_qty = previous[0].total_qty or 0
+			total_achieved = previous[0].total_achieved or 0
+			percent_completed = previous[0].percent_completed or 0
 
-			new_rows.append({
+		new_rows.append({
 
-				"parent_task": parent_row.task,
-				"parent_task_subject" : parent_task.subject,
-				"task": sub.task,
-				"task_subject":sub_task.subject,
-				"construction_type": sub_task.custom_construction_type,
-				"total_qty": total_qty,
-				"uom": sub_task.custom_uom,
-				"total_achieved": total_achieved,
-				"percent_completed": percent_completed
+			"parent_task": parent_task,
+			"parent_task_subject": parent_task_subject,
 
-			})
+			"task": task,
+			"task_subject": task_doc.subject if task_doc else "",
 
-	doc.set("activity_progress", new_rows)
+			"construction_type":
+				task_doc.custom_construction_type
+				if task_doc else "",
 
-	return doc
+			"uom":
+				task_doc.custom_uom
+				if task_doc else "",
 
+			"total_qty": total_qty,
+			"total_achieved": total_achieved,
+			"previous_total_achieved": total_achieved,
+			"percent_completed": percent_completed
+
+		})
+
+	return {
+		"activity_progress": new_rows
+	}
 
 @frappe.whitelist()
 def update_task_progress_from_dpr(task, achieved_qty, total_qty):
@@ -479,6 +613,7 @@ def get_multiple_task_bom_details(tasks):
 
 		for row in data.get("manpower", []):
 			row["tradecategory"] = row.get("item")
+			row["item_type"] = "Man" 
 
 			if row.get("item"):
 				row["daily_wages"] = frappe.db.get_value(
@@ -538,31 +673,47 @@ def update_parent_progress(task):
 
 @frappe.whitelist()
 def get_current_weather(lat, lon):
+    try:
+        url = "https://api.open-meteo.com/v1/forecast"
 
-	url = "https://api.open-meteo.com/v1/forecast"
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "current": "temperature_2m,wind_speed_10m,weather_code",
+            "daily": "temperature_2m_max,temperature_2m_min",
+            "timezone": "auto"
+        }
 
-	params = {
-		"latitude": lat,
-		"longitude": lon,
-		"current": "temperature_2m,wind_speed_10m,weather_code",
-		"daily": "temperature_2m_max,temperature_2m_min",
-		"timezone": "auto"
-	}
+        res = requests.get(url, params=params, timeout=10)
 
-	res = requests.get(url, params=params)
+        if not res.ok:
+            frappe.log_error(f"Weather API error: {res.status_code} - {res.text}", "Weather API")
+            return None
 
-	data = res.json()
+        if not res.text.strip():
+            frappe.log_error("Weather API returned empty response", "Weather API")
+            return None
 
-	current = data.get("current", {})
-	daily = data.get("daily", {})
+        data = res.json()
 
-	return {
-		"temp": current.get("temperature_2m"),
-		"wind_speed_kmh": current.get("wind_speed_10m"),
-		"weather_code": current.get("weather_code"),
-		"max_temp": daily.get("temperature_2m_max", [None])[0],
-		"min_temp": daily.get("temperature_2m_min", [None])[0],
-	}
+        current = data.get("current", {})
+        daily = data.get("daily", {})
+
+        return {
+            "temp": current.get("temperature_2m"),
+            "wind_speed_kmh": current.get("wind_speed_10m"),
+            "weather_code": current.get("weather_code"),
+            "max_temp": daily.get("temperature_2m_max", [None])[0],
+            "min_temp": daily.get("temperature_2m_min", [None])[0],
+        }
+
+    except requests.exceptions.Timeout:
+        frappe.log_error("Weather API timed out", "Weather API")
+        return None
+
+    except Exception as e:
+        frappe.log_error(f"Weather API failed: {str(e)}", "Weather API")
+        return None
 
 
 @frappe.whitelist()
@@ -697,65 +848,65 @@ def get_site_diary_details(project, site_date):
         "visitor": visitors_data
     }
 
-# @frappe.whitelist()
-# def get_material_deliveries(project, site_date):
+@frappe.whitelist()
+def get_material_deliveries(project, site_date):
 
-#     stock_entries = frappe.db.sql("""
-#         SELECT name
-#         FROM `tabStock Entry`
-#         WHERE stock_entry_type = 'Material Issue'
-#         AND posting_date = %s
-#     """, (site_date,), as_dict=True)
+    stock_entries = frappe.db.sql("""
+        SELECT name
+        FROM `tabStock Entry`
+        WHERE stock_entry_type = 'Material Issue'
+        AND posting_date = %s
+    """, (site_date,), as_dict=True)
     
-#     if not stock_entries:
-#         return []
+    if not stock_entries:
+        return []
 
-#     entry_names = [d.name for d in stock_entries]
+    entry_names = [d.name for d in stock_entries]
 
-#     data = frappe.db.sql("""
-#         SELECT
-#             se.name as stock_entry,
-#             sei.item_code,
-#             sei.qty,
-#             sei.uom,
-#             sei.s_warehouse,
-#             sei.custom_task as task,
-#             sei.custom_subtask as subtask,
-#             sei.project
-#         FROM `tabStock Entry Detail` sei
-#         INNER JOIN `tabStock Entry` se ON se.name = sei.parent
-#         WHERE se.name IN %(entries)s
-#         AND sei.project = %(project)s
-#     """, {
-#         "entries": tuple(entry_names),
-#         "project": project
-#     }, as_dict=True)
-#     frappe.msgprint(str(data))
-#     # cache item + task lookups
-#     item_cache = {}
-#     task_cache = {}
+    data = frappe.db.sql("""
+        SELECT
+            se.name as stock_entry,
+            sei.item_code,
+            sei.qty,
+            sei.uom,
+            sei.s_warehouse,
+            sei.custom_task as task,
+            sei.custom_subtask as subtask,
+            sei.project
+        FROM `tabStock Entry Detail` sei
+        INNER JOIN `tabStock Entry` se ON se.name = sei.parent
+        WHERE se.name IN %(entries)s
+        AND sei.project = %(project)s
+    """, {
+        "entries": tuple(entry_names),
+        "project": project
+    }, as_dict=True)
+    frappe.msgprint(str(data))
+    # cache item + task lookups
+    item_cache = {}
+    task_cache = {}
 
-#     for d in data:
+    for d in data:
 
-#         if d.item_code not in item_cache:
-#             item_cache[d.item_code] = frappe.db.get_value(
-#                 "Item", d.item_code, "custom_item_type"
-#             )
-#         d.item_type = item_cache[d.item_code]
+        if d.item_code not in item_cache:
+            item_cache[d.item_code] = frappe.db.get_value(
+                "Item", d.item_code, "custom_item_type"
+            )
+        d.item_type = item_cache[d.item_code]
 
-#         if d.task and d.task not in task_cache:
-#             task_cache[d.task] = frappe.db.get_value(
-#                 "Task", d.task, "subject"
-#             )
-#         d.parent_task_subject = task_cache.get(d.task)
+        if d.task and d.task not in task_cache:
+            task_cache[d.task] = frappe.db.get_value(
+                "Task", d.task, "subject"
+            )
+        d.parent_task_subject = task_cache.get(d.task)
 
-#         if d.subtask and d.subtask not in task_cache:
-#             task_cache[d.subtask] = frappe.db.get_value(
-#                 "Task", d.subtask, "subject"
-#             )
-#         d.task_subject = task_cache.get(d.subtask)
+        if d.subtask and d.subtask not in task_cache:
+            task_cache[d.subtask] = frappe.db.get_value(
+                "Task", d.subtask, "subject"
+            )
+        d.task_subject = task_cache.get(d.subtask)
 
-#     return data
+    return data
 
 import frappe
 
