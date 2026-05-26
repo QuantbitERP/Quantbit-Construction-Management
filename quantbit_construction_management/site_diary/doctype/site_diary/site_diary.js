@@ -1,764 +1,533 @@
 frappe.ui.form.on("Site Diary", {
-refresh(frm) {
 
-    if (!frm.is_new()) return;
+    refresh(frm) {
 
-    let lat = 16.8524;
-    let lon = 74.5815;
+        if (!frm.is_new()) return;
 
-    frappe.call({
-        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_current_weather",
-        args: {
-            lat: lat,
-            lon: lon
-        },
-        callback: function(r) {
-            if (r.message) {
-                let w = r.message;   
-                let hour = new Date().getHours();
+        let lat = 16.8524;
+        let lon = 74.5815;
 
-                let weather_text = getWeatherText(w.weather_code);
-
-                if (hour < 12) {
-                    frm.set_value("weather_am", weather_text);
-                    console.log("AM Weather:", weather_text);
-                } else {
-                    frm.set_value("weather_pm", weather_text);
-                    console.log("PM Weather:", weather_text);
-                }
-
-                frm.set_value("max_temp", w.max_temp);
-                frm.set_value("min_temp", w.min_temp);
-                frm.set_value("wind_speed_kmh", w.wind_speed_kmh);
-            }
-        }
-    });
-},
-
-
-
-setup(frm) {
-
-    frm.set_query("task", "task", function (doc, cdt, cdn) {
-
-        return {
-            filters: {
-                custom_is_stage: 0,
-                is_group: 1,
-                project: doc.project
-            }
-        };
-
-    });
-
-},
-
-after_save(frm) {
-
-	if (!frm.doc.project) return;
-
-	// 🔥 notify project screen
-	frappe.publish_realtime("project_progress_refresh", {
-		project: frm.doc.project
-	});
-
-},
-get_site_diary_details: function(frm) {
-        let unique_tasks = new Map();
-        if (!frm.doc.project || !frm.doc.site_date) {
-            frappe.msgprint("Please select Project and Site Date");
-            return;
-        }
-        frm.clear_table("manpower_log");
-        frm.clear_table("equipment_log");
-        frm.clear_table("material_deliveries");
-        frm.clear_table("material_received");
-        frm.clear_table("task"); 
-        frm.clear_table("activity_progress");
-        frm.clear_table("visitors");
-
-        let manpowerPromise = new Promise(resolve => {
         frappe.call({
-            method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_site_diary_details",
+            method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_current_weather",
             args: {
-                project: frm.doc.project,
-                site_date: frm.doc.site_date
+                lat: lat,
+                lon: lon
             },
             callback: function(r) {
 
                 if (r.message) {
 
-                    // Clear old rows
-                    frm.clear_table("manpower_log");
-                    frm.clear_table("equipment_log");
+                    let w = r.message;
+                    let hour = new Date().getHours();
 
-                    // Manpower
-                    (r.message.manpower || []).forEach(function(d) {
-                        unique_tasks.set(d.task , {
-                            task: d.task
-                        });
-                        let row = frm.add_child("manpower_log");
+                    let weather_text = getWeatherText(w.weather_code);
 
-                        row.parent_task = d.task;
-                        row.task = d.subtask;
-                        row.contratcor = d.contratcor;
-                        row.daily_wages = d.rate;
-                        row.total_wage = d.amount;
-                        row.contratcor = d.contractor;
-                        if(d.skill_type == 'Skilled'){
-                            row.skilled = d.quantity;
-                        }else{
-                            row.unskilled = d.quantity;
-                        }
-                        frappe.db.get_value("Item", d.equipment_item, "item_name")
-                        .then(r => {
+                    if (hour < 12) {
+                        frm.set_value("weather_am", weather_text);
+                    } else {
+                        frm.set_value("weather_pm", weather_text);
+                    }
 
-                            if (r.message) {
-                                row.tradecategory = r.message.item_name;
+                    frm.set_value("max_temp", w.max_temp);
+                    frm.set_value("min_temp", w.min_temp);
+                    frm.set_value("wind_speed_kmh", w.wind_speed_kmh);
+                }
+            }
+        });
+    },
+
+    setup(frm) {
+
+        frm.set_query("task", "task", function(doc) {
+
+            return {
+                filters: {
+                    custom_is_stage: 0,
+                    is_group: 1,
+                    project: doc.project
+                }
+            };
+
+        });
+
+    },
+
+    after_save(frm) {
+
+        if (!frm.doc.project) return;
+
+        frappe.publish_realtime("project_progress_refresh", {
+            project: frm.doc.project
+        });
+
+    },
+
+    get_site_diary_details(frm) {
+
+        let unique_tasks = new Map();
+
+        if (!frm.doc.project || !frm.doc.site_date) {
+
+            frappe.msgprint("Please select Project and Site Date");
+            return;
+        }
+
+        frm.__loading_site_diary = true;
+
+        frm.clear_table("manpower_log");
+        frm.clear_table("equipment_log");
+        frm.clear_table("material_deliveries");
+        frm.clear_table("material_received");
+        frm.clear_table("task");
+        frm.clear_table("activity_progress");
+        frm.clear_table("visitors");
+
+        frm.refresh_fields([
+            "manpower_log",
+            "equipment_log",
+            "material_deliveries",
+            "material_received",
+            "task",
+            "activity_progress",
+            "visitors"
+        ]);
+
+        // =====================================================
+        // MANPOWER / EQUIPMENT / VISITOR
+        // =====================================================
+
+        let manpowerPromise = new Promise(resolve => {
+
+            frappe.call({
+                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_site_diary_details",
+                args: {
+                    project: frm.doc.project,
+                    site_date: frm.doc.site_date
+                },
+                callback: function(r) {
+
+                    if (r.message) {
+
+
+                        (r.message.manpower || []).forEach(function(d) {
+
+                            if (d.task) {
+
+                                unique_tasks.set(d.task, {
+                                    task: d.task
+                                });
+
                             }
-                        });
-                        frappe.db.get_value("Task", d.task, "subject")
-                        .then(r => {
 
-                            if (r.message) {
-                                row.parent_task_subject = r.message.subject;
+                            let row = frm.add_child("manpower_log");
+
+                            row.parent_task = d.task;
+                            row.task = d.subtask;
+                            row.contractor = d.contractor;
+                            row.daily_wages = d.rate;
+                            row.total_wage = d.amount;
+                            row.item_type = "Man"; 
+
+                            if (d.skill_type == "Skilled") {
+                                row.skilled = d.quantity;
+                            } else {
+                                row.unskilled = d.quantity;
                             }
+
+                            frappe.db.get_value(
+                                "Item",
+                                d.equipment_item,
+                                "item_name"
+                            ).then(res => {
+
+                                if (res.message) {
+
+                                    row.tradecategory =
+                                        res.message.item_name;
+
+                                    frm.refresh_field("manpower_log");
+                                }
+
+                            });
+
+                            frappe.db.get_value(
+                                "Task",
+                                d.task,
+                                "subject"
+                            ).then(res => {
+
+                                if (res.message) {
+
+                                    row.parent_task_subject =
+                                        res.message.subject;
+
+                                    frm.refresh_field("manpower_log");
+                                }
+
+                            });
+
+                            frappe.db.get_value(
+                                "Task",
+                                d.subtask,
+                                "subject"
+                            ).then(res => {
+
+                                if (res.message) {
+
+                                    row.task_subject =
+                                        res.message.subject;
+
+                                    frm.refresh_field("manpower_log");
+                                }
+
+                            });
+
                         });
-                        frappe.db.get_value("Task", d.subtask,"subject").then(r => {
-                            if (r.message) {
-                                row.task_subject = r.message.subject;
+
+                        (r.message.equipment || []).forEach(function(d) {
+
+                            if (d.task) {
+
+                                unique_tasks.set(d.task, {
+                                    task: d.task
+                                });
+
                             }
+
+                            let row = frm.add_child("equipment_log");
+
+                            row.parent_task = d.task;
+                            row.task = d.subtask;
+                            row.item = d.equipment_item;
+                            row.rate = d.rate;
+                            row.total_amount = d.amount;
+                            row.quantity = d.quantity;
+                            row.contractor = d.contractor;
+                            row.working_hours = d.working_hrs;
+
+                            frappe.db.get_value(
+                                "Item",
+                                d.equipment_item,
+                                "item_name"
+                            ).then(res => {
+
+                                if (res.message) {
+
+                                    row.equipment_name =
+                                        res.message.item_name;
+
+                                    frm.refresh_field("equipment_log");
+                                }
+
+                            });
+
+                            frappe.db.get_value(
+                                "Task",
+                                d.task,
+                                "subject"
+                            ).then(res => {
+
+                                if (res.message) {
+
+                                    row.parent_task_subject =
+                                        res.message.subject;
+
+                                    frm.refresh_field("equipment_log");
+                                }
+
+                            });
+
+                            frappe.db.get_value(
+                                "Task",
+                                d.subtask,
+                                "subject"
+                            ).then(res => {
+
+                                if (res.message) {
+
+                                    row.task_subject =
+                                        res.message.subject;
+
+                                    frm.refresh_field("equipment_log");
+                                }
+
+                            });
+
                         });
-                    }); 
 
-                    // Equipment
-                    (r.message.equipment || []).forEach(function(d) {
-                        unique_tasks.set(d.task , {
-                            task: d.task
+
+                        (r.message.visitor || []).forEach(function(d) {
+
+                            let row = frm.add_child("visitors");
+
+                            row.visitor_name = d.visitor_name;
+                            row.purpose = d.purpose;
+                            row.time_in = d.time_in;
+                            row.time_out = d.time_out;
+                            row.accompanied_by = d.accompanied_by;
+                            row.company = d.company;
+                            row.safety_inducted = d.safety_inducted;
+                            row.notes = d.notes;
+
                         });
-                        let row = frm.add_child("equipment_log");
 
-                        row.parent_task = d.task;
-                        row.task = d.subtask;
-                        row.item = d.equipment_item;
-                        row.rate = d.rate;
-                        row.total_amount = d.amount;
-                        row.quantity = d.quantity;
-                        row.contractor = d.contractor;
-                        row.working_hours = d.working_hrs;
+                        frm.refresh_field("manpower_log");
+                        frm.refresh_field("equipment_log");
+                        frm.refresh_field("visitors");
+                    }
 
-                        frappe.db.get_value("Item", d.equipment_item, "item_name")
-                        .then(r => {
-
-                            if (r.message) {
-                                row.equipment_name = r.message.item_name;
-                            }
-                        });
-                        frappe.db.get_value("Task", d.task, "subject")
-                        .then(r => {
-
-                            if (r.message) {
-                                row.parent_task_subject = r.message.subject;
-                            }
-                        });
-                        frappe.db.get_value("Task", d.subtask,"subject").then(r => {
-                            if (r.message) {
-                                row.task_subject = r.message.subject;
-                            }
-                        });
-                    });
-
-                    // Visitor
-                    (r.message.visitor || []).forEach(function(d) {
-                        let row = frm.add_child("visitors");
-
-                        row.visitor_name = d.visitor_name;
-                        row.purpose = d.purpose;
-                        row.time_in = d.time_in;
-                        row.time_out = d.time_out;
-                        row.accompanied_by = d.accompanied_by;
-                        row.company = d.company;
-                        row.safety_inducted = d.safety_inducted;
-                        row.notes = d.notes;
-                    });
-
-                    frm.refresh_field("visitors");
                     resolve();
                 }
-            }
-        })
-    });
-    // let deliveryPromise = new Promise(resolve => {
-    //     frappe.call({
-    //         method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_material_deliveries",
-    //         args: {
-    //             project: frm.doc.project,
-    //             site_date: frm.doc.site_date
-    //         },
-    //         freeze: true,
-    //         freeze_message: "Fetching Material Deliveries...",
-    //         callback: function(r) {
-    //             let data = r.message || [];
+            });
 
-    //             if (!data.length) {
-    //                 frm.refresh_field("material_deliveries");
-    //                 frappe.msgprint("No material deliveries found for selected filters");
-    //                 return;
-    //             }
+        });
 
-    //             data.forEach(function(d) {
+        // =====================================================
+        // MATERIAL RECEIVED
+        // =====================================================
 
-    //                 let row = frm.add_child("material_deliveries");
+        let receivedPromise = new Promise(resolve => {
 
-    //                 row.parent_task = d.task;
-    //                 row.task = d.subtask;
-    //                 row.item = d.item_code;
-    //                 row.warehouse = d.s_warehouse;
-    //                 row.quantity = d.qty;
-    //                 row.unit = d.uom;
-    //                 row.item_type = d.item_type;
+            frappe.call({
+                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_material_received",
+                args: {
+                    project: frm.doc.project,
+                    site_date: frm.doc.site_date
+                },
+                freeze: true,
+                freeze_message: "Fetching Material Received...",
+                callback: function(r) {
 
-    //                 row.parent_task_subject = d.parent_task_subject;
-    //                 row.task_subject = d.task_subject;
-    //             });
+                    frm.clear_table("material_received");
 
-    //             frm.refresh_field("material_deliveries");
-    //             resolve();
-    //         }
-    //     });
-    // });
-    let receivedPromise = new Promise(resolve => {
-        frappe.call({
-            method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_material_received",
-            args: {
-                project: frm.doc.project,
-                site_date: frm.doc.site_date
-            },
-            freeze: true,
-            freeze_message: "Fetching Material Received...",
-            callback: function(r) {
-                console.log(r);
-                frm.clear_table("material_received");
+                    let data = r.message || [];
 
-                let data = r.message || [];
+                    data.forEach(function(d) {
 
-                if (!data.length) {
+                        let row = frm.add_child("material_received");
+
+                        row.item_code = d.item_code;
+                        row.quantity = d.qty;
+                        row.uom = d.uom;
+
+                        if (d.reference_type == "Purchase Receipt") {
+                            row.warehouse = d.warehouse;
+                        } else {
+                            row.warehouse = d.t_warehouse;
+                        }
+
+                        row.rate = d.rate;
+                        row.amount = d.amount;
+
+                    });
+
                     frm.refresh_field("material_received");
-                    frappe.msgprint("No Purchase Receipt data found");
-                    return;
+
+                    resolve();
+                }
+            });
+
+        });
+
+        // =====================================================
+        // MATERIAL DELIVERIES
+        // =====================================================
+
+        let materialDeliveryPromise = new Promise(resolve => {
+
+            frappe.call({
+                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_material_deliveries",
+                args: {
+                    project: frm.doc.project,
+                    site_date: frm.doc.site_date
+                },
+                freeze: true,
+                freeze_message: "Fetching Material Deliveries...",
+                callback: function(r) {
+
+                    frm.clear_table("material_deliveries");
+
+                    let data = r.message || [];
+
+                    data.forEach(function(d) {
+
+                        if (d.task) {
+
+                            unique_tasks.set(d.task, {
+                                task: d.task
+                            });
+
+                        }
+
+                        let row = frm.add_child("material_deliveries");
+
+                        row.parent_task = d.task;
+                        row.task = d.subtask;
+
+                        row.item = d.item_code;
+                        row.quantity = d.qty;
+                        row.unit = d.uom;
+                        row.warehouse = d.s_warehouse;
+                        row.item_type = d.item_type;
+
+                        row.rate =
+                            d.basic_rate ||
+                            d.valuation_rate ||
+                            d.rate ||
+                            0;
+
+                        row.amount = d.amount || 0;
+
+                        frappe.db.get_value(
+                            "Task",
+                            d.task,
+                            "subject"
+                        ).then(res => {
+
+                            if (res.message) {
+
+                                row.parent_task_subject =
+                                    res.message.subject;
+
+                                frm.refresh_field(
+                                    "material_deliveries"
+                                );
+                            }
+
+                        });
+
+                        frappe.db.get_value(
+                            "Task",
+                            d.subtask,
+                            "subject"
+                        ).then(res => {
+
+                            if (res.message) {
+
+                                row.task_subject =
+                                    res.message.subject;
+
+                                frm.refresh_field(
+                                    "material_deliveries"
+                                );
+                            }
+
+                        });
+
+                    });
+
+                    frm.refresh_field("material_deliveries");
+
+                    resolve();
+
+                }
+            });
+
+        });
+
+        // =====================================================
+        // FINAL
+        // =====================================================
+
+        Promise.all([
+            manpowerPromise,
+            receivedPromise,
+            materialDeliveryPromise
+        ]).then(() => {
+
+            // =========================
+            // TASK TABLE
+            // =========================
+
+            unique_tasks.forEach(function(val) {
+
+                if (val.task) {
+
+                    let row = frm.add_child("task");
+                    row.task = val.task;
+
+                    frappe.db.get_value("Task", val.task, "subject").then(r => {
+                        if (r.message) {
+                            row.task_subject = r.message.subject;
+                            frm.refresh_field("task");
+            }
+        });
+
                 }
 
-                data.forEach(function(d) {
-                    console.log(d);
-                    let row = frm.add_child("material_received");
-                    row.item_code = d.item_code;
-                    row.quantity = d.qty;
-                    row.uom = d.uom;
-                    if(d.reference_type == 'Purchase Receipt'){
-                        row.warehouse = d.warehouse;
-                    }else{
-                        row.warehouse = d.t_warehouse;
-                    }
-                    
-                    row.rate = d.rate;
-                    row.amount = d.amount;
-                });
+            });
 
-                frm.refresh_field("material_received");
-                resolve();
-            }
-        });
-    }); 
-    //deliveryPromise
-    Promise.all([manpowerPromise,receivedPromise]).then(() => {
-        console.log(unique_tasks);
-        unique_tasks.forEach(function(val) {
-            if (val.task) {
+            frm.refresh_field("task");
 
-            let row = frm.add_child("task");
-            row.task = val.task;
-        };
-        frm.refresh_field("task");
+            // =========================
+            // ACTIVITY PROGRESS
+            // =========================
+
+            sync_activity_progress(frm);
+
+            frm.__loading_site_diary = false;
+
+            frappe.msgprint("Data fetched successfully");
+
         });
-        frappe.msgprint("Data fetched successfully");
-    });
-}
+
+    }
+
 });
+
 
 frappe.ui.form.on("Task Summary", {
 
     task(frm) {
 
-        load_dpr_activity_progress(frm);
+        if (frm.__loading_site_diary) return;
+        if (row.task) {
+    frappe.db.get_value("Task", row.task, "subject").then(r => {
+        if (r.message) {
+                frappe.model.set_value(cdt, cdn, "task_subject", r.message.subject);
+                    }
+                });
+        }else {
+            frappe.model.set_value(cdt, cdn, "task_subject", "");
+}
 
+        sync_all_task_tables(frm);
     },
 
     task_remove(frm) {
 
-        load_dpr_activity_progress(frm);
+        if (frm.__loading_site_diary) return;
 
-    }
-
-});
-
-function load_dpr_activity_progress(frm) {
-
-    if (!frm.doc.task || !frm.doc.task.length) {
-        frm.set_value("activity_progress", []);
-        return;
-    }
-
-frappe.call({
-    method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",
-    args: {
-        doc: frm.doc
-    },
-    callback(r) {
-
-        if (!r.message) return;
-
-        let new_data = r.message.activity_progress || [];
-        let existing = frm.doc.activity_progress || [];
-
-        let updated_rows = [];
-
-        // 🔹 Step 1: Keep only rows whose parent_task still exists
-        let valid_parent_tasks = frm.doc.task.map(t => t.task);
-
-        existing.forEach(row => {
-            if (valid_parent_tasks.includes(row.parent_task)) {
-                updated_rows.push(row);
-            }
-        });
-
-        // 🔹 Step 2: Add missing new subtasks
-        new_data.forEach(new_row => {
-
-            let exists = updated_rows.find(r =>
-                r.parent_task === new_row.parent_task &&
-                r.task === new_row.task
-            );
-
-            if (!exists) {
-                updated_rows.push(new_row);
-            }
-
-        });
-
-        // 🔹 Step 3: Set merged data
-        frm.set_value("activity_progress", updated_rows);
-
-    }
-});
-
-
-}
-
-frappe.ui.form.on("DPR Activity Progress", {
-
-    planned_today(frm, cdt, cdn) {
-
-        validate_progress_limits(frm, cdt, cdn, "planned_today");
-
-    },
-
-    achieved_today(frm, cdt, cdn) {
-
-        update_progress(frm, cdt, cdn);
-        validate_progress_limits(frm, cdt, cdn, "achieved_today");
-
-    },
-
-    total_qty(frm, cdt, cdn) {
-
-        update_progress(frm, cdt, cdn);
-
-    }
-
-});
-
-function validate_progress_limits(frm, cdt, cdn, fieldname) {
-
-    let row = locals[cdt][cdn];
-
-    let total_qty = row.total_qty || 0;
-    let achieved_today = row.achieved_today || 0;
-
-    let previous_today = row._previous_achieved_today || 0;
-    let base_achieved = (row.total_achieved || 0) - previous_today;
-
-    let remaining_qty = total_qty - base_achieved;
-
-    let entered_value = row[fieldname] || 0;
-
-    if (entered_value > remaining_qty) {
-
-        frappe.msgprint({
-            title: "Invalid Entry",
-            message: `${fieldname.replace("_", " ")} cannot exceed remaining quantity (${remaining_qty})`,
-            indicator: "red"
-        });
-
-        return;
-    }
-}
-
-function update_progress(frm, cdt, cdn) {
-
-    let row = locals[cdt][cdn];
-
-    let total_qty = row.total_qty || 0;
-    let achieved_today = row.achieved_today || 0;
-    let previous_today = row._previous_achieved_today || 0;
-    let base_achieved = (row.total_achieved || 0) - previous_today;
-    let new_total = base_achieved + achieved_today;
-
-    if (new_total > total_qty) {
-
-        frappe.msgprint({
-            title: "Invalid Entry",
-            message: "Total achieved cannot exceed total quantity",
-            indicator: "red"
-        });
-
-        row.achieved_today = 0;
-        row.total_achieved = base_achieved;
-        row._previous_achieved_today = 0;
-
-    } else {
-        row.total_achieved = new_total;
-        row._previous_achieved_today = achieved_today;
-    }
-
-    if (total_qty > 0) {
-        row.percent_completed = (row.total_achieved / total_qty) * 100;
-    } else {
-        row.percent_completed = 0;
-    }
-
-    frm.refresh_field("activity_progress");
-}
-frappe.ui.form.on("Manpower Log", {
-
-    skilled: function(frm, cdt, cdn) {
-
-        let row = locals[cdt][cdn];
-
-        if (flt(row.skilled) > 0 && flt(row.unskilled) > 0) {
-
-            frappe.msgprint({
-                title: __("Invalid Entry"),
-                message: __(
-                    "Only Skilled OR Unskilled can be entered in one row"
-                ),
-                indicator: "red"
-            });
-
-            frappe.model.set_value(
-                cdt,
-                cdn,
-                "unskilled",
-                0
-            );
-        }
-
-        calculate_total(frm, cdt, cdn);
-    },
-
-    unskilled: function(frm, cdt, cdn) {
-
-        let row = locals[cdt][cdn];
-
-        if (flt(row.skilled) > 0 && flt(row.unskilled) > 0) {
-
-            frappe.msgprint({
-                title: __("Invalid Entry"),
-                message: __(
-                    "Only Skilled OR Unskilled can be entered in one row"
-                ),
-                indicator: "red"
-            });
-
-            frappe.model.set_value(
-                cdt,
-                cdn,
-                "skilled",
-                0
-            );
-        }
-
-        calculate_total(frm, cdt, cdn);
-    },
-
-    hours_worked: function(frm, cdt, cdn) {
-
-        validate_hours(frm, cdt, cdn);
-    },
-
-    overtime_hours: function(frm, cdt, cdn) {
-
-        validate_hours(frm, cdt, cdn);
-    },
-
-    daily_wages: function(frm, cdt, cdn) {
-
-        calculate_total_wages(frm, cdt, cdn);
-    },
-
-    total: function(frm, cdt, cdn) {
-
-        calculate_total_wages(frm, cdt, cdn);
-    }
-
-});
-frappe.ui.form.on("Site Equipment Log", {
-
-    rate: function(frm, cdt, cdn) {
-        calculate_equipment_total(frm, cdt, cdn);
-    },
-
-    working_hours: function(frm, cdt, cdn) {
-        calculate_equipment_total(frm, cdt, cdn);
-    },
-    quantity: function(frm, cdt, cdn) {
-        calculate_equipment_total(frm, cdt, cdn);
-    },
-
-});
-
-function calculate_equipment_total(frm, cdt, cdn) {
-
-    let row = locals[cdt][cdn];
-    
-    let quantity =row.quantity;
-
-    let rate = flt(row.rate || 0);
-
-    let working_hours = flt(row.working_hours || 0);
-
-    let total_amount = quantity* rate * working_hours;
-
-    frappe.model.set_value(
-        cdt,
-        cdn,
-        "total_amount",
-        total_amount
-    );
-
-}
-
-function calculate_total(frm, cdt, cdn) {
-
-    let row = locals[cdt][cdn];
-
-    let total =
-        (row.skilled || 0) +
-        (row.unskilled || 0)
-
-    frappe.model.set_value(cdt, cdn, "total", total);
-
-    update_parent_total(frm);
-
-
-    }
-
-function calculate_total_wages(frm, cdt, cdn) {
-
-	let row = locals[cdt][cdn];
-
-	let skilled = flt(row.skilled || 0);
-
-	let unskilled = flt(row.unskilled || 0);
-
-
-	let daily_wages = flt(row.daily_wages || 0);
-
-	let total_workers = skilled + unskilled;
-
-	let total_wage = total_workers * daily_wages;
-
-	frappe.model.set_value(cdt, cdn, "total_wage", total_wage);
-}
-
-function validate_hours(frm, cdt, cdn) {
-
-    let row = locals[cdt][cdn];
-
-    let total_hours =
-        (row.hours_worked || 0) +
-        (row.overtime_hours || 0);
-
-    if (total_hours > 16) {
-
-        frappe.msgprint(
-            "Working Hours + Overtime Hours must be between 0 and 16"
-        );
-
-        frappe.model.set_value(cdt, cdn, "hours_worked", 8);
-        frappe.model.set_value(cdt, cdn, "overtime_hours", 0);
-    }
-
-
-    }
-
-function getWeatherText(code) {
-    const map = {
-    0: "Clear sky ☀️",
-
-        1: "Mainly clear 🌤️",
-        2: "Partly cloudy ⛅",
-        3: "Overcast ☁️",
-
-        45: "Fog 🌫️",
-        48: "Freezing fog ❄️🌫️",
-
-        51: "Light drizzle 🌦️",
-        53: "Moderate drizzle 🌦️",
-        55: "Dense drizzle 🌧️",
-
-        61: "Slight rain 🌧️",
-        63: "Moderate rain 🌧️",
-        65: "Heavy rain 🌧️",
-
-        71: "Slight snow ❄️",
-        73: "Moderate snow ❄️",
-        75: "Heavy snow ❄️",
-
-        80: "Rain showers 🌦️",
-        81: "Moderate rain showers 🌧️",
-        82: "Violent rain showers ⛈️",
-
-        85: "Snow showers 🌨️",
-        86: "Heavy snow showers 🌨️",
-
-        95: "Thunderstorm ⛈️",
-        96: "Thunderstorm with hail ⛈️🧊",
-        99: "Severe thunderstorm ⛈️"
-    };
-
-return map[code] || "Unknown weather";
-
-
-}
-
-frappe.ui.form.on("Task Summary", {
-task: function(frm, cdt, cdn) {
-
-    let row = locals[cdt][cdn];
-
-    if (!row.task) return;
-
-    frappe.call({
-        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_task_bom_details",
-        args: {
-            task: row.task
-        },
-        callback: function(r) {
-
-            if (!r.message) return;
-            console.log("execustion check 1")
-            console.log(r.message)
-            // MATERIALS
-            r.message.materials.forEach(d => {
-
-                let row = frm.add_child("material_deliveries");
-
-                row.parent_task = d.parent_task;
-                row.parent_task_subject = d.parent_task_subject;
-                row.task = d.task;
-                row.task_subject = d.task_subject;
-                row.item = d.item;
-                row.item_type = d.item_type;
-                row.unit = d.uom;
-            });
-
-            // MANPOWER
-            // r.message.manpower.forEach(d => {
-
-            //     let row = frm.add_child("manpower_log");
-            //     row.parent_task = d.parent_task;
-            //     row.task = d.task;
-            //     row.task_subject = d.task_subject;
-            //     row.tradecategory = d.item;
-            //     row.item_type = d.item_type;
-            //     MANPOWER
-// MANPOWER
-            r.message.manpower.forEach(d => {
-                let child = frm.add_child("manpower_log");
-
-                frappe.model.set_value(child.doctype, child.name, "parent_task", d.parent_task);
-                frappe.model.set_value(child.doctype, child.name, "parent_task_subject", d.parent_task_subject);
-                frappe.model.set_value(child.doctype, child.name, "task", d.task);
-                frappe.model.set_value(child.doctype, child.name, "task_subject", d.task_subject);
-                frappe.model.set_value(child.doctype, child.name, "item_type", d.item_type);
-
-                // Set tradecategory first, then fetch daily_wages manually
-                frappe.model.set_value(child.doctype, child.name, "tradecategory", d.item).then(() => {
-                    if (d.item) {
-                        frappe.db.get_value("Item", d.item, "custom_daily_wages").then(r => {
-                            if (r.message && r.message.custom_daily_wages) {
-                                frappe.model.set_value(
-                                    child.doctype,
-                                    child.name,
-                                    "daily_wages",
-                                    r.message.custom_daily_wages
-                                );
-                                frm.refresh_field("manpower_log");
-                            }
-                        });
-                    }
-                });
-            });
-
-
-            // EQUIPMENT
-            r.message.equipment.forEach(d => {
-
-                let row = frm.add_child("equipment_log");
-                row.parent_task = d.parent_task;
-                row.parent_task_subject = d.parent_task_subject;
-                row.task = d.task;
-                row.task_subject = d.task_subject;
-                row.item = d.item;
-                row.equipment_name= d.item;
-                row.item_type = d.item_type;
-            });
-
-            frm.refresh_field("material_deliveries");
-            frm.refresh_field("manpower_log");
-            frm.refresh_field("equipment_log");
-        }
-    });
-}
-
-
-});
-
-frappe.ui.form.on("Task Summary", {
-    task(frm, cdt, cdn) {
-        sync_all_task_tables(frm);
-    },
-
-    task_remove(frm, cdt, cdn) {
         sync_all_task_tables(frm);
     }
+
 });
+
 
 function sync_all_task_tables(frm) {
+
     sync_activity_progress(frm);
     sync_bom_tables(frm);
+
 }
 
+
 function get_selected_parent_tasks(frm) {
+
     return (frm.doc.task || [])
         .map(r => r.task)
         .filter(Boolean);
+
 }
 
+
 function sync_activity_progress(frm) {
+
     if (!frm.doc.task || !frm.doc.task.length) {
+
         frm.clear_table("activity_progress");
         frm.refresh_field("activity_progress");
+
         return;
     }
 
@@ -768,20 +537,33 @@ function sync_activity_progress(frm) {
             doc: frm.doc
         },
         callback(r) {
+
             if (!r.message) return;
 
-            let new_data = r.message.activity_progress || [];
-            merge_child_table(frm, "activity_progress", new_data, ["parent_task", "task"]);
+            let new_data =
+                r.message.activity_progress || [];
+
+            merge_child_table(
+                frm,
+                "activity_progress",
+                new_data,
+                ["parent_task", "task"]
+            );
 
             frm.refresh_field("activity_progress");
+
         }
     });
+
 }
 
+
 function sync_bom_tables(frm) {
+
     let tasks = get_selected_parent_tasks(frm);
 
     if (!tasks.length) {
+
         frm.clear_table("material_deliveries");
         frm.clear_table("manpower_log");
         frm.clear_table("equipment_log");
@@ -789,6 +571,7 @@ function sync_bom_tables(frm) {
         frm.refresh_field("material_deliveries");
         frm.refresh_field("manpower_log");
         frm.refresh_field("equipment_log");
+
         return;
     }
 
@@ -798,20 +581,47 @@ function sync_bom_tables(frm) {
             tasks: tasks
         },
         callback(r) {
+
             if (!r.message) return;
 
-            merge_child_table(frm, "material_deliveries", r.message.materials || [], ["parent_task", "task", "item"]);
-            merge_child_table(frm, "manpower_log", r.message.manpower || [], ["parent_task", "task", "tradecategory"]);
-            merge_child_table(frm, "equipment_log", r.message.equipment || [], ["parent_task", "task", "item"]);
+            merge_child_table(
+                frm,
+                "material_deliveries",
+                r.message.materials || [],
+                ["parent_task", "task", "item"]
+            );
+
+            merge_child_table(
+                frm,
+                "manpower_log",
+                r.message.manpower || [],
+                ["parent_task", "task", "tradecategory"]
+            );
+
+            merge_child_table(
+                frm,
+                "equipment_log",
+                r.message.equipment || [],
+                ["parent_task", "task", "item"]
+            );
 
             frm.refresh_field("material_deliveries");
             frm.refresh_field("manpower_log");
             frm.refresh_field("equipment_log");
+
         }
     });
+
 }
 
-function merge_child_table(frm, table_field, new_data, key_fields) {
+
+function merge_child_table(
+    frm,
+    table_field,
+    new_data,
+    key_fields
+) {
+
     let existing = frm.doc[table_field] || [];
 
     let new_keys = new Set(
@@ -821,16 +631,21 @@ function merge_child_table(frm, table_field, new_data, key_fields) {
     let old_rows_by_key = {};
 
     existing.forEach(row => {
+
         let key = make_key(row, key_fields);
+
         if (new_keys.has(key)) {
             old_rows_by_key[key] = row;
         }
+
     });
 
     frm.clear_table(table_field);
 
     new_data.forEach(new_row => {
+
         let key = make_key(new_row, key_fields);
+
         let old_row = old_rows_by_key[key] || {};
 
         let child = frm.add_child(table_field);
@@ -839,19 +654,72 @@ function merge_child_table(frm, table_field, new_data, key_fields) {
             child[field] = new_row[field];
         });
 
-        // preserve manually filled values
         Object.keys(old_row).forEach(field => {
+
             if (
-                !["name", "idx", "doctype", "parent", "parenttype", "parentfield"].includes(field)
-                && old_row[field]
-                && !child[field]
+                ![
+                    "name",
+                    "idx",
+                    "doctype",
+                    "parent",
+                    "parenttype",
+                    "parentfield"
+                ].includes(field)
+                &&
+                old_row[field]
+                &&
+                !child[field]
             ) {
+
                 child[field] = old_row[field];
+
             }
+
         });
+
     });
+
 }
 
+
 function make_key(row, fields) {
-    return fields.map(f => row[f] || "").join("||");
+
+    return fields
+        .map(f => row[f] || "")
+        .join("||");
+
 }
+frappe.ui.form.on("DPR Activity Progress", {
+
+    achieved_today(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+
+        // total_achieved = previous total + today's achieved
+        let previous_total = row.previous_total_achieved || 0;
+        let achieved_today = row.achieved_today || 0;
+
+        let new_total = previous_total + achieved_today;
+        let total_qty = row.total_qty || 0;
+
+        let percent = total_qty > 0
+            ? (new_total / total_qty) * 100
+            : 0;
+
+        frappe.model.set_value(cdt, cdn, "total_achieved", new_total);
+        frappe.model.set_value(cdt, cdn, "percent_completed", percent);
+    },
+
+    total_qty(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+
+        let total_achieved = row.total_achieved || 0;
+        let total_qty = row.total_qty || 0;
+
+        let percent = total_qty > 0
+            ? (total_achieved / total_qty) * 100
+            : 0;
+
+        frappe.model.set_value(cdt, cdn, "percent_completed", percent);
+    }
+
+});

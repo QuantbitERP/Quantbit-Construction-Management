@@ -204,7 +204,7 @@ function load_hierarchy(frm) {
             fields: [
                 "name", "subject", "parent_task", "status", "priority",
                 "description", "task_weight", "custom_is_stage",
-                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date","progress","custom_total_labour_cost","custom_total_equipment_cost"
+                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date","progress","custom_total_labour_cost","custom_total_equipment_cost","custom_total_material_cost" 
             ],
             order_by: "creation asc",
             limit_page_length: 1000
@@ -244,26 +244,32 @@ function load_hierarchy(frm) {
 
                 let stage_labour_total = 0;
                 let stage_equipment_total = 0;
+                let stage_material_total = 0;
 
                 stage.tasks.forEach(taskObj => {
 
                     let task_labour_total = 0;
                     let task_equipment_total = 0;
+                    let task_material_total = 0;
 
                     taskObj.subtasks.forEach(sub => {
                         task_labour_total += flt(sub.custom_total_labour_cost || 0);
                         task_equipment_total += flt(sub.custom_total_equipment_cost || 0);
+                        task_material_total += flt(sub.custom_total_material_cost || 0);
                     });
 
                     taskObj.data.custom_total_labour_cost = task_labour_total;
                     taskObj.data.custom_total_equipment_cost = task_equipment_total;
+                    taskObj.data.custom_total_material_cost = task_material_total;
 
                     stage_labour_total += task_labour_total;
                     stage_equipment_total += task_equipment_total;
+                    stage_material_total += task_material_total;
                 });
 
                 stage.data.custom_total_labour_cost = stage_labour_total;
                 stage.data.custom_total_equipment_cost = stage_equipment_total;
+                stage.data.custom_total_material_cost = stage_material_total;
             });
 
             let html = `<div style="padding:15px;">
@@ -392,6 +398,8 @@ function render_row(item, type, is_expanded) {
                 Labour Cost: ₹ ${flt(item.custom_total_labour_cost || 0).toFixed(2)}
                 &nbsp; | &nbsp;
                 Equipment Cost: ₹ ${flt(item.custom_total_equipment_cost || 0).toFixed(2)}
+                &nbsp; | &nbsp;
+                Material Cost: ₹ ${flt(item.custom_total_material_cost || 0).toFixed(2)}
             </div>
         `;
     }
