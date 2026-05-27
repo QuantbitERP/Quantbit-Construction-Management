@@ -313,7 +313,7 @@ frappe.ui.form.on("Site Diary", {
                         if (d.reference_type == "Purchase Receipt") {
                             row.warehouse = d.warehouse;
                         } else {
-                            row.warehouse = d.t_warehouse;
+                            row.warehouse = d.target_warehouse;
                         }
 
                         row.rate = d.rate;
@@ -689,37 +689,3 @@ function make_key(row, fields) {
         .join("||");
 
 }
-frappe.ui.form.on("DPR Activity Progress", {
-
-    achieved_today(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-
-        // total_achieved = previous total + today's achieved
-        let previous_total = row.previous_total_achieved || 0;
-        let achieved_today = row.achieved_today || 0;
-
-        let new_total = previous_total + achieved_today;
-        let total_qty = row.total_qty || 0;
-
-        let percent = total_qty > 0
-            ? (new_total / total_qty) * 100
-            : 0;
-
-        frappe.model.set_value(cdt, cdn, "total_achieved", new_total);
-        frappe.model.set_value(cdt, cdn, "percent_completed", percent);
-    },
-
-    total_qty(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-
-        let total_achieved = row.total_achieved || 0;
-        let total_qty = row.total_qty || 0;
-
-        let percent = total_qty > 0
-            ? (total_achieved / total_qty) * 100
-            : 0;
-
-        frappe.model.set_value(cdt, cdn, "percent_completed", percent);
-    }
-
-});

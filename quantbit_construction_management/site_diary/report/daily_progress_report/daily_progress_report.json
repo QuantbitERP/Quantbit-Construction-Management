@@ -1,0 +1,34 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2026-05-27 11:08:21.110673",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": null,
+ "modified": "2026-05-27 11:08:21.110673",
+ "modified_by": "Administrator",
+ "module": "Site Diary",
+ "name": "Daily Progress Report",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Task",
+ "report_name": "Daily Progress Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Projects User"
+  },
+  {
+   "role": "HR User"
+  },
+  {
+   "role": "HR Manager"
+  }
+ ],
+ "timeout": 0
+}

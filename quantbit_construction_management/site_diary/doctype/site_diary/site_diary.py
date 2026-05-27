@@ -869,6 +869,8 @@ def get_material_deliveries(project, site_date):
             sei.item_code,
             sei.qty,
             sei.uom,
+			sei.basic_rate,
+			sei.amount,
             sei.s_warehouse,
             sei.custom_task as task,
             sei.custom_subtask as subtask,
@@ -877,11 +879,11 @@ def get_material_deliveries(project, site_date):
         INNER JOIN `tabStock Entry` se ON se.name = sei.parent
         WHERE se.name IN %(entries)s
         AND sei.project = %(project)s
+		AND se.docstatus = 1
     """, {
         "entries": tuple(entry_names),
         "project": project
     }, as_dict=True)
-    frappe.msgprint(str(data))
     # cache item + task lookups
     item_cache = {}
     task_cache = {}
@@ -951,7 +953,7 @@ def get_material_received(project, site_date):
             ON pr.name = pri.parent
         WHERE pr.posting_date = %(site_date)s
         AND pri.project = %(project)s
-        AND pr.set_warehouse IN %(warehouses)s
+        AND pri.warehouse IN %(warehouses)s
 		AND pr.docstatus = 1
     """, {
         "site_date": site_date,
@@ -969,14 +971,14 @@ def get_material_received(project, site_date):
 
         stock_entries = frappe.db.sql("""
             SELECT
-                se.name as reference_name,
-                'Stock Entry' as reference_type,
+                se.name as reference_name, 
+				se.stock_entry_type as reference_type,
                 sed.item_code,
                 sed.item_name,
                 sed.qty,
                 sed.uom,
                 sed.s_warehouse as warehouse,
-                sed.t_warehouse,
+                sed.t_warehouse as target_warehouse,
                 sed.project,
                 sed.basic_rate as rate,
                 sed.amount
