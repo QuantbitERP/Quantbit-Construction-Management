@@ -1,0 +1,494 @@
+<div class="print-format">
+
+    {%
+    var report_data = (typeof data !== "undefined" && data) ? data : [];
+
+    function fmt_num(v) {
+        if (v === undefined || v === null || v === "") return "";
+        var n = parseFloat(v);
+        return isNaN(n) ? v : n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function fmt_qty(v) {
+        if (v === undefined || v === null || v === "") return "";
+        var n = parseFloat(v);
+        return isNaN(n) ? v : n.toLocaleString("en-IN", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    }
+
+    var SECTION_ORDER = ["Equipment Usage", "Visitors", "Manpower Usage", "Material Consumed", "Material Received"];
+    var TOTAL_KEYS = {
+        "Equipment Usage": "Equipment Usage TOTAL",
+        "Manpower Usage": "Manpower Usage TOTAL",
+        "Material Consumed": "Material Consumed TOTAL",
+        "Material Received": "Material Received TOTAL"
+    };
+
+    var sections = {};
+    SECTION_ORDER.forEach(function(s) { sections[s] = []; });
+    var total_rows = {};
+    var grand_total_row = null;
+
+    report_data.forEach(function(row) {
+        if (row.section === "GRAND TOTAL") { grand_total_row = row; return; }
+        for (var k in TOTAL_KEYS) {
+            if (row.section === TOTAL_KEYS[k]) { total_rows[k] = row; return; }
+        }
+        if (sections[row.section]) {
+            var is_sentinel = !row.site_engineer && !row.task && !row.item && !row.visitor_name && !row.skill_type && !row.working_hours && !row.quantity && !row.amount;
+            if (!is_sentinel) sections[row.section].push(row);
+        }
+    });
+    %}
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .print-format {
+            padding: 6px 10px !important;
+            background: #fff;
+            width: 100%;
+        }
+
+        body { font-family: Arial, sans-serif; font-size: 9px; color: #111; background: #fff; }
+
+        .header { text-align: center; margin-bottom: 6px; line-height: 1.5; }
+        .header .company-name {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+        }
+
+        .header .report-title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 3px;
+        }
+
+        .sub-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        border-bottom: 2px solid #222;
+        padding-bottom: 5px;
+    }
+        .section-title {
+            margin-top: 10px;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f2f4f7;
+            border-left: 4px solid #000;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            table-layout: fixed;
+            margin-bottom: 8px;
+            border: 1px solid #d0d0d0;
+        }
+
+        th, td {
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        thead tr th {
+            padding: 4px 4px;
+            background: #e9ecef;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 1px solid #999;
+            border-right: 1px solid #ddd;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+
+        thead tr th:last-child { border-right: none; }
+
+        tbody tr td {
+            padding: 3px 4px;
+            vertical-align: top;
+            border-bottom: 1px solid #eee;
+            border-right: 1px solid #f1f1f1;
+            word-wrap: break-word;
+        }
+
+        tbody tr td:last-child { border-right: none; }
+
+        tr.data-row:nth-child(even) { background: #fafafa; }
+
+        tr.total-row td {
+            font-weight: 700;
+            background: #f1f3f5;
+            border-top: 2px solid #333;
+            border-bottom: 2px solid #333;
+            white-space: nowrap;
+        }
+
+        tr.no-data td {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 6px;
+            background: #fff;
+        }
+
+        .grand-total-block {
+            margin-top: 8px;
+            padding: 6px 8px;
+            text-align: right;
+            font-weight: 800;
+            font-size: 11px;
+            background: #f8f9fa;
+            border: 2px solid #000;
+        }
+
+        .right  { text-align: right; }
+        .center { text-align: center; }
+        .bold   { font-weight: 700; }
+        .light  { color: #444; font-size: 8px; }
+        .nowrap { white-space: nowrap; }
+
+           /* ── Equipment: 11 cols ── */
+        .tbl-eq .c-eng     { width: 8%; }
+        .tbl-eq .c-task    { width: 11%; }
+        .tbl-eq .c-subtask { width: 11%; }
+        .tbl-eq .c-item    { width: 15%; }
+        .tbl-eq .c-itype   { width: 8%; }
+        .tbl-eq .c-contr   { width: 12%; }
+        .tbl-eq .c-uom     { width: 5%; }
+        .tbl-eq .c-rate    { width: 7%; }
+        .tbl-eq .c-qty     { width: 7%; }
+        .tbl-eq .c-hrs     { width: 7%; }
+        .tbl-eq .c-amt     { width: 9%; }
+
+        /* ── Visitors: 5 cols ── */
+        .tbl-vi .c-vname { width: 22%; }
+        .tbl-vi .c-vpurp { width: 33%; }
+        .tbl-vi .c-vcomp { width: 25%; }
+        .tbl-vi .c-vin   { width: 10%; }
+        .tbl-vi .c-vout  { width: 10%; }
+
+
+        /* ── Manpower: 8 cols ── */
+        .tbl-mp .c-tsub  { width: 18%; }
+        .tbl-mp .c-ssub  { width: 18%; }
+        .tbl-mp .c-contr { width: 18%; }
+        .tbl-mp .c-skill { width: 12%; }
+        .tbl-mp .c-uom   { width: 8%; }
+        .tbl-mp .c-rate  { width: 8%; }
+        .tbl-mp .c-qty   { width: 8%; }
+        .tbl-mp .c-amt   { width: 10%; }
+
+        /* ── Material Consumed: 13 cols ── */
+        .tbl-mc .c-task    { width: 7%; }
+        .tbl-mc .c-tsub    { width: 10%; }
+        .tbl-mc .c-subtask { width: 7%; }
+        .tbl-mc .c-ssub    { width: 10%; }
+        .tbl-mc .c-item    { width: 12%; }
+        .tbl-mc .c-itype   { width: 7%; }
+        .tbl-mc .c-ttype   { width: 8%; }
+        .tbl-mc .c-tid     { width: 10%; }
+        .tbl-mc .c-wh      { width: 10%; }
+        .tbl-mc .c-uom     { width: 5%; }
+        .tbl-mc .c-rate    { width: 7%; }
+        .tbl-mc .c-qty     { width: 7%; }
+        .tbl-mc .c-amt     { width: 10%; }
+
+        /* ── Material Received: 10 cols ── */
+        .tbl-mr .c-item   { width: 14%; }
+        .tbl-mr .c-itype  { width: 8%; }
+        .tbl-mr .c-wh     { width: 13%; }
+        .tbl-mr .c-twh    { width: 13%; }
+        .tbl-mr .c-ttype  { width: 10%; }
+        .tbl-mr .c-tid    { width: 12%; }
+        .tbl-mr .c-uom    { width: 6%; }
+        .tbl-mr .c-rate   { width: 8%; }
+        .tbl-mr .c-qty    { width: 7%; }
+        .tbl-mr .c-amt    { width: 9%; }
+    </style>
+
+    <div class="header">
+        <div class="company-name">Daily Progress Report</div>
+    </div>
+
+    <div class="sub-header">
+        <div>Project:
+        {%= report_data.length && report_data[0].project_name
+        ? report_data[0].project_name
+        : (filters.project || "") %}</div>
+    <div>
+        Date:
+        {%
+            if (filters.site_date) {
+                var d = frappe.datetime.str_to_obj(filters.site_date);
+        %}
+            {%= frappe.datetime.obj_to_user(d) %}
+        {%
+            }
+        %}
+    </div>
+    </div>
+
+    <!-- ══════════════════ 1. EQUIPMENT USAGE ══════════════════ -->
+    <div class="section-title">Equipment Usage</div>
+    <table class="tbl-eq">
+        <thead>
+            <tr>
+                <th class="c-eng">Site Engineer</th>
+                <th class="c-task">Task Subject</th>
+                <th class="c-subtask">Subtask Subject</th>
+                <th class="c-item">Equipment Item</th>
+                <th class="c-itype">Item Type</th>
+                <th class="c-contr">Contractor</th>
+                <th class="c-uom center">UOM</th>
+                <th class="c-rate right">Rate</th>
+                <th class="c-qty right">Quantity</th>
+                <th class="c-hrs right">Working Hrs</th>
+                <th class="c-amt right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%
+            if (sections["Equipment Usage"].length === 0) { %}
+                <tr class="no-data"><td colspan="11">No records found.</td></tr>
+            {%
+            } else {
+                for (var i = 0; i < sections["Equipment Usage"].length; i++) {
+                    var r = sections["Equipment Usage"][i]; %}
+                    <tr class="data-row">
+                        <td class="c-eng">{%= r.site_engineer || "" %}</td>
+                        <td class="c-task">
+                            {% if (r.task_subject) { %}
+                                <br><span>{%= r.task_subject %}</span>
+                            {% } %}
+                        </td>
+                        <td class="c-subtask">
+                            {% if (r.subtask_subject) { %}
+                                <br><span>{%= r.subtask_subject %}</span>
+                            {% } %}
+                        </td>
+                        <td class="c-item">{%= r.item || "" %}</td>
+                        <td class="c-itype">{%= r.item_type || "" %}</td>
+                        <td class="c-contr">{%= r.contractor || "" %}</td>
+                        <td class="c-uom center nowrap">{%= r.uom || "" %}</td>
+                        <td class="c-rate right nowrap">{%= fmt_num(r.rate) %}</td>
+                        <td class="c-qty right nowrap">{%= fmt_qty(r.quantity) %}</td>
+                        <td class="c-hrs right nowrap">{%= fmt_num(r.working_hours) %}</td>
+                        <td class="c-amt right bold">{%= fmt_num(r.amount) %}</td>
+                    </tr>
+                {%
+                }
+                if (total_rows["Equipment Usage"]) { %}
+                    <tr class="total-row">
+                        <td colspan="10" class="right">Equipment Usage Total</td>
+                        <td class="right nowrap">{%= fmt_num(total_rows["Equipment Usage"].amount) %}</td>
+                    </tr>
+                {%
+                }
+            }
+            %}
+        </tbody>
+    </table>
+
+    <!-- ══════════════════ 2. VISITORS ══════════════════ -->
+    <div class="section-title">Visitors</div>
+    <table class="tbl-vi">
+        <thead>
+            <tr>
+                <th class="c-vname">Visitor Name</th>
+                <th class="c-vpurp">Purpose</th>
+                <th class="c-vcomp">Company</th>
+                <th class="c-vin center">Time In</th>
+                <th class="c-vout center">Time Out</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%
+            if (sections["Visitors"].length === 0) { %}
+                <tr class="no-data"><td colspan="5">No visitors recorded.</td></tr>
+            {%
+            } else {
+                for (var i = 0; i < sections["Visitors"].length; i++) {
+                    var r = sections["Visitors"][i]; %}
+                    <tr class="data-row">
+                        <td class="c-vname bold">{%= r.visitor_name || "" %}</td>
+                        <td class="c-vpurp">{%= r.purpose || "" %}</td>
+                        <td class="c-vcomp">{%= r.company || "" %}</td>
+                        <td class="c-vin center nowrap">{%= r.time_in || "" %}</td>
+                        <td class="c-vout center nowrap">{%= r.time_out || "" %}</td>
+                    </tr>
+                {%
+                }
+            }
+            %}
+        </tbody>
+    </table>
+
+    <!-- ══════════════════ 3. MANPOWER USAGE ══════════════════ -->
+    <div class="section-title">Manpower Usage</div>
+    <table class="tbl-mp">
+        <thead>
+            <tr>
+                <th class="c-tsub">Task Subject</th>
+                <th class="c-ssub">Subtask Subject</th>
+                <th class="c-contr">Contractor</th>
+                <th class="c-skill">Skill Type</th>
+                <th class="c-uom center">UOM</th>
+                <th class="c-rate right">Rate</th>
+                <th class="c-qty right">Quantity</th>
+                <th class="c-amt right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%
+            if (sections["Manpower Usage"].length === 0) { %}
+                <tr class="no-data"><td colspan="10">No records found.</td></tr>
+            {%
+            } else {
+                for (var i = 0; i < sections["Manpower Usage"].length; i++) {
+                    var r = sections["Manpower Usage"][i]; %}
+                    <tr class="data-row">
+                        <td class="c-tsub">{%= r.task_subject || "" %}</td>
+                        <td class="c-ssub">{%= r.subtask_subject || "" %}</td>
+                        <td class="c-contr">{%= r.contractor || "" %}</td>
+                        <td class="c-skill">{%= r.skill_type || "" %}</td>
+                        <td class="c-uom center nowrap">{%= r.uom || "" %}</td>
+                        <td class="c-rate right nowrap">{%= fmt_num(r.rate) %}</td>
+                        <td class="c-qty right nowrap">{%= fmt_qty(r.quantity) %}</td>
+                        <td class="c-amt right bold nowrap">{%= fmt_num(r.amount) %}</td>
+                    </tr>
+                {%
+                }
+                if (total_rows["Manpower Usage"]) { %}
+                    <tr class="total-row">
+                        <td colspan="7" class="right">Manpower Usage Total</td>
+                        <td class="right nowrap">{%= fmt_num(total_rows["Manpower Usage"].amount) %}</td>
+                    </tr>
+                {%
+                }
+            }
+            %}
+        </tbody>
+    </table>
+
+    <!-- ══════════════════ 4. MATERIAL CONSUMED ══════════════════ -->
+    <div class="section-title">Material Consumed</div>
+    <table class="tbl-mc">
+        <thead>
+            <tr>
+                <th class="c-tsub">Task Subject</th>
+                <th class="c-ssub">Subtask Subject</th>
+                <th class="c-item">Item</th>
+                <th class="c-itype">Item Type</th>
+                <th class="c-ttype">Transaction Type</th>
+                <th class="c-tid">Transaction ID</th>
+                <th class="c-wh">Warehouse</th>
+                <th class="c-uom center">UOM</th>
+                <th class="c-rate right">Rate</th>
+                <th class="c-qty right">Qty</th>
+                <th class="c-amt right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%
+            if (sections["Material Consumed"].length === 0) { %}
+                <tr class="no-data"><td colspan="11">No records found.</td></tr>
+            {%
+            } else {
+                for (var i = 0; i < sections["Material Consumed"].length; i++) {
+                    var r = sections["Material Consumed"][i]; %}
+                    <tr class="data-row">
+                        <td class="c-tsub">{%= r.task_subject || "" %}</td>
+                        <td class="c-ssub">{%= r.subtask_subject || "" %}</td>
+                        <td class="c-item">{%= r.item || "" %}</td>
+                        <td class="c-itype">{%= r.item_type || "" %}</td>
+                        <td class="c-ttype">{%= r.transaction_type || "" %}</td>
+                        <td class="c-tid">{%= r.entry_id || "" %}</td>
+                        <td class="c-wh">{%= r.warehouse || "" %}</td>
+                        <td class="c-uom center">{%= r.uom || "" %}</td>
+                        <td class="c-rate right nowrap">{%= fmt_num(r.rate) %}</td>
+                        <td class="c-qty right nowrap">{%= fmt_qty(r.quantity) %}</td>
+                        <td class="c-amt right bold">{%= fmt_num(r.amount) %}</td>
+                    </tr>
+                {%
+                }
+                  if (total_rows["Material Consumed"]) { %}
+                    <tr class="total-row">
+                        <td colspan="10" class="right">Material Consumed Total</td>
+                        <td class="right nowrap">
+                            {%= fmt_num(total_rows["Material Consumed"].amount) %}
+                        </td>
+                    </tr>
+                {%
+                }
+            }
+            %}
+        </tbody>
+    </table>
+
+    <!-- ══════════════════ 5. MATERIAL RECEIVED ══════════════════ -->
+    <div class="section-title">Material Received</div>
+    <table class="tbl-mr">
+        <thead>
+            <tr>
+                <th class="c-item">Item</th>
+                <th class="c-itype">Item Type</th>
+                <th class="c-wh">Source Warehouse</th>
+                <th class="c-twh">Target Warehouse</th>
+                <th class="c-ttype">Transaction Type</th>
+                <th class="c-tid">Transaction ID</th>
+                <th class="c-uom center">UOM</th>
+                <th class="c-rate right">Rate</th>
+                <th class="c-qty right">Qty</th>
+                <th class="c-amt right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%
+            if (sections["Material Received"].length === 0) { %}
+                <tr class="no-data"><td colspan="7">No records found.</td></tr>
+            {%
+            } else {
+                for (var i = 0; i < sections["Material Received"].length; i++) {
+                    var r = sections["Material Received"][i]; %}
+                    <tr class="data-row">
+                        <td class="c-item">{%= r.item || "" %}</td>
+                        <td class="c-itype">{%= r.item_type || "" %}</td>
+                        <td class="c-wh">{%= r.warehouse || "" %}</td>
+                        <td class="c-wh">{%= r.target_warehouse || "" %}</td>
+                        <td class="c-ttype">{%= r.transaction_type || "" %}</td>
+                        <td class="c-tid">{%= r.entry_id || "" %}</td>
+                        <td class="c-uom center nowrap">{%= r.uom || "" %}</td>
+                        <td class="c-rate right nowrap">{%= fmt_num(r.rate) %}</td>
+                        <td class="c-qty right nowrap">{%= fmt_qty(r.quantity) %}</td>
+                        <td class="c-amt right bold nowrap">{%= fmt_num(r.amount) %}</td>
+                    </tr>
+                {%
+                }
+                if (total_rows["Material Received"]) { %}
+                    <tr class="total-row">
+                        <td colspan="9" class="right">Material Received Total</td>
+                        <td class="right nowrap">{%= fmt_num(total_rows["Material Received"].amount) %}</td>
+                    </tr>
+                {%
+                }
+            }
+            %}
+        </tbody>
+    </table>
+
+    {%
+    if (grand_total_row) { %}
+        <div class="grand-total-block">
+            Grand Total &nbsp;&nbsp; {%= fmt_num(grand_total_row.amount) %}
+        </div>
+    {%
+    }
+    %}
+
+</div>

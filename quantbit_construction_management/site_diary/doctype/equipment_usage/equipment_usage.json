@@ -1,10 +1,13 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "naming_series:",
  "creation": "2026-05-22 11:33:44.191213",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "naming_series_section",
+  "naming_series",
   "section_break_sf9h",
   "project",
   "site_engineer",
@@ -59,16 +62,29 @@
   {
    "fieldname": "column_break_rfhk",
    "fieldtype": "Column Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "naming_series_section",
+   "fieldtype": "Section Break",
+   "label": "Naming Series"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "\nEU-"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-22 17:52:18.259447",
+ "modified": "2026-05-27 18:30:21.339711",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Equipment Usage",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
