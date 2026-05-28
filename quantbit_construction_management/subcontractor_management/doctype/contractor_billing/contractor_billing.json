@@ -1,10 +1,13 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "naming_series:",
  "creation": "2026-05-27 17:52:28.774338",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "naming_series_section",
+  "naming_series",
   "section_break_xsvv",
   "project",
   "contractor",
@@ -99,17 +102,29 @@
   {
    "fieldname": "section_break_jpuc",
    "fieldtype": "Section Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "naming_series_section",
+   "fieldtype": "Section Break",
+   "label": "Naming Series"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "\nCB-"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-27 18:32:51.362624",
+ "modified": "2026-05-28 12:21:41.103016",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing",
- "naming_rule": "By fieldname",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
