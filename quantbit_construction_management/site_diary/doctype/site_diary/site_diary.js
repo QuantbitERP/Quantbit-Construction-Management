@@ -13,7 +13,7 @@ frappe.ui.form.on("Site Diary", {
                 lat: lat,
                 lon: lon
             },
-            callback: function(r) {
+            callback: function (r) {
 
                 if (r.message) {
 
@@ -38,7 +38,7 @@ frappe.ui.form.on("Site Diary", {
 
     setup(frm) {
 
-        frm.set_query("task", "task", function(doc) {
+        frm.set_query("task", "task", function (doc) {
 
             return {
                 filters: {
@@ -104,12 +104,12 @@ frappe.ui.form.on("Site Diary", {
                     project: frm.doc.project,
                     site_date: frm.doc.site_date
                 },
-                callback: function(r) {
+                callback: function (r) {
 
                     if (r.message) {
 
 
-                        (r.message.manpower || []).forEach(function(d) {
+                        (r.message.manpower || []).forEach(function (d) {
 
                             if (d.task) {
 
@@ -126,7 +126,7 @@ frappe.ui.form.on("Site Diary", {
                             row.contractor = d.contractor;
                             row.daily_wages = d.rate;
                             row.total_wage = d.amount;
-                            row.item_type = "Man"; 
+                            row.item_type = "Man";
 
                             if (d.skill_type == "Skilled") {
                                 row.skilled = d.quantity;
@@ -184,7 +184,7 @@ frappe.ui.form.on("Site Diary", {
 
                         });
 
-                        (r.message.equipment || []).forEach(function(d) {
+                        (r.message.equipment || []).forEach(function (d) {
 
                             if (d.task) {
 
@@ -256,7 +256,7 @@ frappe.ui.form.on("Site Diary", {
                         });
 
 
-                        (r.message.visitor || []).forEach(function(d) {
+                        (r.message.visitor || []).forEach(function (d) {
 
                             let row = frm.add_child("visitors");
 
@@ -296,13 +296,13 @@ frappe.ui.form.on("Site Diary", {
                 },
                 freeze: true,
                 freeze_message: "Fetching Material Received...",
-                callback: function(r) {
+                callback: function (r) {
 
                     frm.clear_table("material_received");
 
                     let data = r.message || [];
 
-                    data.forEach(function(d) {
+                    data.forEach(function (d) {
 
                         let row = frm.add_child("material_received");
 
@@ -343,13 +343,13 @@ frappe.ui.form.on("Site Diary", {
                 },
                 freeze: true,
                 freeze_message: "Fetching Material Deliveries...",
-                callback: function(r) {
+                callback: function (r) {
 
                     frm.clear_table("material_deliveries");
 
                     let data = r.message || [];
 
-                    data.forEach(function(d) {
+                    data.forEach(function (d) {
 
                         if (d.task) {
 
@@ -439,7 +439,7 @@ frappe.ui.form.on("Site Diary", {
             // TASK TABLE
             // =========================
 
-            unique_tasks.forEach(function(val) {
+            unique_tasks.forEach(function (val) {
 
                 if (val.task) {
 
@@ -450,8 +450,8 @@ frappe.ui.form.on("Site Diary", {
                         if (r.message) {
                             row.task_subject = r.message.subject;
                             frm.refresh_field("task");
-            }
-        });
+                        }
+                    });
 
                 }
 
@@ -478,18 +478,19 @@ frappe.ui.form.on("Site Diary", {
 
 frappe.ui.form.on("Task Summary", {
 
-    task(frm) {
+    task(frm, cdt, cdn) {
 
         if (frm.__loading_site_diary) return;
+        let row = locals[cdt][cdn];
         if (row.task) {
-    frappe.db.get_value("Task", row.task, "subject").then(r => {
-        if (r.message) {
-                frappe.model.set_value(cdt, cdn, "task_subject", r.message.subject);
-                    }
-                });
-        }else {
+            frappe.db.get_value("Task", row.task, "subject").then(r => {
+                if (r.message) {
+                    frappe.model.set_value(cdt, cdn, "task_subject", r.message.subject);
+                }
+            });
+        } else {
             frappe.model.set_value(cdt, cdn, "task_subject", "");
-}
+        }
 
         sync_all_task_tables(frm);
     },
@@ -689,3 +690,38 @@ function make_key(row, fields) {
         .join("||");
 
 }
+
+frappe.ui.form.on("DPR Activity Progress", {
+
+    achieved_today(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+
+        // total_achieved = previous total + today's achieved
+        let previous_total = row.previous_total_achieved || 0;
+        let achieved_today = row.achieved_today || 0;
+
+        let new_total = previous_total + achieved_today;
+        let total_qty = row.total_qty || 0;
+
+        let percent = total_qty > 0
+            ? (new_total / total_qty) * 100
+            : 0;
+
+        frappe.model.set_value(cdt, cdn, "total_achieved", new_total);
+        frappe.model.set_value(cdt, cdn, "percent_completed", percent);
+    },
+
+    total_qty(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+
+        let total_achieved = row.total_achieved || 0;
+        let total_qty = row.total_qty || 0;
+
+        let percent = total_qty > 0
+            ? (total_achieved / total_qty) * 100
+            : 0;
+
+        frappe.model.set_value(cdt, cdn, "percent_completed", percent);
+    }
+
+});

@@ -646,6 +646,52 @@ def update_parent_progress(task):
 	parent = frappe.db.get_value("Task", task, "parent_task")
 
 	if not parent:
+
+		project = frappe.db.get_value("Task", task, "project")
+
+		if not project:
+			return
+
+		stages = frappe.get_all(
+			"Task",
+			filters={
+				"project": project,
+				"custom_is_stage": 1
+			},
+			fields=["progress", "task_weight"]
+		)
+
+		if not stages:
+			frappe.db.set_value("Project", project, "percent_complete", 0)
+			return
+
+		project_progress = 0
+
+		for stage in stages:
+
+			progress = stage.progress or 0
+			weight = stage.task_weight or 0
+
+			project_progress += (progress * weight) / 100
+
+		# Limit to 100
+		project_progress = min(project_progress, 100)
+
+		frappe.db.set_value(
+			"Project",
+			project,
+			"percent_complete",
+			project_progress
+		)
+
+		# Realtime refresh
+		frappe.publish_realtime(
+			"project_progress_refresh",
+			{
+				"project": project
+			}
+		)
+
 		return
 
 	children = frappe.get_all(
@@ -666,8 +712,17 @@ def update_parent_progress(task):
 
 		weighted_total += (progress * weight) / 100
 
-	frappe.db.set_value("Task", parent, "progress", weighted_total)
+	# Limit to 100
+	weighted_total = min(weighted_total, 100)
 
+	frappe.db.set_value(
+		"Task",
+		parent,
+		"progress",
+		weighted_total
+	)
+
+	# Continue recursion upward
 	update_parent_progress(parent)
 
 
