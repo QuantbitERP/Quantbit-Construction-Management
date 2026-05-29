@@ -2,7 +2,7 @@
 
     {%
     var report_data = (typeof data !== "undefined" && data) ? data : [];
-
+    console.log("Report Data:", report_data);
     function fmt_num(v) {
         if (v === undefined || v === null || v === "") return "";
         var n = parseFloat(v);
@@ -14,7 +14,7 @@
         return isNaN(n) ? v : n.toLocaleString("en-IN", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
     }
 
-    var SECTION_ORDER = ["Equipment Usage", "Visitors", "Manpower Usage", "Material Consumed", "Material Received"];
+    var SECTION_ORDER = ["Equipment Usage", "Visitors", "Manpower Usage", "Material Consumed", "Material Received","Task Progress"];
     var TOTAL_KEYS = {
         "Equipment Usage": "Equipment Usage TOTAL",
         "Manpower Usage": "Manpower Usage TOTAL",
@@ -210,6 +210,55 @@
         .tbl-mr .c-rate   { width: 8%; }
         .tbl-mr .c-qty    { width: 7%; }
         .tbl-mr .c-amt    { width: 9%; }
+
+        /* ── Task Progress: 8 cols ── */
+        .tbl-tp .c-taskid   { width: 10%; }
+        .tbl-tp .c-tsub     { width: 14%; }
+        .tbl-tp .c-subid    { width: 10%; }
+        .tbl-tp .c-ssub     { width: 18%; }
+        .tbl-tp .c-qty      { width: 10%; }
+        .tbl-tp .c-today    { width: 10%; }
+        .tbl-tp .c-achieved { width: 12%; }
+        .tbl-tp .c-percent  { width: 8%; }
+
+        .tbl-tp th, 
+        .tbl-tp td {
+            padding: 4px 5px;
+            font-size: 9px;
+            border-right: 1px solid #eee;
+        }
+
+        .tbl-tp thead th {
+            background: #e9ecef;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .tbl-tp tbody td {
+            vertical-align: top;
+        }
+
+        .tbl-tp .right {
+            text-align: right;
+        }
+
+        .tbl-tp .center {
+            text-align: center;
+        }
+
+        .tbl-tp .bold {
+            font-weight: 700;
+        }
+
+        .tbl-tp tr.data-row:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .tbl-tp tr.no-data td {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+        }
     </style>
 
     <div class="header">
@@ -233,6 +282,53 @@
         %}
     </div>
     </div>
+
+    <!-- ══════════════════ 6. Task Progress ══════════════════ -->
+<div class="section-title">Task Progress</div>
+
+<table class="tbl-tp">
+    <thead>
+        <tr>
+            <th class="c-taskid">Task ID</th>
+            <th class="c-tsub">Task Subject</th>
+            <th class="c-subid">Subtask ID</th>
+            <th class="c-ssub">Subtask Subject</th>
+            <th class="c-qty right">Total Qty</th>
+            <th class="c-today right">Achieved Today</th>
+            <th class="c-achieved right">Total Achieved</th>
+            <th class="c-percent right">Percent Completed</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {%
+        if (sections["Task Progress"].length === 0) { %}
+            <tr class="no-data">
+                <td colspan="8">No task progress recorded.</td>
+            </tr>
+        {%
+        } else {
+            for (var i = 0; i < sections["Task Progress"].length; i++) {
+                var r = sections["Task Progress"][i]; %}
+                
+                <tr class="data-row">
+                    <td class="c-taskid">{%= r.task || "" %}</td>
+                    <td class="c-tsub">{%= r.task_subject || "" %}</td>
+                    <td class="c-subid">{%= r.subtask || "" %}</td>
+                    <td class="c-ssub">{%= r.subtask_subject || "" %}</td>
+
+                    <td class="c-qty right">{%= fmt_qty(r.total_qty) %}</td>
+                    <td class="c-today right">{%= fmt_qty(r.achieved_today) %}</td>
+                    <td class="c-achieved right">{%= fmt_qty(r.total_achieved) %}</td>
+                    <td class="c-percent right">{%= r.percent_completed || "" %}</td>
+                </tr>
+
+        {%
+            }
+        }
+        %}
+    </tbody>
+</table>
 
     <!-- ══════════════════ 1. EQUIPMENT USAGE ══════════════════ -->
     <div class="section-title">Equipment Usage</div>
@@ -287,40 +383,6 @@
                     <tr class="total-row">
                         <td colspan="10" class="right">Equipment Usage Total</td>
                         <td class="right nowrap">{%= fmt_num(total_rows["Equipment Usage"].amount) %}</td>
-                    </tr>
-                {%
-                }
-            }
-            %}
-        </tbody>
-    </table>
-
-    <!-- ══════════════════ 2. VISITORS ══════════════════ -->
-    <div class="section-title">Visitors</div>
-    <table class="tbl-vi">
-        <thead>
-            <tr>
-                <th class="c-vname">Visitor Name</th>
-                <th class="c-vpurp">Purpose</th>
-                <th class="c-vcomp">Company</th>
-                <th class="c-vin center">Time In</th>
-                <th class="c-vout center">Time Out</th>
-            </tr>
-        </thead>
-        <tbody>
-            {%
-            if (sections["Visitors"].length === 0) { %}
-                <tr class="no-data"><td colspan="5">No visitors recorded.</td></tr>
-            {%
-            } else {
-                for (var i = 0; i < sections["Visitors"].length; i++) {
-                    var r = sections["Visitors"][i]; %}
-                    <tr class="data-row">
-                        <td class="c-vname bold">{%= r.visitor_name || "" %}</td>
-                        <td class="c-vpurp">{%= r.purpose || "" %}</td>
-                        <td class="c-vcomp">{%= r.company || "" %}</td>
-                        <td class="c-vin center nowrap">{%= r.time_in || "" %}</td>
-                        <td class="c-vout center nowrap">{%= r.time_out || "" %}</td>
                     </tr>
                 {%
                 }
@@ -474,6 +536,40 @@
                     <tr class="total-row">
                         <td colspan="9" class="right">Material Received Total</td>
                         <td class="right nowrap">{%= fmt_num(total_rows["Material Received"].amount) %}</td>
+                    </tr>
+                {%
+                }
+            }
+            %}
+        </tbody>
+    </table>
+
+ <!-- ══════════════════ 2. VISITORS ══════════════════ -->
+    <div class="section-title">Visitors</div>
+    <table class="tbl-vi">
+        <thead>
+            <tr>
+                <th class="c-vname">Visitor Name</th>
+                <th class="c-vpurp">Purpose</th>
+                <th class="c-vcomp">Company</th>
+                <th class="c-vin center">Time In</th>
+                <th class="c-vout center">Time Out</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%
+            if (sections["Visitors"].length === 0) { %}
+                <tr class="no-data"><td colspan="5">No visitors recorded.</td></tr>
+            {%
+            } else {
+                for (var i = 0; i < sections["Visitors"].length; i++) {
+                    var r = sections["Visitors"][i]; %}
+                    <tr class="data-row">
+                        <td class="c-vname bold">{%= r.visitor_name || "" %}</td>
+                        <td class="c-vpurp">{%= r.purpose || "" %}</td>
+                        <td class="c-vcomp">{%= r.company || "" %}</td>
+                        <td class="c-vin center nowrap">{%= r.time_in || "" %}</td>
+                        <td class="c-vout center nowrap">{%= r.time_out || "" %}</td>
                     </tr>
                 {%
                 }

@@ -10,22 +10,16 @@
   "naming_series",
   "section_break_ghjy",
   "project",
-  "parent_task",
-  "parent_task_subject",
-  "task",
   "column_break_zpnh",
   "site_date",
-  "task_subject",
-  "total_qty",
   "column_break_pqmo",
   "shift",
-  "achieved_today",
-  "planned_today",
-  "column_break_tmrv",
-  "uom",
-  "total_achieved",
-  "percent_completed",
-  "amended_from"
+  "amended_from",
+  "column_break_hmdz",
+  "site_engineer",
+  "section_break_eoqo",
+  "task_progress_details_column",
+  "task_progress_details"
  ],
  "fields": [
   {
@@ -72,82 +66,46 @@
    "label": "Site Date"
   },
   {
-   "fieldname": "column_break_tmrv",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "shift",
    "fieldtype": "Select",
    "label": "Shift",
    "options": "\nDay\nNight\nBoth"
   },
   {
-   "fieldname": "parent_task",
-   "fieldtype": "Link",
-   "label": "Parent Task",
-   "options": "Task"
-  },
-  {
-   "fieldname": "parent_task_subject",
-   "fieldtype": "Data",
-   "label": "Parent Task Subject"
-  },
-  {
-   "fieldname": "task",
-   "fieldtype": "Link",
-   "label": "Task",
-   "options": "Task",
-   "reqd": 1
-  },
-  {
-   "fieldname": "task_subject",
-   "fieldtype": "Data",
-   "label": "Task Subject"
-  },
-  {
-   "fieldname": "achieved_today",
-   "fieldtype": "Float",
-   "label": "Achieved Today",
-   "reqd": 1
-  },
-  {
-   "fieldname": "total_qty",
-   "fieldtype": "Float",
-   "label": "Total Qty",
-   "reqd": 1
-  },
-  {
    "fieldname": "column_break_zpnh",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "planned_today",
-   "fieldtype": "Float",
-   "label": "Planned Today",
-   "reqd": 1
+   "fieldname": "section_break_eoqo",
+   "fieldtype": "Section Break"
   },
   {
-   "fieldname": "total_achieved",
-   "fieldtype": "Float",
-   "label": "Total Achieved"
+   "fieldname": "task_progress_details_column",
+   "fieldtype": "Column Break",
+   "options": "task pr"
   },
   {
-   "fieldname": "percent_completed",
-   "fieldtype": "Percent",
-   "label": "Percent Completed"
+   "fieldname": "task_progress_details",
+   "fieldtype": "Table",
+   "label": "Task Progress Details",
+   "options": "Task Progress Details"
   },
   {
-   "fieldname": "uom",
+   "fieldname": "column_break_hmdz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "site_engineer",
    "fieldtype": "Link",
-   "label": "UOM",
-   "options": "UOM"
+   "label": "Site Engineer",
+   "options": "Employee"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-28 10:58:15.669133",
+ "modified": "2026-05-29 16:19:52.288692",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Task Progress",

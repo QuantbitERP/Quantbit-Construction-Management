@@ -6,7 +6,9 @@ frappe.ui.form.on("Manpower Usage", {
         frm.set_query("task","manpower_usage", function() {
             return {
                 filters: {
-                    project: frm.doc.project
+                    project: frm.doc.project,
+                    "custom_is_task": 1,
+                    "is_group": 1
                 }
             };
         });
