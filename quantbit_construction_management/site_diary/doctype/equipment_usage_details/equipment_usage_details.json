@@ -15,7 +15,9 @@
   "quantity",
   "rate",
   "working_hrs",
-  "amount"
+  "amount",
+  "billed",
+  "paid"
  ],
  "fields": [
   {
@@ -94,13 +96,25 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Working Hrs"
+  },
+  {
+   "default": "0",
+   "fieldname": "billed",
+   "fieldtype": "Check",
+   "label": "Billed"
+  },
+  {
+   "default": "0",
+   "fieldname": "paid",
+   "fieldtype": "Check",
+   "label": "Paid"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-22 18:46:28.385843",
+ "modified": "2026-05-29 12:22:46.191086",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Equipment Usage Details",
