@@ -11,15 +11,20 @@
   "section_break_xsvv",
   "project",
   "contractor",
+  "contractor_account",
   "column_break_wcet",
   "start_date",
   "type",
+  "supplier",
   "column_break_cyml",
   "end_date",
+  "project_account",
+  "company",
   "section_break_jpuc",
   "get_details",
   "section_break_jezx",
   "contractor_billing_details",
+  "grand_total",
   "amended_from"
  ],
  "fields": [
@@ -83,8 +88,7 @@
    "in_list_view": 1,
    "label": "Contractor",
    "options": "Contractor",
-   "reqd": 1,
-   "unique": 1
+   "reqd": 1
   },
   {
    "fieldname": "type",
@@ -114,13 +118,46 @@
    "fieldtype": "Select",
    "label": "Naming Series",
    "options": "\nCB-"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total"
+  },
+  {
+   "fetch_from": "contractor.billing_account",
+   "fieldname": "contractor_account",
+   "fieldtype": "Link",
+   "label": "Contractor Account",
+   "options": "Account"
+  },
+  {
+   "fetch_from": "project.custom_default_contractor_billing_account",
+   "fieldname": "project_account",
+   "fieldtype": "Link",
+   "label": "Project Account",
+   "options": "Account"
+  },
+  {
+   "fetch_from": "contractor.supplier_name",
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fetch_from": "project.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-28 12:21:41.103016",
+ "modified": "2026-05-28 19:48:34.424127",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing",

@@ -11,6 +11,8 @@
   "supplier_name",
   "column_break_gulr",
   "contractor_type",
+  "accounting_section",
+  "billing_account",
   "section_break_fner",
   "site_diary_contractor_item_details"
  ],
@@ -50,12 +52,23 @@
    "fieldtype": "Table",
    "label": "Site Diary Contractor Item Details",
    "options": "Site Diary Contractor Item Details"
+  },
+  {
+   "fieldname": "accounting_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting"
+  },
+  {
+   "fieldname": "billing_account",
+   "fieldtype": "Link",
+   "label": "Billing Account",
+   "options": "Account"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-22 16:42:48.980397",
+ "modified": "2026-05-28 15:58:51.729599",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor",

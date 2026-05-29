@@ -1,4 +1,19 @@
 frappe.ui.form.on("Contractor Billing", {
+     refresh: function(frm) {
+        calculate_grand_total(frm);
+        if (frm.doc.docstatus === 1 && !frm.doc.payment_entry) {
+
+        frm.add_custom_button("Create Payment Entry", function() {
+
+            frappe.model.open_mapped_doc({
+                method: "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.create_payment_entry",
+                frm: frm
+            });
+
+        },
+            "Create");
+		}
+    },
 
     get_details: async function(frm) {
 
@@ -71,9 +86,30 @@ frappe.ui.form.on("Contractor Billing", {
                 child.amount = row.amount;
             });
         }
+        calculate_grand_total(frm);
 
         frm.refresh_field("contractor_billing_details");
 
         frappe.msgprint("Data fetched successfully");
     }
 });
+
+frappe.ui.form.on('Contractor Billing Details', {
+    amount: function(frm, cdt, cdn) {
+        calculate_grand_total(frm);
+    },
+
+    contractor_billing_details_remove: function(frm) {
+        calculate_grand_total(frm);
+    }
+});
+
+function calculate_grand_total(frm) {
+    let total = 0;
+
+    (frm.doc.contractor_billing_details || []).forEach(row => {
+        total += flt(row.amount);
+    });
+
+    frm.set_value('grand_total', total);
+}
