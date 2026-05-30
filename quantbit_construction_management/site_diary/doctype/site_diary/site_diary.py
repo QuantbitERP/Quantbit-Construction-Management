@@ -462,10 +462,7 @@ def update_daily_activity_progress_table(doc):
 	if not project or not site_date:
 		return {"activity_progress": []}
 
-	# =====================================================
 	# MANPOWER USAGE DETAILS
-	# =====================================================
-
 	manpower_data = frappe.db.sql("""
 		SELECT
 			mud.task as parent_task,
@@ -478,10 +475,7 @@ def update_daily_activity_progress_table(doc):
 		AND mu.docstatus = 1
 	""", (project, site_date), as_dict=True)
 
-	# =====================================================
 	# EQUIPMENT USAGE DETAILS
-	# =====================================================
-
 	equipment_data = frappe.db.sql("""
 		SELECT
 			eud.task as parent_task,
@@ -527,11 +521,8 @@ def update_daily_activity_progress_table(doc):
 			],
 			as_dict=True
 		)
-
-		# ==========================================
+		
 		# FETCH PREVIOUS PROGRESS
-		# ==========================================
-
 		previous = frappe.db.sql("""
 			SELECT
 				total_qty,
@@ -971,11 +962,7 @@ import frappe
 def get_material_received(project, site_date):
 
     final_data = []
-
-    # =====================================================
     # PROJECT WAREHOUSES
-    # =====================================================
-
     project_doc = frappe.get_doc("Project", project)
 
     warehouses = []
@@ -987,10 +974,7 @@ def get_material_received(project, site_date):
 
     warehouses = list(set(warehouses))
 
-    # =====================================================
-    # PURCHASE RECEIPTS (OK)
-    # =====================================================
-
+    # PURCHASE RECEIPTS 
     purchase_receipts = frappe.db.sql("""
         SELECT
             pr.name as reference_name,
@@ -1018,10 +1002,7 @@ def get_material_received(project, site_date):
 
     final_data.extend(purchase_receipts)
 
-    # =====================================================
     # STOCK ENTRIES (FIXED LOGIC)
-    # =====================================================
-
     if warehouses:
 
         stock_entries = frappe.db.sql("""
@@ -1055,3 +1036,40 @@ def get_material_received(project, site_date):
         final_data.extend(stock_entries)
 
     return final_data
+
+@frappe.whitelist()
+def get_latest_task_progress(project, site_date):
+
+    task_progress_name = frappe.db.get_value(
+        "Task Progress",
+        {
+            "project": project,
+            "site_date": site_date,
+            "docstatus": 1
+        },
+        "name",
+    )
+
+    if not task_progress_name:
+        return []
+
+    data = frappe.db.sql("""
+        SELECT
+            parent_task,
+			parent_task_subject,
+            task,
+			task_subject,
+			uom,
+            total_qty,
+            achieved_today,
+            total_achieved,
+			planned_today,
+            percent_completed
+        FROM `tabTask Progress Details`
+        WHERE parent = %(parent)s
+        ORDER BY idx
+    """, {
+        "parent": task_progress_name
+    }, as_dict=True)
+
+    return data

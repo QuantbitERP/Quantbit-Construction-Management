@@ -267,6 +267,10 @@ doc_events = {
 	},
     "Stock Entry": {
         "on_submit": "quantbit_construction_management.site_diary.custom_stock.stock_entry.update_task_material_cost"
+    },
+    "Payment Entry": {
+        "on_submit": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_payment_entry_submit",
+        "on_cancel": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_payment_entry_cancel"
     }
 }
 

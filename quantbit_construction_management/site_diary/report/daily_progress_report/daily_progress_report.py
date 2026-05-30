@@ -18,19 +18,11 @@ def execute(filters=None):
     data = []
     grand_total = 0
 
-    # =====================================================
-    # PROJECT NAME
-    # =====================================================
-
     project_name = frappe.db.get_value(
         "Project",
         project,
         "project_name"
     )
-
-    # =====================================================
-    # CACHE
-    # =====================================================
 
     task_subject_cache = {}
     item_type_cache = {}
@@ -70,10 +62,6 @@ def execute(filters=None):
             )
 
         return item_type_cache[item]
-
-    # =====================================================
-    # ROW HELPER
-    # =====================================================
 
     def row(section, **kwargs):
 
@@ -116,12 +104,13 @@ def execute(filters=None):
 
             "transaction_type": kwargs.get("transaction_type"),
             "entry_id": kwargs.get("entry_id"),
+            "total_qty": kwargs.get("total_qty"),
+            "total_achieved": kwargs.get("total_achieved"),
+            "percent_completed": kwargs.get("percent_completed"),
+            "achieved_today": kwargs.get("achieved_today"),
         }
 
-    # =====================================================
     # EQUIPMENT USAGE
-    # =====================================================
-
     equipment_total = 0
 
     data.append(row(
@@ -130,7 +119,6 @@ def execute(filters=None):
     ))
 
     equipment = frappe.db.sql("""
-
         SELECT
             emp.employee_name AS site_engineer,
             eud.task,
@@ -197,14 +185,10 @@ def execute(filters=None):
 
     grand_total += equipment_total
 
-    # leave 2 blank rows
     data.append({})
     data.append({})
 
-    # =====================================================
     # VISITORS
-    # =====================================================
-
     data.append(row(
         "Visitors",
         project_name=project_name
@@ -239,14 +223,10 @@ def execute(filters=None):
             time_out=v.time_out
         ))
 
-    # leave 2 blank rows
     data.append({})
     data.append({})
 
-    # =====================================================
     # MANPOWER USAGE
-    # =====================================================
-
     manpower_total = 0
 
     data.append(row(
@@ -255,7 +235,6 @@ def execute(filters=None):
     ))
 
     manpower = frappe.db.sql("""
-
         SELECT
             mud.task,
             mud.subtask,
@@ -311,14 +290,10 @@ def execute(filters=None):
 
     grand_total += manpower_total
 
-    # leave 2 blank rows
     data.append({})
     data.append({})
 
-    # =====================================================
     # MATERIAL CONSUMED
-    # =====================================================
-
     consumed_total = 0
 
     data.append(row(
@@ -367,14 +342,10 @@ def execute(filters=None):
 
     grand_total += consumed_total
 
-    # leave 2 blank rows
     data.append({})
     data.append({})
 
-    # =====================================================
     # MATERIAL RECEIVED
-    # =====================================================
-
     received_total = 0
 
     data.append(row(
@@ -447,14 +418,67 @@ def execute(filters=None):
 
     grand_total += received_total
 
-    # leave 2 blank rows
     data.append({})
     data.append({})
 
-    # =====================================================
+    # TASK PROGRESS
+    task_progress_total = 0
+
+    data.append(row(
+        "Task Progress",
+        project_name=project_name
+    ))
+
+    task_progress = frappe.db.sql("""
+        SELECT
+            tp.parent_task as task,
+            tp.task as subtask,
+            tp.parent_task_subject as task_subject,
+            tp.task_subject as subtask_subject,
+            tp.total_qty,
+            tp.achieved_today,
+            tp.total_achieved,
+            tp.percent_completed
+        FROM `tabTask Progress Details` tp
+        INNER JOIN `tabTask Progress` t
+            ON t.name = tp.parent
+        WHERE
+            t.project = %(project)s
+            AND t.site_date = %(site_date)s
+    """, {
+        "project": project,
+        "site_date": site_date
+    }, as_dict=1)
+
+    for t in task_progress:
+        total_qty = t.get("total_qty") or 0
+        achieved_today = t.get("achieved_today") or 0
+        total_achieved = t.get("total_achieved") or 0
+        percent_completed = t.get("percent_completed") or 0
+
+        data.append(row(
+            "Task Progress",
+
+            project_name=project_name,
+            task=t.get("task"),
+            task_subject=get_task_subject(t.get("task")),
+            subtask=t.get("subtask"),
+            subtask_subject=get_task_subject(t.get("subtask")),
+
+            total_qty=total_qty,
+            total_achieved=total_achieved,
+            percent_completed=percent_completed,
+            achieved_today=achieved_today or 0
+        ))
+
+    data.append(row(
+        "Task Progress TOTAL",
+        amount=task_progress_total
+    ))
+
+    grand_total += task_progress_total
+
     # GRAND TOTAL
-    # =====================================================
-
     data.append(row(
         "GRAND TOTAL",
         amount=grand_total,
@@ -463,154 +487,145 @@ def execute(filters=None):
 
     return columns, data
 
-
-# =====================================================
-# COLUMNS
-# =====================================================
-
 def get_columns():
 
     return [
-
         {
             "label": "Section",
             "fieldname": "section",
             "fieldtype": "Data",
             "width": 160
         },
-
         {
             "label": "Site Engineer",
             "fieldname": "site_engineer",
             "fieldtype": "Data"
         },
-
         {
             "label": "Task",
             "fieldname": "task",
             "fieldtype": "Data"
         },
-
         {
             "label": "Task Subject",
             "fieldname": "task_subject",
             "fieldtype": "Data"
         },
-
         {
             "label": "Subtask",
             "fieldname": "subtask",
             "fieldtype": "Data"
         },
-
         {
             "label": "Subtask Subject",
             "fieldname": "subtask_subject",
             "fieldtype": "Data"
         },
-
+       {
+            "label": "Total Qty",
+            "fieldname": "total_qty",
+            "fieldtype": "Float"
+        },
         {
+            "label": "Achieved Today",
+            "fieldname": "achieved_today",
+            "fieldtype": "Float"
+        },
+        {
+            "label": "Total Achieved",
+            "fieldname": "total_achieved",
+            "fieldtype": "Float"
+        },
+        {
+            "label": "Percent Completed",
+            "fieldname": "percent_completed",
+            "fieldtype": "Percent"
+        },
+       {
             "label": "Item",
             "fieldname": "item",
             "fieldtype": "Data"
         },
-
         {
             "label": "Item Type",
             "fieldname": "item_type",
             "fieldtype": "Data"
         },
-
         {
             "label": "Contractor",
             "fieldname": "contractor",
             "fieldtype": "Data"
         },
-
         {
             "label": "Visitor Name",
             "fieldname": "visitor_name",
             "fieldtype": "Data"
         },
-
         {
             "label": "Purpose",
             "fieldname": "purpose",
             "fieldtype": "Data"
         },
-
         {
             "label": "Company",
             "fieldname": "company",
             "fieldtype": "Data"
         },
-
         {
             "label": "Time In",
             "fieldname": "time_in",
             "fieldtype": "Data"
         },
-
         {
             "label": "Time Out",
             "fieldname": "time_out",
             "fieldtype": "Data"
         },
-
         {
             "label": "Skill Type",
             "fieldname": "skill_type",
             "fieldtype": "Data"
         },
-
         {
             "label": "Transaction Type",
             "fieldname": "transaction_type",
             "fieldtype": "Data"
         },
-
         {
             "label": "Transaction ID",
             "fieldname": "entry_id",
             "fieldtype": "Data"
         },
-
         {
             "label": "Source Warehouse",
             "fieldname": "warehouse",
             "fieldtype": "Data"
         },
-
         {
             "label": "Target Warehouse",
             "fieldname": "target_warehouse",
             "fieldtype": "Data"
         },
-
         {
             "label": "UOM",
             "fieldname": "uom",
             "fieldtype": "Data"
         },
-
         {
             "label": "Rate",
             "fieldname": "rate",
             "fieldtype": "Float"
         },
-
         {
             "label": "Working Hours",
             "fieldname": "working_hours",
             "fieldtype": "Float"
         },
-
         {
             "label": "Quantity",
             "fieldname": "quantity",
             "fieldtype": "Float"
         },
-
         {
             "label": "Amount",
             "fieldname": "amount",

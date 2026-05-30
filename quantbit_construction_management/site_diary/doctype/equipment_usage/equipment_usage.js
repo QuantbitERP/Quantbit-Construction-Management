@@ -6,7 +6,9 @@ frappe.ui.form.on("Equipment Usage", {
         frm.set_query("task","equipment_usage_details",function() {
             return {
                 filters: {
-                    project: frm.doc.project
+                    project: frm.doc.project,
+                    "custom_is_task": 1,
+                    "is_group": 1
                 }
             };
         });

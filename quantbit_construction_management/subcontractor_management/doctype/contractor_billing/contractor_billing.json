@@ -22,10 +22,14 @@
   "company",
   "section_break_jpuc",
   "get_details",
-  "section_break_jezx",
+  "section_break_pvgm",
   "contractor_billing_details",
+  "section_break_jezx",
   "grand_total",
-  "amended_from"
+  "amended_from",
+  "column_break_vpex",
+  "outstanding_amount",
+  "paid_amount"
  ],
  "fields": [
   {
@@ -151,13 +155,36 @@
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company"
+  },
+  {
+   "fieldname": "section_break_pvgm",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_vpex",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount"
+  },
+  {
+   "fieldname": "paid_amount",
+   "fieldtype": "Currency",
+   "label": "Paid Amount"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2026-05-28 19:48:34.424127",
+ "links": [
+  {
+   "link_doctype": "Journal Entry",
+   "link_fieldname": "custom_doc_link"
+  }
+ ],
+ "modified": "2026-05-29 16:27:25.959576",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing",

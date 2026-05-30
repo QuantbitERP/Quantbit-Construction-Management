@@ -92,10 +92,7 @@ frappe.ui.form.on("Site Diary", {
             "visitors"
         ]);
 
-        // =====================================================
         // MANPOWER / EQUIPMENT / VISITOR
-        // =====================================================
-
         let manpowerPromise = new Promise(resolve => {
 
             frappe.call({
@@ -282,10 +279,7 @@ frappe.ui.form.on("Site Diary", {
 
         });
 
-        // =====================================================
         // MATERIAL RECEIVED
-        // =====================================================
-
         let receivedPromise = new Promise(resolve => {
 
             frappe.call({
@@ -328,11 +322,7 @@ frappe.ui.form.on("Site Diary", {
             });
 
         });
-
-        // =====================================================
         // MATERIAL DELIVERIES
-        // =====================================================
-
         let materialDeliveryPromise = new Promise(resolve => {
 
             frappe.call({
@@ -424,21 +414,45 @@ frappe.ui.form.on("Site Diary", {
             });
 
         });
+        // TASK PROGRESS
+        let taskProgressPromise = new Promise(resolve => {
 
-        // =====================================================
+            frappe.call({
+                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
+                args: {
+                    project: frm.doc.project,
+                    site_date: frm.doc.site_date
+                },
+                freeze: true,
+                freeze_message: "Fetching Task Progress...",
+                callback(r) {
+                    if (r.message) {
+                        let data = r.message || [];
+
+                        data.forEach(function (d) {
+
+                        if (d.parent_task) {
+                                unique_tasks.set(d.parent_task, {
+                                    task: d.parent_task
+                                });
+
+                            }
+                    });
+                        frm.refresh_field("activity_progress");
+                    }
+                    resolve();
+                }
+            });
+
+        });
         // FINAL
-        // =====================================================
-
         Promise.all([
             manpowerPromise,
             receivedPromise,
-            materialDeliveryPromise
+            materialDeliveryPromise,
+            taskProgressPromise
         ]).then(() => {
-
-            // =========================
             // TASK TABLE
-            // =========================
-
             unique_tasks.forEach(function (val) {
 
                 if (val.task) {
@@ -458,11 +472,7 @@ frappe.ui.form.on("Site Diary", {
             });
 
             frm.refresh_field("task");
-
-            // =========================
             // ACTIVITY PROGRESS
-            // =========================
-
             sync_activity_progress(frm);
 
             frm.__loading_site_diary = false;
@@ -530,7 +540,43 @@ function sync_activity_progress(frm) {
         frm.refresh_field("activity_progress");
 
         return;
-    }
+    }   
+    let existing_keys = new Set();
+    frm.clear_table("activity_progress");
+
+    frappe.call({
+                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
+                args: {
+                    project: frm.doc.project,
+                    site_date: frm.doc.site_date
+                },
+                freeze: true,
+                freeze_message: "Fetching Task Progress...",
+                callback(r) {
+                    if (r.message) {
+                        let data = r.message || [];
+
+                        data.forEach(function (d) {
+                        let key = `${d.parent_task}|${d.task}`;
+                        existing_keys.add(key);
+                        let row = frm.add_child("activity_progress");
+
+                        row.parent_task = d.parent_task;
+                        row.parent_task_subject = d.parent_task_subject;
+                        row.task = d.task;
+                        row.task_subject = d.task_subject;
+                        row.achieved_today = d.achieved_today;
+                        row.total_qty = d.total_qty;
+                        row.uom = d.uom;
+                        row.percent_completed = d.percent_completed;
+                        row.total_achieved = d.total_achieved;
+                        row.planned_today = d.planned_today;
+
+                    });
+                        frm.refresh_field("activity_progress");
+                    }
+                }
+  });
 
     frappe.call({
         method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",
@@ -544,18 +590,39 @@ function sync_activity_progress(frm) {
             let new_data =
                 r.message.activity_progress || [];
 
-            merge_child_table(
-                frm,
-                "activity_progress",
-                new_data,
-                ["parent_task", "task"]
-            );
+            // merge_child_table(
+            //     frm,
+            //     "activity_progress",
+            //     new_data,
+            //     ["parent_task", "task"]
+            // );
+
+            new_data.forEach(d => {
+
+                let key = `${d.parent_task}|${d.task}`;
+                if (existing_keys.has(key)) return;
+
+                existing_keys.add(key);
+
+                let row = frm.add_child("activity_progress");
+
+                row.parent_task = d.parent_task;
+                row.parent_task_subject = d.parent_task_subject;
+                row.task = d.task;
+                row.task_subject = d.task_subject;
+                row.achieved_today = d.achieved_today;
+                row.total_qty = d.total_qty;
+                row.uom = d.uom;
+                row.percent_completed = d.percent_completed;
+                row.total_achieved = d.total_achieved;
+                row.planned_today = d.planned_today;
+            });
+
 
             frm.refresh_field("activity_progress");
 
         }
     });
-
 }
 
 

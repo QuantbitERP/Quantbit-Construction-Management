@@ -1,7 +1,11 @@
 frappe.ui.form.on("Contractor Billing", {
      refresh: function(frm) {
         calculate_grand_total(frm);
-        if (frm.doc.docstatus === 1 && !frm.doc.payment_entry) {
+        let outstanding = frm.doc.outstanding_amount !== undefined && frm.doc.outstanding_amount !== null 
+            ? frm.doc.outstanding_amount 
+            : (frm.doc.grand_total - flt(frm.doc.paid_amount));
+            
+        if (frm.doc.docstatus === 1 && flt(outstanding) > 0) {
 
         frm.add_custom_button("Create Payment Entry", function() {
 
@@ -69,7 +73,7 @@ frappe.ui.form.on("Contractor Billing", {
             let data = full_doc.message;
 
             let rows = (data[child_table] || []).filter(row => {
-                return row.contractor === frm.doc.contractor;
+                return row.contractor === frm.doc.contractor && !row.billed;
             });
 
             rows.forEach(row => {
@@ -77,6 +81,7 @@ frappe.ui.form.on("Contractor Billing", {
                 let child = frm.add_child("contractor_billing_details");
 
                 child.id = data.name;
+                child.reference_row_name = row.name;
                 child.site_date = data.site_date;
                 child.item = row.equipment_item || row.item;
                 child.uom = row.uom;
