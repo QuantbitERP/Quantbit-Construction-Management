@@ -14,7 +14,7 @@ class SiteDiary(Document):
 		# self.create_material_issue_entry()
 		# self.update_task_labour_cost()
 		# self.update_task_equipment_cost()
-		self.update_task_progress()
+		# self.update_task_progress()
 
 	
 	def update_task_progress(self):

@@ -17,6 +17,18 @@ class TaskProgress(Document):
                 "progress",
                 row.percent_completed
             )
+            frappe.db.set_value(
+                "Task",
+                row.task,
+                "custom_total_quantity",
+                row.total_qty
+            )
+            frappe.db.set_value(
+                "Task",
+                row.task,
+                "custom_total_achieved",
+                row.total_achieved
+            )
 
             self.update_parent_progress(row.task)
 
@@ -120,7 +132,7 @@ def get_previous_task_progress(task, current_doc=None):
             total_qty,
             total_achieved,
             percent_completed
-        FROM `tabTask Progress`
+        FROM `tabTask Progress Details`
         WHERE task=%s
         AND name != %s
         ORDER BY creation DESC

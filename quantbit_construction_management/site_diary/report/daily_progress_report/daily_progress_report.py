@@ -26,6 +26,7 @@ def execute(filters=None):
 
     task_subject_cache = {}
     item_type_cache = {}
+    item_name_cache = {}
 
     def get_task_subject(task):
 
@@ -62,6 +63,20 @@ def execute(filters=None):
             )
 
         return item_type_cache[item]
+
+    def get_item_name(item_code):
+
+        if not item_code:
+            return None
+
+        if item_code not in item_name_cache:
+            item_name_cache[item_code] = frappe.db.get_value(
+                "Item",
+                item_code,
+                "item_name"
+            )
+
+        return item_name_cache[item_code]
 
     def row(section, **kwargs):
 
@@ -165,7 +180,7 @@ def execute(filters=None):
             subtask=e.subtask,
             subtask_subject=get_task_subject(e.subtask),
 
-            item=e.equipment_item,
+            item=get_item_name(e.equipment_item),
             item_type=get_item_type(e.equipment_item),
 
             contractor=e.contractor,
@@ -243,7 +258,8 @@ def execute(filters=None):
             mud.quantity,
             mud.amount,
             mud.uom,
-            mud.rate
+            mud.rate,
+            mud.equipment_item
 
         FROM `tabManpower Usage Details` mud
 
@@ -270,6 +286,7 @@ def execute(filters=None):
 
             task=m.task,
             task_subject=get_task_subject(m.task),
+            item=get_item_name(m.equipment_item),
 
             subtask=m.subtask,
             subtask_subject=get_task_subject(m.subtask),
@@ -322,7 +339,7 @@ def execute(filters=None):
             subtask=c.get("subtask"),
             subtask_subject=get_task_subject(c.get("subtask")),
 
-            item=c.get("item_code"),
+            item=get_item_name(c.get("item_code")),
             item_type=c.get("item_type"),
 
             uom=c.get("uom"),
@@ -370,7 +387,7 @@ def execute(filters=None):
 
                 transaction_type=r.get("reference_type"),
 
-                item=r.get("item_code"),
+                item=get_item_name(r.get("item_code")),
                 item_type=get_item_type(r.get("item_code")),
 
                 uom=r.get("uom"),
@@ -537,7 +554,7 @@ def get_columns():
             "fieldtype": "Float"
         },
         {
-            "label": "Percent Completed",
+            "label": "Progress Completed",
             "fieldname": "percent_completed",
             "fieldtype": "Percent"
         },
