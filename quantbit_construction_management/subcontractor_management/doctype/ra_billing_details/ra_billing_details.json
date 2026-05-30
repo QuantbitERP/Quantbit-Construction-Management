@@ -1,0 +1,123 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-30 12:37:54.005651",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "stage",
+  "stage_subject",
+  "task",
+  "task_subject",
+  "subtask",
+  "subtask_subject",
+  "total_quantity",
+  "column_break_volg",
+  "total_achieved",
+  "progress",
+  "billed_quantity",
+  "billable_quantity",
+  "rate",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "stage_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Stage Subject"
+  },
+  {
+   "fieldname": "task_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Task Subject"
+  },
+  {
+   "fieldname": "subtask_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Subtask Subject"
+  },
+  {
+   "fieldname": "column_break_volg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_quantity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Quantity"
+  },
+  {
+   "fieldname": "total_achieved",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Achieved Quantity"
+  },
+  {
+   "fieldname": "progress",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Progress"
+  },
+  {
+   "fieldname": "billed_quantity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Billed Quantity"
+  },
+  {
+   "fieldname": "billable_quantity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Billable Quantity"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Customer Rate"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount"
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "stage",
+   "fieldtype": "Link",
+   "label": "Stage",
+   "options": "Task"
+  },
+  {
+   "fieldname": "subtask",
+   "fieldtype": "Link",
+   "label": "Subtask",
+   "options": "Task"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-30 17:41:19.046025",
+ "modified_by": "Administrator",
+ "module": "Subcontractor Management",
+ "name": "RA Billing Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,144 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-05-30 12:34:43.583605",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "abstract_tab",
+  "section_break_dxaj",
+  "naming_series",
+  "section_break_unhe",
+  "project",
+  "column_break_cwdx",
+  "bill_of_quantities",
+  "column_break_kylo",
+  "customer",
+  "section_break_xpic",
+  "ra_billing_details",
+  "grand_total",
+  "details_tab",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_dxaj",
+   "fieldtype": "Section Break",
+   "label": "Naming Series"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "RA Billing",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "\nRAB-"
+  },
+  {
+   "fieldname": "section_break_unhe",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_cwdx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fetch_from": "project.custom_bill_of_quantities",
+   "fieldname": "bill_of_quantities",
+   "fieldtype": "Link",
+   "label": "Bill of Quantities",
+   "options": "Bill of Quantities"
+  },
+  {
+   "fieldname": "section_break_xpic",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "ra_billing_details",
+   "fieldtype": "Table",
+   "label": "RA Billing Details",
+   "options": "RA Billing Details"
+  },
+  {
+   "fieldname": "abstract_tab",
+   "fieldtype": "Tab Break",
+   "label": "Abstract"
+  },
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_kylo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "project.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Sales Invoice",
+   "link_fieldname": "custom_doc_link"
+  }
+ ],
+ "modified": "2026-05-30 16:32:21.371256",
+ "modified_by": "Administrator",
+ "module": "Subcontractor Management",
+ "name": "RA Billing",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

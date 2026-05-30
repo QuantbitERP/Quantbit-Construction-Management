@@ -182,9 +182,13 @@
   {
    "link_doctype": "Journal Entry",
    "link_fieldname": "custom_doc_link"
+  },
+  {
+   "link_doctype": "Payment Entry",
+   "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-05-29 16:27:25.959576",
+ "modified": "2026-05-30 10:57:58.919468",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing",

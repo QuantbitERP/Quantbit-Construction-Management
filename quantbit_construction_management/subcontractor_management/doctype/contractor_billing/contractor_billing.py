@@ -7,6 +7,7 @@ from frappe.utils import today
 class ContractorBilling(Document):
 
     def before_submit(self):
+        self.outstanding_amount = self.grand_total
         self.create_journal_entry()
 
     def on_submit(self):
@@ -32,6 +33,7 @@ class ContractorBilling(Document):
                 "custom_doc_link_doctype": "",
                 "custom_doc_link": ""
             })
+            frappe.db.commit()
 
     def update_billed_status(self, status):
         child_doctype = ""
@@ -49,6 +51,7 @@ class ContractorBilling(Document):
 
     def cancel_journal_entry(self):
         je_name = frappe.db.get_value("Journal Entry", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": self.name}, "name")
+        frappe.msgprint(str(je_name))
         if je_name:
             je = frappe.get_doc("Journal Entry", je_name)
             if je.docstatus == 1:
@@ -127,7 +130,7 @@ def create_payment_entry(source_name, target_doc=None):
         target.paid_to = source.contractor_account
         target.paid_to_account_currency = "INR"
 
-        target.paid_amount = source.grand_total
+        target.paid_amount = source.outstanding_amount
         target.project = source.project
 
     doc = get_mapped_doc(
@@ -182,3 +185,4 @@ def update_payment_status(payment_entry):
         status = 0
         
     billing.update_paid_status_in_child(status)
+

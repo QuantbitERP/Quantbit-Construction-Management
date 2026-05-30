@@ -111,7 +111,9 @@ def create_project_from_tender(tender_name, project_name):
 		'customer': tender_doc.customer_name if tender_doc.opportunity_from == "Lead" else tender_doc.party_name,
 		'expected_start_date': tender_doc.expected_start_date,
 		'expected_end_date': tender_doc.expected_end_date,
-		'custom_reference_doc_name':tender_name
+		'custom_reference_doc_name':tender_name,
+		'custom_bill_of_quantities':tender_doc.boq
+		
 	})
 	
 	project.insert(ignore_permissions=True)
