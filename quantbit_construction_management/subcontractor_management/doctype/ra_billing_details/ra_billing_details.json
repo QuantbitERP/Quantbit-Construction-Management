@@ -12,12 +12,17 @@
   "task_subject",
   "subtask",
   "subtask_subject",
+  "column_break_dkzt",
   "total_quantity",
+  "no1",
+  "no2",
+  "length",
+  "width",
+  "height",
   "column_break_volg",
-  "total_achieved",
-  "progress",
+  "quantity",
+  "uom",
   "billed_quantity",
-  "billable_quantity",
   "rate",
   "amount"
  ],
@@ -51,28 +56,10 @@
    "label": "Total Quantity"
   },
   {
-   "fieldname": "total_achieved",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Total Achieved Quantity"
-  },
-  {
-   "fieldname": "progress",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Progress"
-  },
-  {
    "fieldname": "billed_quantity",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Billed Quantity"
-  },
-  {
-   "fieldname": "billable_quantity",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Billable Quantity"
   },
   {
    "fieldname": "rate",
@@ -103,13 +90,53 @@
    "fieldtype": "Link",
    "label": "Subtask",
    "options": "Task"
+  },
+  {
+   "fieldname": "no1",
+   "fieldtype": "Float",
+   "label": "No.1"
+  },
+  {
+   "fieldname": "no2",
+   "fieldtype": "Float",
+   "label": "No.2"
+  },
+  {
+   "fieldname": "length",
+   "fieldtype": "Float",
+   "label": "Length"
+  },
+  {
+   "fieldname": "width",
+   "fieldtype": "Float",
+   "label": "Width"
+  },
+  {
+   "fieldname": "height",
+   "fieldtype": "Float",
+   "label": "Height"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "column_break_dkzt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "Actual Quantity(By Measurement)"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-30 17:41:19.046025",
+ "modified": "2026-06-02 17:18:35.022917",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing Details",
