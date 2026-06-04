@@ -1182,28 +1182,32 @@ function attach_events(frm, all_tasks) {
                 {
                     label: "Select Existing Stage",
                     fieldname: "existing_stage",
-                    fieldtype: "MultiSelectPills",
+                    fieldtype: "Link",
+                    options: "Task",
 
-                    get_data: function (txt) {
-
-                        return frappe.db.get_list("Task", {
-                            filters: [
-                                ["custom_is_stage", "=", 1],
-                                ["is_group", "=", 1],
-                                ["is_template", "=", 1],
-                                ["subject", "like", "%" + txt + "%"]
-                            ],
-                            fields: ["name", "subject"],
-                            limit: 20
-                        }).then(records => {
-
-                            return records.map(row => ({
-                                value: row.name,
-                                label: row.subject
-                            }));
-
-                        });
+                    get_query() {
+                        return {
+                            filters: {
+                                custom_is_stage: 1,
+                                is_group: 1,
+                                is_template: 1
+                            }
+                        };
                     }
+                },
+                {
+                    label: "Include Tasks",
+                    fieldname: "include_tasks",
+                    fieldtype: "Check",
+                    default: 0,
+                    depends_on: "eval:doc.existing_stage"
+                },
+                {
+                    label: "Include Subtasks",
+                    fieldname: "include_children",
+                    fieldtype: "Check",
+                    default: 0,
+                    depends_on: "eval:doc.existing_stage"
                 },
 
                 {
@@ -1246,15 +1250,15 @@ function attach_events(frm, all_tasks) {
             primary_action_label: "Add",
 
             primary_action(values) {
-                console.log(values.existing_stage);
-
-                if (values.existing_stage && values.existing_stage.length) {
+                if (values.existing_stage) {
                     frappe.call({
                         method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_stage_task",
                         args: {
                             boq_name: frm.doc.name,
-                            selected_stages: values.existing_stage,
-                            values: values
+                            selected_stages: [values.existing_stage],
+                            values: values,
+                            include_tasks: values.include_tasks,
+                            include_children: values.include_children
                         },
 
                         freeze: true,
@@ -1447,28 +1451,25 @@ function attach_events(frm, all_tasks) {
                 {
                     label: "Select Existing Task",
                     fieldname: "existing_task",
-                    fieldtype: "MultiSelectPills",
+                    fieldtype: "Link",
+                    options: "Task",
 
-                    get_data: function (txt) {
-
-                        return frappe.db.get_list("Task", {
-                            filters: [
-                                ["custom_is_task", "=", 1],
-                                ["is_group", "=", 1],
-                                ["is_template", "=", 1],
-                                ["subject", "like", "%" + txt + "%"]
-                            ],
-                            fields: ["name", "subject"],
-                            limit: 20
-                        }).then(records => {
-
-                            return records.map(row => ({
-                                value: row.name,
-                                label: row.subject
-                            }));
-
-                        });
+                    get_query() {
+                        return {
+                            filters: {
+                                custom_is_task: 1,
+                                is_group: 1,
+                                is_template: 1
+                            }
+                        };
                     }
+                },
+                {
+                    label: "Include Subtasks",
+                    fieldname: "include_children",
+                    fieldtype: "Check",
+                    default: 0,
+                    depends_on: "eval:doc.existing_task"
                 },
                 {
                     label: "OR Create New Task",
@@ -1505,14 +1506,14 @@ function attach_events(frm, all_tasks) {
             primary_action_label: "Add",
 
             primary_action(values) {
-                if (values.existing_task && values.existing_task.length) {
+                if (values.existing_task) {
                     frappe.call({
                         method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_task",
                         args: {
                             boq_name: frm.doc.name,
-                            selected_tasks: values.existing_task,
+                            selected_tasks: [values.existing_task],
                             parent_stage: stage,
-                            include_children: 1
+                            include_children: values.include_children
                         },
 
                         freeze: true,

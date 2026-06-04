@@ -256,9 +256,14 @@ def import_boq_tasks(file_url, boq_name):
     return "Success"
 
 @frappe.whitelist()
-def create_stage_task(boq_name=None, selected_stages=None, values=None):
+def create_stage_task(boq_name=None, selected_stages=None, values=None, include_tasks=0, include_children=0):
         if isinstance(selected_stages, str):
             selected_stages = json.loads(selected_stages)
+
+        if isinstance(include_tasks, str):
+            include_tasks = frappe.parse_json(include_tasks)
+        if isinstance(include_children, str):
+            include_children = frappe.parse_json(include_children)
 
         created = []
 
@@ -271,12 +276,58 @@ def create_stage_task(boq_name=None, selected_stages=None, values=None):
                 "subject": old_doc.subject,
                 "custom_is_stage": 1,
                 "is_group":1,
-                "custom_boq_name":boq_name
+                "custom_boq_name":boq_name,
+                "task_weight": old_doc.task_weight,
+                "description": old_doc.description
             })
 
             new_doc.insert(ignore_permissions=True)
 
             created.append(new_doc.name)
+
+            if include_tasks:
+                tasks = frappe.get_all("Task", filters={"parent_task": stage_name, "custom_is_task": 1})
+                for t in tasks:
+                    old_task = frappe.get_doc("Task", t.name)
+                    new_task = frappe.get_doc({
+                        "doctype": "Task",
+                        "subject": old_task.subject,
+                        "custom_is_task": 1,
+                        "is_group": 1,
+                        "custom_boq_name": boq_name,
+                        "parent_task": new_doc.name,
+                        "task_weight": old_task.task_weight,
+                        "description": old_task.description
+                    })
+                    new_task.insert(ignore_permissions=True)
+                    
+                    if include_children:
+                        subtasks = frappe.get_all("Task", filters={"parent_task": old_task.name, "custom_is_subtask": 1})
+                        for st in subtasks:
+                            old_subtask = frappe.get_doc("Task", st.name)
+                            new_subtask = frappe.get_doc({
+                                "doctype": "Task",
+                                "subject": old_subtask.subject,
+                                "custom_is_subtask": 1,
+                                "custom_boq_name": boq_name,
+                                "parent_task": new_task.name,
+                                "task_weight": old_subtask.task_weight,
+                                "description": old_subtask.description
+                            })
+                            new_subtask.insert(ignore_permissions=True)
+                            
+                            if old_subtask.get("custom_bom_details"):
+                                for row in old_subtask.custom_bom_details:
+                                    new_subtask.append("custom_bom_details", {
+                                        "item": row.item,
+                                        "item_name": row.item_name,
+                                        "qty": row.qty,
+                                        "uom": row.uom,
+                                        "rate": row.rate,
+                                        "item_type": row.item_type,
+                                        "total_amount": row.total_amount
+                                    })
+                                new_subtask.save(ignore_permissions=True)
 
         return created
 
@@ -284,16 +335,17 @@ def create_stage_task(boq_name=None, selected_stages=None, values=None):
 def create_task(  boq_name=None,
     selected_tasks=None,
     parent_stage=None,
-    include_children=False):
+    include_children=0):
         if isinstance(selected_tasks, str):
             selected_tasks = json.loads(selected_tasks)
 
+        if isinstance(include_children, str):
+            include_children = frappe.parse_json(include_children)
         created = []
-        # frappe.msgprint(stage)
 
-        for stage_name in selected_tasks:
+        for task_name in selected_tasks:
 
-            old_doc = frappe.get_doc("Task", stage_name)
+            old_doc = frappe.get_doc("Task", task_name)
 
             new_doc = frappe.get_doc({
                 "doctype": "Task",
@@ -301,12 +353,42 @@ def create_task(  boq_name=None,
                 "custom_is_task": 1,
                 "is_group":1,
                 "custom_boq_name":boq_name,
-                "parent_task":parent_stage
+                "parent_task":parent_stage,
+                "task_weight": old_doc.task_weight,
+                "description": old_doc.description
             })
 
             new_doc.insert(ignore_permissions=True)
 
             created.append(new_doc.name)
+
+            if include_children:
+                subtasks = frappe.get_all("Task", filters={"parent_task": old_doc.name, "custom_is_subtask": 1})
+                for st in subtasks:
+                    old_subtask = frappe.get_doc("Task", st.name)
+                    new_subtask = frappe.get_doc({
+                        "doctype": "Task",
+                        "subject": old_subtask.subject,
+                        "custom_is_subtask": 1,
+                        "custom_boq_name": boq_name,
+                        "parent_task": new_doc.name,
+                        "task_weight": old_subtask.task_weight,
+                        "description": old_subtask.description
+                    })
+                    new_subtask.insert(ignore_permissions=True)
+                    
+                    if old_subtask.get("custom_bom_details"):
+                        for row in old_subtask.custom_bom_details:
+                            new_subtask.append("custom_bom_details", {
+                                "item": row.item,
+                                "item_name": row.item_name,
+                                "qty": row.qty,
+                                "uom": row.uom,
+                                "rate": row.rate,
+                                "item_type": row.item_type,
+                                "total_amount": row.total_amount
+                            })
+                        new_subtask.save(ignore_permissions=True)
 
         return created
 

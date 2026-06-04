@@ -4,11 +4,63 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import flt
 from frappe.model.mapper import get_mapped_doc
-
+import openpyxl
+from openpyxl.styles import Font, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+from io import BytesIO
 class RABilling(Document):
+
+    def before_save(self):
+        self.sync_deleted_tasks()
+        self.update_abstract_details()
+
+    def sync_deleted_tasks(self):
+        if not self.is_new() and self.get_doc_before_save():
+            old_tasks = set(d.task for d in self.get_doc_before_save().ra_abstract_details if d.task)
+            current_tasks = set(d.task for d in self.ra_abstract_details if d.task)
+            deleted_tasks = old_tasks - current_tasks
+            
+            if deleted_tasks:
+                valid_details = [d for d in self.ra_billing_details if d.task not in deleted_tasks]
+                self.set("ra_billing_details", valid_details)
 
     def on_submit(self):
         self.update_billed_quantity()
+
+    def update_abstract_details(self):
+        self.set("ra_abstract_details", [])
+        
+        abstract_data = {}
+        for row in self.ra_billing_details:
+            key = (row.stage, row.stage_subject, row.task, row.task_subject, row.uom)
+            if key not in abstract_data:
+                abstract_data[key] = {
+                    "billed_quantity": 0.0,
+                    "rate": 0.0,
+                    "amount": 0.0,
+                    "description": getattr(row, "description", "")
+                }
+            
+            abstract_data[key]["billed_quantity"] += flt(row.quantity)
+            abstract_data[key]["rate"] += flt(row.rate)
+            abstract_data[key]["amount"] += flt(row.amount)
+            if not abstract_data[key]["description"]:
+                abstract_data[key]["description"] = getattr(row, "description", "")
+            
+        for key, data in abstract_data.items():
+            self.append("ra_abstract_details", {
+                "stage": key[0],
+                "stage_subject": key[1],
+                "task": key[2],
+                "task_subject": key[3],
+                "uom": key[4],
+                "rate": data["rate"],
+                "billed_quantity": data["billed_quantity"],
+                "amount": data["amount"],
+                "description": data["description"]
+            })
+            
+        self.grand_total = sum(flt(d.amount) for d in self.ra_billing_details)
 
     def update_billed_quantity(self):
 
@@ -47,80 +99,32 @@ class RABilling(Document):
             )
 
 @frappe.whitelist()
-def get_details_from_task_progress(project, from_date, to_date):
+def get_project_tasks(project):
     """
-    Fetch submitted Task Progress records filtered by project and site_date range,
-    aggregate achieved_today per subtask, then return enriched data.
+    Fetch all subtasks for the selected project and return enriched data for RA Billing.
     """
-
-    tp_list = frappe.get_all(
-        "Task Progress",
-        filters={
-            "project": project,
-            "site_date": ["between", [from_date, to_date]],
-            "docstatus": 1
-        },
-        fields=["name"]
-    )
-
-    if not tp_list:
+    if not project:
         return []
 
-    tp_names = [tp.name for tp in tp_list]
-
-    tp_details = frappe.get_all(
-        "Task Progress Details",
+    subtasks = frappe.get_all(
+        "Task",
         filters={
-            "parent": ["in", tp_names],
-            "parenttype": "Task Progress"
+            "project": project,
+            "custom_is_subtask": 1
         },
         fields=[
-            "parent_task",   
-            "task",          
-            "achieved_today", 
+            "name", "subject", "parent_task",
+            "custom_total_quantity", "custom_total_achieved",
+            "custom_rate", "custom_billed_quantity", "custom_uom"
         ]
     )
 
-    if not tp_details:
-        return []
-
-    subtask_data = {}
-    for row in tp_details:
-        subtask_id = row.task
-        if not subtask_id:
-            continue
-
-        qty = flt(row.achieved_today)
-
-        if subtask_id not in subtask_data:
-            subtask_data[subtask_id] = {
-                "achieved_qty": 0,
-                "parent_task": row.parent_task
-            }
-        subtask_data[subtask_id]["achieved_qty"] += qty
-
-    if not subtask_data:
+    if not subtasks:
         return []
 
     result = []
-
-    for subtask_id, info in subtask_data.items():
-        # Fetch subtask details
-        subtask = frappe.db.get_value(
-            "Task",
-            subtask_id,
-            [
-                "name", "subject", "parent_task",
-                "custom_total_quantity", "custom_total_achieved",
-                "custom_rate", "custom_billed_quantity","custom_uom"
-            ],
-            as_dict=True
-        )
-
-        if not subtask:
-            continue
-
-        task_id = info["parent_task"] or subtask.parent_task
+    for subtask in subtasks:
+        task_id = subtask.parent_task
         task = None
         stage = None
 
@@ -140,10 +144,10 @@ def get_details_from_task_progress(project, from_date, to_date):
                 as_dict=True
             )
 
-        achieved_qty = info["achieved_qty"]
         billed_qty = flt(subtask.custom_billed_quantity)
-        billable_qty = achieved_qty - billed_qty
         rate = flt(subtask.custom_rate)
+        achieved_qty = flt(subtask.custom_total_achieved)
+        billable_qty = achieved_qty - billed_qty
 
         result.append({
             "stage":            stage.subject if stage else "",
@@ -153,9 +157,11 @@ def get_details_from_task_progress(project, from_date, to_date):
             "subtask_id":       subtask.name,
             "subtask":          subtask.subject,
             "total_quantity":   subtask.custom_total_quantity,
+            "total_achieved":   achieved_qty,
             "rate":             rate,
             "billed_quantity":  billed_qty,
-            "uom" : subtask.custom_uom or " "
+            "billable_quantity": billable_qty,
+            "uom":              subtask.custom_uom
         })
 
     return result
@@ -197,3 +203,465 @@ def create_sales_invoice(source_name, target_doc=None, item_code=None):
     )
 
     return doc
+
+
+@frappe.whitelist()
+def export_ra_excel(ra_billing):
+    doc = frappe.get_doc("RA Billing", ra_billing)
+    project_doc = frappe.get_doc("Project", doc.project)
+    company_name = project_doc.company
+
+    wb = openpyxl.Workbook()
+    
+    # Sheet 1: Abstract
+    ws_abstract = wb.active
+    ws_abstract.title = "Abstract"
+    
+    # Sheet 2: Measurement
+    ws_meas = wb.create_sheet("Measurement")
+    
+    bold_font = Font(bold=True)
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'), 
+        right=Side(style='thin'), 
+        top=Side(style='thin'), 
+        bottom=Side(style='thin')
+    )
+    
+    # Helper for caching descriptions
+    task_desc_cache = {}
+    def get_task_desc(task_id):
+        if not task_id: return ""
+        if task_id not in task_desc_cache:
+            desc = frappe.db.get_value("Task", task_id, "description")
+            task_desc_cache[task_id] = frappe.utils.strip_html(desc) if desc else ""
+        return task_desc_cache[task_id]
+
+    # --- Measurement Sheet ---
+    ws_meas.merge_cells('A1:J1')
+    ws_meas['A1'] = company_name
+    ws_meas['A1'].font = Font(bold=True, size=14)
+    ws_meas['A1'].alignment = center_align
+
+    ws_meas.merge_cells('A2:J2')
+    ws_meas['A2'] = project_doc.project_name or project_doc.name
+    ws_meas['A2'].font = Font(bold=True, size=12)
+    ws_meas['A2'].alignment = center_align
+
+    ws_meas.merge_cells('A3:J3')
+    ws_meas['A3'] = f"RA Bill Number: {doc.name}"
+    ws_meas['A3'].font = Font(bold=True, size=12)
+    ws_meas['A3'].alignment = center_align
+
+    ws_meas.merge_cells('A4:J4')
+    ws_meas['A4'] = "MEASUREMENT SHEET"
+    ws_meas['A4'].font = Font(bold=True, size=12)
+    ws_meas['A4'].alignment = center_align
+
+    ws_meas.append([])
+    meas_headers = ["Sr. No", "Content", "Description", "No.1", "No.2", "Length", "Width", "Depth", "Unit", "Qty"]
+    ws_meas.append(meas_headers)
+
+    for col_num in range(1, 11):
+        cell = ws_meas.cell(row=6, column=col_num)
+        cell.font = bold_font
+        cell.alignment = center_align if col_num not in (2, 3) else left_align
+        cell.border = thin_border
+
+    grouped_meas_data = {}
+    for row in getattr(doc, "ra_billing_details", []):
+        stage = row.stage_subject or "No Stage"
+        task = row.task_subject or "No Task"
+        if stage not in grouped_meas_data:
+            grouped_meas_data[stage] = {}
+        if task not in grouped_meas_data[stage]:
+            grouped_meas_data[stage][task] = []
+        grouped_meas_data[stage][task].append(row)
+        
+    row_num = 7
+    stage_idx = 1
+    for stage, tasks in grouped_meas_data.items():
+        cell_sr = ws_meas.cell(row=row_num, column=1, value=str(stage_idx))
+        cell_sr.border = thin_border; cell_sr.alignment = left_align
+        
+        cell_desc = ws_meas.cell(row=row_num, column=2, value=stage)
+        cell_desc.font = bold_font
+        cell_desc.border = thin_border
+        cell_desc.alignment = left_align
+        
+        for c in range(3, 11):
+            cell = ws_meas.cell(row=row_num, column=c, value="")
+            cell.border = thin_border; cell.alignment = center_align
+            
+        row_num += 1
+        
+        task_idx = 1
+        for task, subtasks in tasks.items():
+            cell_sr = ws_meas.cell(row=row_num, column=1, value=f"{stage_idx}.{task_idx}")
+            cell_sr.border = thin_border; cell_sr.alignment = left_align
+            
+            cell_desc = ws_meas.cell(row=row_num, column=2, value="  " + task)
+            cell_desc.font = bold_font
+            cell_desc.border = thin_border
+            cell_desc.alignment = left_align
+            
+            for c in range(3, 11):
+                cell = ws_meas.cell(row=row_num, column=c, value="")
+                cell.border = thin_border; cell.alignment = center_align
+            
+            row_num += 1
+            
+            subtask_idx = 1
+            task_total_qty = 0.0
+            
+            for row in subtasks:
+                cell_sr = ws_meas.cell(row=row_num, column=1, value=f"{stage_idx}.{task_idx}.{subtask_idx}")
+                cell_sr.border = thin_border; cell_sr.alignment = left_align
+                
+                cell_desc = ws_meas.cell(row=row_num, column=2, value="    " + (row.subtask_subject or ""))
+                cell_desc.border = thin_border; cell_desc.alignment = left_align
+                
+                desc_val = row.description if hasattr(row, 'description') and row.description else get_task_desc(row.subtask)
+                cell_subdesc = ws_meas.cell(row=row_num, column=3, value=desc_val)
+                cell_subdesc.border = thin_border; cell_subdesc.alignment = left_align
+                
+                cell = ws_meas.cell(row=row_num, column=4, value=row.no1 or "")
+                cell.border = thin_border; cell.alignment = center_align
+                
+                cell = ws_meas.cell(row=row_num, column=5, value=row.no2 or "")
+                cell.border = thin_border; cell.alignment = center_align
+                
+                cell = ws_meas.cell(row=row_num, column=6, value=row.length or "")
+                cell.border = thin_border; cell.alignment = center_align
+                
+                cell = ws_meas.cell(row=row_num, column=7, value=row.width or "")
+                cell.border = thin_border; cell.alignment = center_align
+                
+                cell = ws_meas.cell(row=row_num, column=8, value=row.height or "")
+                cell.border = thin_border; cell.alignment = center_align
+                
+                cell = ws_meas.cell(row=row_num, column=9, value=row.uom or "")
+                cell.border = thin_border; cell.alignment = center_align
+                
+                qty = flt(row.quantity)
+                task_total_qty += qty
+                
+                qty_cell = ws_meas.cell(row=row_num, column=10, value=qty)
+                qty_cell.border = thin_border; qty_cell.alignment = center_align
+                qty_cell.number_format = '0.00'
+                
+                row_num += 1
+                subtask_idx += 1
+                
+            # Total
+            cell_sr = ws_meas.cell(row=row_num, column=1, value="")
+            cell_sr.border = thin_border; cell_sr.alignment = left_align
+            
+            cell_desc = ws_meas.cell(row=row_num, column=2, value="    Total")
+            cell_desc.font = bold_font; cell_desc.border = thin_border; cell_desc.alignment = left_align
+            
+            for c in range(3, 10):
+                cell = ws_meas.cell(row=row_num, column=c, value="")
+                cell.border = thin_border; cell.alignment = center_align
+                
+            total_qty_cell = ws_meas.cell(row=row_num, column=10, value=task_total_qty)
+            total_qty_cell.font = bold_font; total_qty_cell.border = thin_border; total_qty_cell.alignment = center_align
+            total_qty_cell.number_format = '0.00'
+            
+            row_num += 1
+            task_idx += 1
+            
+        stage_idx += 1
+
+    for col in ws_meas.columns:
+        max_length = 0
+        column = get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except: pass
+        ws_meas.column_dimensions[column].width = (max_length + 2)
+        
+    # --- Abstract Sheet ---
+    ws_abstract.merge_cells('A1:G1')
+    ws_abstract['A1'] = company_name
+    ws_abstract['A1'].font = Font(bold=True, size=14)
+    ws_abstract['A1'].alignment = center_align
+
+    ws_abstract.merge_cells('A2:G2')
+    ws_abstract['A2'] = project_doc.project_name or project_doc.name
+    ws_abstract['A2'].font = Font(bold=True, size=12)
+    ws_abstract['A2'].alignment = center_align
+
+    ws_abstract.merge_cells('A3:G3')
+    ws_abstract['A3'] = f"RA Bill Number: {doc.name}"
+    ws_abstract['A3'].font = Font(bold=True, size=12)
+    ws_abstract['A3'].alignment = center_align
+
+    ws_abstract.merge_cells('A4:G4')
+    ws_abstract['A4'] = "ABSTRACT SHEET"
+    ws_abstract['A4'].font = Font(bold=True, size=12)
+    ws_abstract['A4'].alignment = center_align
+
+    ws_abstract.append([])
+    abs_headers = ["Sr. No", "Content", "Description", "Unit", "Qty", "Rate", "Amount"]
+    ws_abstract.append(abs_headers)
+    
+    for col_num in range(1, 8):
+        cell = ws_abstract.cell(row=6, column=col_num)
+        cell.font = bold_font
+        cell.alignment = center_align if col_num not in (2, 3) else left_align
+        cell.border = thin_border
+
+    row_num = 7
+    sr_no = 1
+    current_stage = None
+
+    for row in getattr(doc, "ra_abstract_details", []):
+        if row.stage_subject != current_stage:
+            current_stage = row.stage_subject
+            cell_sr = ws_abstract.cell(row=row_num, column=1, value="")
+            cell_sr.border = thin_border; cell_sr.alignment = left_align
+            
+            cell_desc = ws_abstract.cell(row=row_num, column=2, value=current_stage or "No Stage")
+            cell_desc.font = bold_font; cell_desc.border = thin_border; cell_desc.alignment = left_align
+            
+            for c in range(3, 8): 
+                cell = ws_abstract.cell(row=row_num, column=c, value="")
+                cell.border = thin_border; cell.alignment = center_align
+            row_num += 1
+
+        cell_sr = ws_abstract.cell(row=row_num, column=1, value=sr_no)
+        cell_sr.border = thin_border; cell_sr.alignment = left_align
+        
+        cell_desc = ws_abstract.cell(row=row_num, column=2, value="  " + (row.task_subject or ""))
+        cell_desc.border = thin_border; cell_desc.alignment = left_align
+        
+        # Abstract only groups by Task, it does not display subtasks, so description is task description
+        desc_val = row.description if hasattr(row, 'description') and row.description else get_task_desc(row.task)
+        cell_subdesc = ws_abstract.cell(row=row_num, column=3, value=desc_val)
+        cell_subdesc.border = thin_border; cell_subdesc.alignment = left_align
+        
+        cell = ws_abstract.cell(row=row_num, column=4, value=row.uom or "")
+        cell.border = thin_border; cell.alignment = center_align
+        
+        qty_cell = ws_abstract.cell(row=row_num, column=5, value=flt(row.billed_quantity))
+        qty_cell.border = thin_border; qty_cell.alignment = center_align; qty_cell.number_format = '0.00'
+        
+        rate_cell = ws_abstract.cell(row=row_num, column=6, value=flt(row.rate))
+        rate_cell.border = thin_border; rate_cell.alignment = center_align; rate_cell.number_format = '0.00'
+        
+        amt_cell = ws_abstract.cell(row=row_num, column=7, value=flt(row.amount))
+        amt_cell.border = thin_border; amt_cell.alignment = center_align; amt_cell.number_format = '0.00'
+
+        sr_no += 1
+        row_num += 1
+
+    for col in ws_abstract.columns:
+        max_length = 0
+        column = get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except: pass
+        ws_abstract.column_dimensions[column].width = (max_length + 2)
+
+    # --- Steel Sheet ---
+    ws_steel = wb.create_sheet("Steel")
+    
+    ws_steel.merge_cells('A1:L1')
+    ws_steel['A1'] = company_name
+    ws_steel['A1'].font = Font(bold=True, size=14)
+    ws_steel['A1'].alignment = center_align
+
+    ws_steel.merge_cells('A2:L2')
+    ws_steel['A2'] = project_doc.project_name or project_doc.name
+    ws_steel['A2'].font = Font(bold=True, size=12)
+    ws_steel['A2'].alignment = center_align
+
+    ws_steel.merge_cells('A3:L3')
+    ws_steel['A3'] = f"RA Bill Number: {doc.name}"
+    ws_steel['A3'].font = Font(bold=True, size=12)
+    ws_steel['A3'].alignment = center_align
+
+    ws_steel.merge_cells('A4:L4')
+    ws_steel['A4'] = "STEEL DETAILS"
+    ws_steel['A4'].font = Font(bold=True, size=12)
+    ws_steel['A4'].alignment = center_align
+
+    ws_steel.append([])
+    steel_headers = ["Sr. No", "Content", "Description", "No of FDN", "No of Bar", "Dia meter of Bar", "Cutting Length", "Total Length", "Quantity", "Weight of Bar", "Total Weight", "Unit"]
+    ws_steel.append(steel_headers)
+    
+    for col_num in range(1, 13):
+        cell = ws_steel.cell(row=6, column=col_num)
+        cell.font = bold_font
+        cell.alignment = center_align if col_num not in (2, 3) else left_align
+        cell.border = thin_border
+
+    grouped_steel_data = {}
+    for row in getattr(doc, "ra_steel_details", []):
+        task = row.task
+        subtask = row.subtask
+        
+        stage_subject = "No Stage"
+        task_subject = "No Task"
+        if task:
+            task_info = frappe.db.get_value("Task", task, ["subject", "parent_task"], as_dict=True)
+            if task_info:
+                task_subject = task_info.get("subject") or "No Task"
+                stage_id = task_info.get("parent_task")
+                if stage_id:
+                    stage_subj = frappe.db.get_value("Task", stage_id, "subject")
+                    if stage_subj:
+                        stage_subject = stage_subj
+        
+        subtask_subject = "No Subtask"
+        if subtask:
+            subtask_subj = frappe.db.get_value("Task", subtask, "subject")
+            if subtask_subj:
+                subtask_subject = subtask_subj
+        
+        if stage_subject not in grouped_steel_data:
+            grouped_steel_data[stage_subject] = {}
+        if task_subject not in grouped_steel_data[stage_subject]:
+            grouped_steel_data[stage_subject][task_subject] = {}
+        if subtask_subject not in grouped_steel_data[stage_subject][task_subject]:
+            grouped_steel_data[stage_subject][task_subject][subtask_subject] = []
+            
+        grouped_steel_data[stage_subject][task_subject][subtask_subject].append(row)
+        
+    row_num = 7
+    stage_idx = 1
+    for stage, tasks in grouped_steel_data.items():
+        cell_sr = ws_steel.cell(row=row_num, column=1, value=str(stage_idx))
+        cell_sr.border = thin_border; cell_sr.alignment = left_align
+        
+        cell_desc = ws_steel.cell(row=row_num, column=2, value=stage)
+        cell_desc.font = bold_font; cell_desc.border = thin_border; cell_desc.alignment = left_align
+        
+        for c in range(3, 13):
+            cell = ws_steel.cell(row=row_num, column=c, value="")
+            cell.border = thin_border; cell.alignment = center_align
+        row_num += 1
+        
+        task_idx = 1
+        for task, subtasks in tasks.items():
+            cell_sr = ws_steel.cell(row=row_num, column=1, value=f"{stage_idx}.{task_idx}")
+            cell_sr.border = thin_border; cell_sr.alignment = left_align
+            
+            cell_desc = ws_steel.cell(row=row_num, column=2, value="  " + task)
+            cell_desc.font = bold_font; cell_desc.border = thin_border; cell_desc.alignment = left_align
+            
+            for c in range(3, 13):
+                cell = ws_steel.cell(row=row_num, column=c, value="")
+                cell.border = thin_border; cell.alignment = center_align
+            row_num += 1
+            
+            subtask_idx = 1
+            for subtask, rows in subtasks.items():
+                subtask_id = rows[0].subtask if len(rows) > 0 else None
+                task_desc = get_task_desc(subtask_id)
+                
+                for r in rows:
+                    cell_sr = ws_steel.cell(row=row_num, column=1, value=f"{stage_idx}.{task_idx}.{subtask_idx}")
+                    cell_sr.border = thin_border; cell_sr.alignment = left_align
+                    
+                    cell_desc = ws_steel.cell(row=row_num, column=2, value="    " + subtask)
+                    cell_desc.border = thin_border; cell_desc.alignment = left_align
+                    
+                    # If r.description exists, use it. Else use task_desc.
+                    final_desc = r.description if r.description else task_desc
+                    cell_subdesc = ws_steel.cell(row=row_num, column=3, value=final_desc)
+                    cell_subdesc.border = thin_border; cell_subdesc.alignment = left_align
+                    
+                    cell = ws_steel.cell(row=row_num, column=4, value=r.no_of_fdn or "")
+                    cell.border = thin_border; cell.alignment = center_align
+                    
+                    cell = ws_steel.cell(row=row_num, column=5, value=r.no_of_bar or "")
+                    cell.border = thin_border; cell.alignment = center_align
+                    
+                    cell = ws_steel.cell(row=row_num, column=6, value=r.diamter_of_bar or "")
+                    cell.border = thin_border; cell.alignment = center_align
+                    
+                    cell = ws_steel.cell(row=row_num, column=7, value=r.cutting_length or "")
+                    cell.border = thin_border; cell.alignment = center_align
+                    
+                    t_len = flt(r.total_length)
+                    cell = ws_steel.cell(row=row_num, column=8, value=t_len)
+                    cell.border = thin_border; cell.alignment = center_align
+                    if t_len: cell.number_format = '0.00'
+                    
+                    qty = flt(r.qty)
+                    cell = ws_steel.cell(row=row_num, column=9, value=qty)
+                    cell.border = thin_border; cell.alignment = center_align
+                    if qty: cell.number_format = '0.00'
+                    
+                    w_bar = flt(r.weight_of_bar)
+                    cell = ws_steel.cell(row=row_num, column=10, value=w_bar)
+                    cell.border = thin_border; cell.alignment = center_align
+                    if w_bar: cell.number_format = '0.00'
+                    
+                    t_weight = flt(r.total_weight)
+                    cell = ws_steel.cell(row=row_num, column=11, value=t_weight)
+                    cell.border = thin_border; cell.alignment = center_align
+                    if t_weight: cell.number_format = '0.00'
+                    
+                    cell = ws_steel.cell(row=row_num, column=12, value=r.unit or "")
+                    cell.border = thin_border; cell.alignment = center_align
+                    
+                    row_num += 1
+                subtask_idx += 1
+            task_idx += 1
+        stage_idx += 1
+
+    for col in ws_steel.columns:
+        max_length = 0
+        column = get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except: pass
+        ws_steel.column_dimensions[column].width = (max_length + 2)
+
+    file_data = BytesIO()
+    wb.save(file_data)
+    
+    frappe.response['filename'] = f"RA_Bill_{doc.name}.xlsx"
+    frappe.response['filecontent'] = file_data.getvalue()
+    frappe.response['type'] = 'binary'
+
+@frappe.whitelist()
+def get_steel_details(project, from_date, to_date):
+    if not project or not from_date or not to_date:
+        return []
+
+    query = """
+        SELECT 
+            sed.item_code as item,
+            sed.custom_task as task,
+            sed.custom_subtask as subtask,
+            sed.custom_diameter_of_steel as diamter_of_bar,
+            sed.uom as unit,
+            sed.qty as qty
+        FROM 
+            `tabStock Entry` se
+        JOIN 
+            `tabStock Entry Detail` sed ON se.name = sed.parent
+        JOIN
+            `tabItem` item ON sed.item_code = item.name
+        WHERE 
+            (se.project = %s OR sed.project = %s)
+            AND se.posting_date >= %s
+            AND se.posting_date <= %s
+            AND se.docstatus = 1
+            AND LOWER(item.custom_item_type) = 'steel'
+    """
+    
+    data = frappe.db.sql(query, (project, project, from_date, to_date), as_dict=1)
+    return data
