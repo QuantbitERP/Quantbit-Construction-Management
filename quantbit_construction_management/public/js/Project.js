@@ -42,10 +42,9 @@ function render_report_view(frm) {
                 frm.set_df_property('custom_html_view', 'options', html);
                 frm.refresh_field('custom_html_view');
 
-                // If still preparing, poll again in 5 seconds
                 if (msg.status === "preparing") {
                     setTimeout(() => {
-                        // Check if we are still on the same report
+                        
                         if (frm.doc.custom_report_name_) {
                             render_report_view(frm);
                         }
@@ -540,8 +539,8 @@ function attach_events(frm, all_tasks) {
                 },
 
                 {
-                    label: "Include Dependencies",
-                    fieldname: "include_dependencies",
+                    label: "Include Tasks",
+                    fieldname: "include_tasks",
                     fieldtype: "Check",
                     default: 0,
                     depends_on: "eval:doc.existing_stage"
@@ -1015,7 +1014,7 @@ function attach_events(frm, all_tasks) {
                                         return;
                                     }
 
-                                    update_task_values(); // ✅ only after validation
+                                    update_task_values(); 
 
                                 });
                         }

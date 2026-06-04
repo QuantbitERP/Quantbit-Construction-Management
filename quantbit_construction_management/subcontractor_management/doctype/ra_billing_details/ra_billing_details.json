@@ -12,6 +12,7 @@
   "task_subject",
   "subtask",
   "subtask_subject",
+  "description",
   "column_break_dkzt",
   "total_quantity",
   "no1",
@@ -28,18 +29,21 @@
  ],
  "fields": [
   {
+   "fetch_from": "stage.subject",
    "fieldname": "stage_subject",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Stage Subject"
   },
   {
+   "fetch_from": "task.subject",
    "fieldname": "task_subject",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Task Subject"
   },
   {
+   "fetch_from": "subtask.subject",
    "fieldname": "subtask_subject",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -130,13 +134,18 @@
    "fieldname": "quantity",
    "fieldtype": "Float",
    "label": "Actual Quantity(By Measurement)"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-02 17:18:35.022917",
+ "modified": "2026-06-04 14:56:18.357111",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing Details",

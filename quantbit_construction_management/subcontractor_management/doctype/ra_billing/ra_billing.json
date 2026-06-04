@@ -6,7 +6,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "abstract_tab",
+  "measurement_tab",
   "section_break_dxaj",
   "naming_series",
   "section_break_unhe",
@@ -22,7 +22,13 @@
   "get_details",
   "section_break_xpic",
   "ra_billing_details",
-  "grand_total"
+  "grand_total",
+  "abstract_tab",
+  "ra_abstract_details",
+  "steel_tab",
+  "get_details_",
+  "section_break_bwox",
+  "ra_steel_details"
  ],
  "fields": [
   {
@@ -84,7 +90,7 @@
   {
    "fieldname": "abstract_tab",
    "fieldtype": "Tab Break",
-   "label": "Abstract"
+   "label": "Abstract "
   },
   {
    "fieldname": "grand_total",
@@ -121,6 +127,37 @@
    "fieldname": "get_details",
    "fieldtype": "Button",
    "label": "Get Details"
+  },
+  {
+   "fieldname": "measurement_tab",
+   "fieldtype": "Tab Break",
+   "label": "Measurement "
+  },
+  {
+   "fieldname": "ra_abstract_details",
+   "fieldtype": "Table",
+   "label": "RA Abstract Details",
+   "options": "RA Abstarct  Details"
+  },
+  {
+   "fieldname": "steel_tab",
+   "fieldtype": "Tab Break",
+   "label": "Steel"
+  },
+  {
+   "fieldname": "get_details_",
+   "fieldtype": "Button",
+   "label": "Get Details"
+  },
+  {
+   "fieldname": "section_break_bwox",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "ra_steel_details",
+   "fieldtype": "Table",
+   "label": "RA Steel Details",
+   "options": "RA Steel Details"
   }
  ],
  "grid_page_length": 50,
@@ -132,7 +169,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-06-02 18:00:13.075671",
+ "modified": "2026-06-04 12:10:00.310923",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",

@@ -1,0 +1,156 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-06-04 12:03:25.972069",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "no_of_fdn",
+  "description",
+  "column_break_rpct",
+  "task",
+  "no_of_bar",
+  "column_break_cbxd",
+  "subtask",
+  "cutting_length",
+  "column_break_xqjs",
+  "diamter_of_bar",
+  "total_length",
+  "column_break_mndj",
+  "qty",
+  "weight_of_bar",
+  "column_break_gbpg",
+  "unit",
+  "total_weight"
+ ],
+ "fields": [
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "no_of_fdn",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "No of FDN"
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Unit",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "column_break_rpct",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "no_of_bar",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "No of Bar"
+  },
+  {
+   "fieldname": "weight_of_bar",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Weight of Bar"
+  },
+  {
+   "fieldname": "column_break_cbxd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "subtask",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Subtask",
+   "options": "Task"
+  },
+  {
+   "fieldname": "diamter_of_bar",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Diamter of Bar"
+  },
+  {
+   "fieldname": "total_weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Total Weight "
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Quantity"
+  },
+  {
+   "fieldname": "column_break_xqjs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description "
+  },
+  {
+   "fieldname": "cutting_length",
+   "fieldtype": "Float",
+   "label": "Cutting Length"
+  },
+  {
+   "fieldname": "total_length",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Total Length"
+  },
+  {
+   "fieldname": "column_break_mndj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_gbpg",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-04 16:24:47.816044",
+ "modified_by": "Administrator",
+ "module": "Subcontractor Management",
+ "name": "RA Steel Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
