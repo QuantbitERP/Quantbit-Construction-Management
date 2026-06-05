@@ -2203,71 +2203,21 @@ function attach_events(frm, all_tasks) {
                 // =====================================
 
                 frappe.call({
-
-                    method: "frappe.client.get_list",
-
+                    method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.delete_task_with_dependencies",
                     args: {
-                        doctype: "Task Depends On",
-                        filters: {
-                            task: docname
-                        },
-                        fields: ["name"]
+                        task_name: docname
                     },
-
-                    callback: function (r) {
-
-                        let dependency_rows = r.message || [];
-
-                        let promises = [];
-
-                        dependency_rows.forEach(dep => {
-
-                            promises.push(
-
-                                frappe.call({
-                                    method: "frappe.client.delete",
-                                    args: {
-                                        doctype: "Task Depends On",
-                                        name: dep.name
-                                    }
-                                })
-
-                            );
-
-                        });
-
-                        Promise.all(promises).then(() => {
-
-                            // DELETE TASK / SUBTASK
-                            frappe.call({
-
-                                method: "frappe.client.delete",
-
-                                args: {
-                                    doctype: "Task",
-                                    name: docname
-                                },
-
-                                freeze: true,
-                                freeze_message: __("Deleting..."),
-
-                                callback: function () {
-
-                                    frappe.show_alert({
-                                        message: __("{0} deleted successfully", [type]),
-                                        indicator: "red"
-                                    });
-
-                                    load_hierarchy(frm);
-
-                                }
-
+                    freeze: true,
+                    freeze_message: __("Deleting..."),
+                    callback: function(r) {
+                        if (!r.exc) {
+                            frappe.show_alert({
+                                message: __("{0} deleted successfully", [type]),
+                                indicator: "red"
                             });
-
-                        });
-
+                            load_hierarchy(frm);
+                        }
                     }
-
                 });
 
             }

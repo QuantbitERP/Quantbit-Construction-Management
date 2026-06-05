@@ -434,3 +434,13 @@ def delete_boq_tasks(boq_name):
     frappe.db.commit()
 
     return True
+
+@frappe.whitelist()
+def delete_task_with_dependencies(task_name):
+    dependencies = frappe.get_all("Task Depends On", filters={"task": task_name}, pluck="name")
+    for dep in dependencies:
+        frappe.delete_doc("Task Depends On", dep, ignore_permissions=True, force=1)
+    
+    frappe.delete_doc("Task", task_name, ignore_permissions=True, force=1)
+    
+    return True
