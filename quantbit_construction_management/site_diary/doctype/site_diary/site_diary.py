@@ -975,32 +975,33 @@ def get_material_received(project, site_date):
     warehouses = list(set(warehouses))
 
     # PURCHASE RECEIPTS 
-    purchase_receipts = frappe.db.sql("""
-        SELECT
-            pr.name as reference_name,
-            'Purchase Receipt' as reference_type,
-            pri.item_code,
-            pri.item_name,
-            pri.qty,
-            pri.uom,
-            pr.set_warehouse as warehouse,
-            pri.project,
-            pri.rate,
-            pri.amount
-        FROM `tabPurchase Receipt Item` pri
-        INNER JOIN `tabPurchase Receipt` pr
-            ON pr.name = pri.parent
-        WHERE pr.posting_date = %(site_date)s
-        AND pri.project = %(project)s
-        AND pri.warehouse IN %(warehouses)s
-		AND pr.docstatus = 1
-    """, {
-        "site_date": site_date,
-        "project": project,
-        "warehouses": tuple(warehouses)
-    }, as_dict=True)
+    if warehouses:
+        purchase_receipts = frappe.db.sql("""
+            SELECT
+                pr.name as reference_name,
+                'Purchase Receipt' as reference_type,
+                pri.item_code,
+                pri.item_name,
+                pri.qty,
+                pri.uom,
+                pr.set_warehouse as warehouse,
+                pri.project,
+                pri.rate,
+                pri.amount
+            FROM `tabPurchase Receipt Item` pri
+            INNER JOIN `tabPurchase Receipt` pr
+                ON pr.name = pri.parent
+            WHERE pr.posting_date = %(site_date)s
+            AND pri.project = %(project)s
+            AND pri.warehouse IN %(warehouses)s
+            AND pr.docstatus = 1
+        """, {
+            "site_date": site_date,
+            "project": project,
+            "warehouses": tuple(warehouses)
+        }, as_dict=True)
 
-    final_data.extend(purchase_receipts)
+        final_data.extend(purchase_receipts)
 
     # STOCK ENTRIES (FIXED LOGIC)
     if warehouses:
@@ -1040,17 +1041,17 @@ def get_material_received(project, site_date):
 @frappe.whitelist()
 def get_latest_task_progress(project, site_date):
 
-    task_progress_name = frappe.db.get_value(
+    task_progress_names = frappe.db.get_all(
         "Task Progress",
-        {
+        filters={
             "project": project,
             "site_date": site_date,
             "docstatus": 1
         },
-        "name",
+        pluck="name",
     )
 
-    if not task_progress_name:
+    if not task_progress_names:
         return []
 
     data = frappe.db.sql("""
@@ -1066,10 +1067,10 @@ def get_latest_task_progress(project, site_date):
 			planned_today,
             percent_completed
         FROM `tabTask Progress Details`
-        WHERE parent = %(parent)s
-        ORDER BY idx
+        WHERE parent IN %(parents)s
+        ORDER BY parent, idx
     """, {
-        "parent": task_progress_name
+        "parents": tuple(task_progress_names)
     }, as_dict=True)
 
     return data

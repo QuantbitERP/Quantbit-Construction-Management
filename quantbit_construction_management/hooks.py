@@ -33,7 +33,6 @@ doctype_js = {
 }
 
 fixtures = [
-
     {
         "doctype": "Custom Field",
         "filters": [
@@ -73,7 +72,7 @@ fixtures = [
     {
         "dt": "Property Setter",
         "filters": [
-            ["doc_type", "=", "Task"]
+            ["doc_type", "in", ["Task", "Stock Entry Detail"]]
         ]
     },
 
