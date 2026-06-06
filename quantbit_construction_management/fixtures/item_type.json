@@ -26,5 +26,12 @@
   "item_type_name": "Other",
   "modified": "2026-05-08 11:41:45.100973",
   "name": "Other"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Item Type",
+  "item_type_name": "steel",
+  "modified": "2026-06-04 12:11:35.354052",
+  "name": "steel"
  }
 ]
