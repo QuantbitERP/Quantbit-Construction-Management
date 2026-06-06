@@ -3,15 +3,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:39:29.185528",
-  "name": "Approved By Technical Evaluator",
-  "style": "",
-  "workflow_state_name": "Approved By Technical Evaluator"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-04-30 00:39:40.065164",
   "name": "Approved By Financial Evaluator",
   "style": "",
@@ -84,15 +75,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:39:16.815799",
-  "name": "Approved By Analyzer",
-  "style": "",
-  "workflow_state_name": "Approved By Analyzer"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-04-30 00:40:32.354777",
   "name": "Don't Go For Bid",
   "style": "",
@@ -120,15 +102,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-04-30 00:40:07.317914",
-  "name": "Approved By Top Management",
-  "style": "",
-  "workflow_state_name": "Approved By Top Management"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-04-30 00:44:13.481014",
   "name": "Commercially Approved",
   "style": "",
@@ -142,5 +115,32 @@
   "name": "Alloted",
   "style": "",
   "workflow_state_name": "Alloted"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-04-30 00:39:16.815799",
+  "name": "Approved By Analyzer",
+  "style": "",
+  "workflow_state_name": "Approved By Analyzer"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-04-30 00:40:07.317914",
+  "name": "Approved By Top Management",
+  "style": "",
+  "workflow_state_name": "Approved By Top Management"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-04-30 00:39:29.185528",
+  "name": "Approved By Technical Evaluator",
+  "style": "",
+  "workflow_state_name": "Approved By Technical Evaluator"
  }
 ]
