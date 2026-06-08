@@ -1038,6 +1038,11 @@ def get_material_received(project, site_date):
 
     return final_data
 
+
+
+
+
+
 @frappe.whitelist()
 def get_latest_task_progress(project, site_date):
 
