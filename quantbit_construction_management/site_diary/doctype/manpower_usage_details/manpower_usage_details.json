@@ -7,19 +7,24 @@
  "engine": "InnoDB",
  "field_order": [
   "task",
-  "subtask",
-  "equipment_item",
-  "contractor",
   "uom",
+  "time_in",
   "skill_type",
   "column_break_tudt",
+  "subtask",
   "quantity",
-  "rate",
-  "amount",
+  "time_out",
   "billed",
   "paid",
-  "time_in",
-  "time_out"
+  "column_break_vgha",
+  "contractor",
+  "presenty",
+  "hours",
+  "column_break_xlbz",
+  "equipment_item",
+  "total_presenty",
+  "rate",
+  "amount"
  ],
  "fields": [
   {
@@ -37,7 +42,6 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Manpower Item",
-   "link_filters": "[[\"Item\",\"custom_item_type\",\"=\",\"Man\"]]",
    "options": "Item",
    "reqd": 1
   },
@@ -126,13 +130,36 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Time Out"
+  },
+  {
+   "fieldname": "column_break_vgha",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "presenty",
+   "fieldtype": "Float",
+   "label": "Presenty"
+  },
+  {
+   "fieldname": "hours",
+   "fieldtype": "Float",
+   "label": "Hours"
+  },
+  {
+   "fieldname": "column_break_xlbz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_presenty",
+   "fieldtype": "Float",
+   "label": "Total Presenty"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-06 17:18:01.580723",
+ "modified": "2026-06-09 16:37:13.756470",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Manpower Usage Details",

@@ -10,19 +10,29 @@
   "site_date",
   "item",
   "uom",
+  "presenty",
+  "time_in",
+  "hours",
+  "opening_reading",
+  "diesel_filledin_ltr",
+  "doc_name",
   "column_break_bbhi",
   "quantity",
   "rate",
   "working_hrs",
   "amount",
-  "reference_row_name"
+  "reference_row_name",
+  "time_out",
+  "total_presenty",
+  "closing_reading"
  ],
  "fields": [
   {
    "fieldname": "id",
-   "fieldtype": "Data",
+   "fieldtype": "Dynamic Link",
    "in_list_view": 1,
-   "label": "Id"
+   "label": "Id",
+   "options": "doc_name"
   },
   {
    "fieldname": "site_date",
@@ -77,13 +87,59 @@
    "fieldname": "reference_row_name",
    "fieldtype": "Data",
    "label": "Reference Row Name"
+  },
+  {
+   "fieldname": "presenty",
+   "fieldtype": "Float",
+   "label": "Presenty"
+  },
+  {
+   "fieldname": "time_in",
+   "fieldtype": "Time",
+   "label": "Time In"
+  },
+  {
+   "fieldname": "hours",
+   "fieldtype": "Float",
+   "label": "Hours"
+  },
+  {
+   "fieldname": "time_out",
+   "fieldtype": "Time",
+   "label": "Time Out"
+  },
+  {
+   "fieldname": "total_presenty",
+   "fieldtype": "Float",
+   "label": "Total Presenty "
+  },
+  {
+   "fieldname": "opening_reading",
+   "fieldtype": "Float",
+   "label": "Opening Reading"
+  },
+  {
+   "fieldname": "closing_reading",
+   "fieldtype": "Float",
+   "label": "Closing Reading"
+  },
+  {
+   "fieldname": "diesel_filledin_ltr",
+   "fieldtype": "Float",
+   "label": " Diesel filled(in LTR)"
+  },
+  {
+   "fieldname": "doc_name",
+   "fieldtype": "Link",
+   "label": "Doc Name ",
+   "options": "DocType"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-29 12:44:27.963431",
+ "modified": "2026-06-09 17:07:53.911526",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing Details",

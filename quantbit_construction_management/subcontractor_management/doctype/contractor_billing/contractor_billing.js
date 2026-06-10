@@ -1,4 +1,14 @@
 frappe.ui.form.on("Contractor Billing", {
+    setup: function(frm) {
+        frm.set_query("doc_name", "contractor_billing_details", function() {
+            return {
+                filters: {
+                    name: ["in", ["Manpower Usage", "Equipment Usage"]]
+                }
+            };
+        });
+    },
+
      refresh: function(frm) {
         calculate_grand_total(frm);
         let outstanding = frm.doc.outstanding_amount !== undefined && frm.doc.outstanding_amount !== null 
@@ -81,6 +91,7 @@ frappe.ui.form.on("Contractor Billing", {
                 let child = frm.add_child("contractor_billing_details");
 
                 child.id = data.name;
+                child.doc_name = doctype;
                 child.reference_row_name = row.name;
                 child.site_date = data.site_date;
                 child.item = row.equipment_item || row.item;
@@ -89,6 +100,14 @@ frappe.ui.form.on("Contractor Billing", {
                 child.rate = row.rate;
                 child.working_hrs = row.working_hrs;
                 child.amount = row.amount;
+                child.presenty = row.presenty;
+                child.time_in = row.time_in;
+                child.hours = row.hours;
+                child.time_out = row.time_out;
+                child.total_presenty = row.total_presenty;
+                child.opening_reading = row.opening_reading;
+                child.closing_reading = row.closing_reading;
+                child.diesel_filledin_ltr = row.diesel_filledin_ltr;
             });
         }
         calculate_grand_total(frm);

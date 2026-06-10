@@ -129,17 +129,11 @@
    "label": "Grand Total"
   },
   {
-   "fetch_from": "contractor.billing_account",
-   "fieldname": "contractor_account",
-   "fieldtype": "Link",
-   "label": "Contractor Account",
-   "options": "Account"
-  },
-  {
    "fetch_from": "project.custom_default_contractor_billing_account",
    "fieldname": "project_account",
    "fieldtype": "Link",
    "label": "Project Account",
+   "link_filters": "[[\"Account\",\"account_type\",\"=\",\"Indirect Expense\"]]",
    "options": "Account"
   },
   {
@@ -173,6 +167,13 @@
    "fieldname": "paid_amount",
    "fieldtype": "Currency",
    "label": "Paid Amount"
+  },
+  {
+   "fetch_from": "contractor.billing_account",
+   "fieldname": "contractor_account",
+   "fieldtype": "Link",
+   "label": "Contractor Account",
+   "options": "Account"
   }
  ],
  "grid_page_length": 50,
@@ -186,9 +187,13 @@
   {
    "link_doctype": "Payment Entry",
    "link_fieldname": "custom_doc_link"
+  },
+  {
+   "link_doctype": "Purchase Invoice",
+   "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-05-30 10:57:58.919468",
+ "modified": "2026-06-09 12:34:37.280146",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing",

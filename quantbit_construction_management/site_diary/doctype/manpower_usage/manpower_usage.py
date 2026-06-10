@@ -41,3 +41,24 @@ class ManpowerUsage(Document):
 				"custom_total_labour_cost",
 				new_total
 			)
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_contractor_manpower_items(doctype, txt, searchfield, start, page_len, filters):
+	contractor = filters.get("contractor")
+	if not contractor:
+		return []
+
+	# Cast to int to prevent MySQL syntax error in LIMIT clause
+	start = int(start) if start else 0
+	page_len = int(page_len) if page_len else 20
+
+	return frappe.db.sql("""
+		select c.item, i.item_name 
+		from `tabSite Diary Contractor Item Details` c
+		left join `tabItem` i on c.item = i.name
+		where c.parent = %s and c.parenttype = 'Contractor'
+		and i.custom_item_type = 'Man'
+		and (c.item like %s or i.item_name like %s)
+		limit %s, %s
+	""", (contractor, "%%%s%%" % txt, "%%%s%%" % txt, start, page_len))

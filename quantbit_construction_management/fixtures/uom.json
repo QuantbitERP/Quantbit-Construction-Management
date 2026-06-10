@@ -1,5 +1,18 @@
 [
  {
+  "category": "Force",
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-06-02 14:50:49.832205",
+  "must_be_whole_number": 0,
+  "name": "PCS",
+  "symbol": null,
+  "uom_name": "PCS"
+ },
+ {
   "category": null,
   "common_code": null,
   "description": null,
@@ -3300,5 +3313,44 @@
   "name": "Square Meter",
   "symbol": null,
   "uom_name": "Square Meter"
+ },
+ {
+  "category": "Time",
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-06-02 11:37:10.451571",
+  "must_be_whole_number": 0,
+  "name": "DAYS",
+  "symbol": null,
+  "uom_name": "DAYS"
+ },
+ {
+  "category": null,
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-06-07 15:51:30.338022",
+  "must_be_whole_number": 0,
+  "name": "BRASS",
+  "symbol": null,
+  "uom_name": "BRASS"
+ },
+ {
+  "category": null,
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-04-27 16:49:07.250946",
+  "must_be_whole_number": 0,
+  "name": "Ton",
+  "symbol": null,
+  "uom_name": "Ton"
  }
 ]
