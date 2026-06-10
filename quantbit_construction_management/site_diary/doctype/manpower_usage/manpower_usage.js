@@ -13,17 +13,29 @@ frappe.ui.form.on("Manpower Usage", {
             };
         });
         
-       frm.fields_dict.manpower_usage.grid.get_field('subtask').get_query = function(doc, cdt, cdn) {
-
-            let row = locals[cdt][cdn];
-
+        frm.set_query('subtask', 'manpower_usage', function(doc, cdt, cdn) {
+            let row = frappe.get_doc(cdt, cdn);
             return {
                 filters: {
                     parent_task: row.task,
                     custom_is_subtask: 1
                 }
             };
-        };
+        });
+
+        frm.set_query('equipment_item', 'manpower_usage', function(doc, cdt, cdn) {
+            let row = frappe.get_doc(cdt, cdn);
+            if (!row.contractor) {
+                frappe.msgprint(__("Please select a Contractor first"));
+                return {};
+            }
+            return {
+                query: "quantbit_construction_management.site_diary.doctype.manpower_usage.manpower_usage.get_contractor_manpower_items",
+                filters: {
+                    contractor: row.contractor
+                }
+            };
+        });
 
 	},
      onload(frm) {
@@ -37,22 +49,45 @@ frappe.ui.form.on("Manpower Usage Details", {
     quantity: function(frm, cdt, cdn) {
         calculate_amount(frm, cdt, cdn);
     },
+    presenty: function(frm, cdt, cdn) {
+        calculate_amount(frm, cdt, cdn);
+    },
+    rate: function(frm, cdt, cdn) {
+        calculate_amount(frm, cdt, cdn);
+    },
+    time_in: function(frm, cdt, cdn) {
+        calculate_amount(frm, cdt, cdn);
+    },
+    time_out: function(frm, cdt, cdn) {
+        calculate_amount(frm, cdt, cdn);
+    },
     contractor: function(frm, cdt, cdn) {
         validate_equipment(frm, cdt, cdn);
     },
     equipment_item: function(frm, cdt, cdn) {
         validate_equipment(frm, cdt, cdn);
     }
-
 });
 
 
 function calculate_amount(frm, cdt, cdn) {
     let row = locals[cdt][cdn];
 
-    row.amount = (row.quantity || 0) * (row.rate || 0);
+    if (row.time_in && row.time_out) {
+        let t1 = moment(row.time_in, "HH:mm:ss");
+        let t2 = moment(row.time_out, "HH:mm:ss");
+        if (t2.isBefore(t1)) {
+            t2.add(1, 'days');
+        }
+        let hours = t2.diff(t1, 'hours', true);
+        frappe.model.set_value(cdt, cdn, "hours", hours);
+    }
 
-    frm.refresh_field("manpower_usage");
+    let total_presenty = (row.quantity || 0) * (row.presenty || 0);
+    frappe.model.set_value(cdt, cdn, "total_presenty", total_presenty);
+
+    let amount = total_presenty * (row.rate || 0);
+    frappe.model.set_value(cdt, cdn, "amount", amount);
 }
 
 function validate_equipment(frm, cdt, cdn) {

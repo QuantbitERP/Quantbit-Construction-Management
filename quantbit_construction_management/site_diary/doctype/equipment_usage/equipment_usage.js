@@ -13,17 +13,29 @@ frappe.ui.form.on("Equipment Usage", {
             };
         });
         
-        frm.fields_dict.equipment_usage_details.grid.get_field('subtask').get_query = function(doc, cdt, cdn) {
-
-                    let row = locals[cdt][cdn];
-
-                    return {
-                        filters: {
-                            parent_task: row.task,
-                            custom_is_subtask: 1
-                        }
-                    };
-                };
+        frm.set_query('subtask', 'equipment_usage_details', function(doc, cdt, cdn) {
+            let row = frappe.get_doc(cdt, cdn);
+            return {
+                filters: {
+                    parent_task: row.task,
+                    custom_is_subtask: 1
+                }
+            };
+        });
+                
+        frm.set_query('equipment_item', 'equipment_usage_details', function(doc, cdt, cdn) {
+            let row = frappe.get_doc(cdt, cdn);
+            if (!row.contractor) {
+                frappe.msgprint(__("Please select a Contractor first"));
+                return {};
+            }
+            return {
+                query: "quantbit_construction_management.site_diary.doctype.equipment_usage.equipment_usage.get_contractor_items",
+                filters: {
+                    contractor: row.contractor
+                }
+            };
+        });
 	},
      onload(frm) {
         if (frm.is_new() && !frm.doc.site_date) {

@@ -36,7 +36,7 @@ fixtures = [
     {
         "doctype": "Custom Field",
         "filters": [
-            ["dt", "in", ["Task", "Project","Item","Warehouse", "Stock Entry Detail", "Journal Entry", "Payment Entry", "Sales Invoice"]]
+            ["dt", "in", ["Task", "Project","Item","Warehouse", "Stock Entry Detail", "Journal Entry", "Payment Entry", "Sales Invoice", "Purchase Invoice"]]
         ]
     },
 
@@ -270,6 +270,9 @@ doc_events = {
     "Payment Entry": {
         "on_submit": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_payment_entry_submit",
         "on_cancel": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_payment_entry_cancel"
+    },
+    "Purchase Invoice": {
+        "on_update": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_purchase_invoice_update"
     }
 }
 

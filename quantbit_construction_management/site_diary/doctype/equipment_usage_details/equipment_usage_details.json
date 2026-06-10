@@ -8,14 +8,17 @@
  "field_order": [
   "task",
   "subtask",
-  "equipment_item",
   "contractor",
+  "equipment_item",
   "uom",
+  "closing_reading",
   "column_break_tudt",
   "quantity",
   "rate",
   "working_hrs",
   "amount",
+  "opening_reading",
+  "diesel_filledin_ltr",
   "billed",
   "paid"
  ],
@@ -35,7 +38,6 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Equipment Item",
-   "link_filters": "[[\"Item\",\"custom_item_type\",\"=\",\"Equipment\"]]",
    "options": "Item",
    "reqd": 1
   },
@@ -108,13 +110,37 @@
    "fieldname": "paid",
    "fieldtype": "Check",
    "label": "Paid"
+  },
+  {
+   "fieldname": "closing_reading",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Closing Reading "
+  },
+  {
+   "fieldname": "opening_reading",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": " Opening Reading"
+  },
+  {
+   "fieldname": "diesel_filledin_ltr",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": " Diesel filled(in LTR)"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-29 12:22:46.191086",
+ "modified": "2026-06-09 16:29:06.235480",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Equipment Usage Details",

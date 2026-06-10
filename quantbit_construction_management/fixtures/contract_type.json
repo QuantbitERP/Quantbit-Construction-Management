@@ -33,5 +33,12 @@
   "doctype": "Contract Type",
   "modified": "2026-05-08 11:51:02.730247",
   "name": "EPC"
+ },
+ {
+  "contract_type_name": "Lumsum",
+  "docstatus": 0,
+  "doctype": "Contract Type",
+  "modified": "2026-04-30 14:51:21.506566",
+  "name": "Lumsum"
  }
 ]

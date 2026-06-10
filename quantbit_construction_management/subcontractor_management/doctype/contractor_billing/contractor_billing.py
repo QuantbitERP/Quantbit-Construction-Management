@@ -8,15 +8,24 @@ class ContractorBilling(Document):
 
     def before_submit(self):
         self.outstanding_amount = self.grand_total
-        self.create_journal_entry()
 
     def on_submit(self):
         self.update_billed_status(1)
+        
+        create_jv = frappe.db.get_single_value("Billing Settings", "create_jv")
+        create_pi = frappe.db.get_single_value("Billing Settings", "create_purchase_invoice")
+        
+        if create_jv:
+            self.create_journal_entry()
+            
+        if create_pi:
+            self.create_purchase_invoice()
 
     def on_cancel(self):
         self.update_billed_status(0)
         self.update_paid_status_in_child(0)
         self.cancel_journal_entry()
+        self.cancel_purchase_invoice()
         self.unlink_payment_entries()
 
     def unlink_payment_entries(self):
@@ -57,6 +66,36 @@ class ContractorBilling(Document):
             if je.docstatus == 1:
                 je.cancel()
 
+    def cancel_purchase_invoice(self):
+        pi_name = frappe.db.get_value("Purchase Invoice", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": self.name}, "name")
+        if pi_name:
+            pi = frappe.get_doc("Purchase Invoice", pi_name)
+            if pi.docstatus == 1:
+                pi.cancel()
+
+    def create_purchase_invoice(self):
+        pi = frappe.new_doc("Purchase Invoice")
+        pi.supplier = self.supplier
+        pi.project = self.project
+        pi.company = self.company
+        pi.custom_doc_link_doctype = "Contractor Billing"
+        pi.custom_doc_link = self.name
+        
+        for item in self.get("contractor_billing_details"):
+            qty = item.quantity or item.working_hrs or 1
+            rate = item.amount / qty if qty else item.amount
+            pi.append("items", {
+                "item_code": item.item,
+                "qty": qty,
+                "rate": rate,
+                "amount": item.amount,
+                "uom": item.uom,
+                "project": self.project
+            })
+            
+        pi.insert(ignore_permissions=True)
+        pi.submit()
+
     def create_journal_entry(self):
 
         je = frappe.new_doc("Journal Entry")
@@ -80,8 +119,8 @@ class ContractorBilling(Document):
 
         je.append("accounts", {
             "account": self.project_account,
-            "party_type": "Customer",
-            "party": customer_name,
+            # "party_type": "Customer",
+            # "party": customer_name,
             "credit_in_account_currency": 0,
             "debit_in_account_currency": self.grand_total,
 			"project":self.project
@@ -157,32 +196,53 @@ def on_payment_entry_cancel(doc, method):
     update_payment_status(doc)
 
 def update_payment_status(payment_entry):
-    if payment_entry.custom_doc_link_doctype != "Contractor Billing" or not payment_entry.custom_doc_link:
-        return
+    cb_names = set()
     
-    payments = frappe.db.get_all(
-        "Payment Entry",
-        filters={
-            "custom_doc_link_doctype": "Contractor Billing",
-            "custom_doc_link": payment_entry.custom_doc_link,
-            "docstatus": 1
-        },
-        fields=["paid_amount"]
-    )
-    
-    from frappe.utils import flt
-    total_paid_amount = sum(flt(p.paid_amount) for p in payments)
-    
-    billing = frappe.get_doc("Contractor Billing", payment_entry.custom_doc_link)
-    
-    billing.db_set("paid_amount", total_paid_amount)
-    outstanding = flt(billing.grand_total) - flt(total_paid_amount)
-    billing.db_set("outstanding_amount", outstanding)
-    
-    if flt(total_paid_amount) >= flt(billing.grand_total):
-        status = 1
-    else:
-        status = 0
+    if payment_entry.custom_doc_link_doctype == "Contractor Billing" and payment_entry.custom_doc_link:
+        cb_names.add(payment_entry.custom_doc_link)
         
-    billing.update_paid_status_in_child(status)
+    for ref in payment_entry.get("references", []):
+        if ref.reference_doctype == "Purchase Invoice" and ref.reference_name:
+            pi_link = frappe.db.get_value("Purchase Invoice", ref.reference_name, ["custom_doc_link_doctype", "custom_doc_link"], as_dict=True)
+            if pi_link and pi_link.custom_doc_link_doctype == "Contractor Billing" and pi_link.custom_doc_link:
+                cb_names.add(pi_link.custom_doc_link)
+
+    if not cb_names:
+        return
+        
+    for cb_name in cb_names:
+        sync_contractor_billing_payment_status(cb_name)
+
+def on_purchase_invoice_update(doc, method):
+    if doc.custom_doc_link_doctype == "Contractor Billing" and doc.custom_doc_link:
+        sync_contractor_billing_payment_status(doc.custom_doc_link)
+
+def sync_contractor_billing_payment_status(cb_name):
+    billing = frappe.get_doc("Contractor Billing", cb_name)
+    
+    is_paid = 0
+    
+    # Check if Purchase Invoice is Paid
+    pi_name = frappe.db.get_value("Purchase Invoice", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": cb_name}, "name")
+    if pi_name:
+        pi_status = frappe.db.get_value("Purchase Invoice", pi_name, "status")
+        if pi_status == "Paid":
+            is_paid = 1
+    else:
+        # Fallback to direct Payment Entry logic
+        from frappe.utils import flt
+        direct_payments = frappe.db.get_all(
+            "Payment Entry",
+            filters={
+                "custom_doc_link_doctype": "Contractor Billing",
+                "custom_doc_link": cb_name,
+                "docstatus": 1
+            },
+            fields=["paid_amount"]
+        )
+        total_paid_amount = sum(flt(p.paid_amount) for p in direct_payments)
+        if flt(total_paid_amount) >= flt(billing.grand_total):
+            is_paid = 1
+            
+    billing.update_paid_status_in_child(is_paid)
 
