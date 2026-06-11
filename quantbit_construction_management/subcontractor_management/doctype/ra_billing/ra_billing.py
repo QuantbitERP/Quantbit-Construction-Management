@@ -1,5 +1,6 @@
 # Copyright (c) 2026, QTPL and contributors
 # For license information, please see license.txt
+from openpyxl.cell import read_only
 import frappe
 from frappe.model.document import Document
 from frappe.utils import flt
@@ -15,14 +16,14 @@ class RABilling(Document):
         self.sync_deleted_tasks()
         self.update_abstract_details()
         steel_map = {}
-
         for row in self.ra_steel_details:
-            steel_map[row.subtask] = row
+            if row.subtask not in steel_map:
+                steel_map[row.subtask] = 0
+            steel_map[row.subtask] += (row.total_weight or 0)
 
         for row in self.ra_billing_details:
             if row.subtask in steel_map:
-                row.uom = steel_map[row.subtask].unit
-                row.quantity = steel_map[row.subtask].qty
+                row.quantity = steel_map[row.subtask]
 
     def sync_deleted_tasks(self):
         if not self.is_new() and self.get_doc_before_save():
@@ -52,7 +53,7 @@ class RABilling(Document):
                 }
             
             abstract_data[key]["billed_quantity"] += flt(row.quantity)
-            abstract_data[key]["rate"] += flt(row.rate)
+            abstract_data[key]["rate"] = flt(row.rate)
             abstract_data[key]["amount"] += flt(row.amount)
             if not abstract_data[key]["description"]:
                 abstract_data[key]["description"] = getattr(row, "description", "")
@@ -107,6 +108,23 @@ class RABilling(Document):
                 "custom_billed_quantity",
                 current_billed + flt(row.quantity)
             )
+
+@frappe.whitelist()
+def validate_task_rates(doc):
+    task_rate_map = {}
+    doc = frappe.get_doc(frappe.parse_json(doc))
+    for row in doc.ra_billing_details:
+        task = (row.task or "").strip()
+        rate = flt(row.rate)
+        task_subject = frappe.db.get_value("Task",task, "subject")
+        if task in task_rate_map:
+            if task_rate_map[task] != rate:
+                frappe.throw(
+                    f"Task <b>{task_subject}</b> (Row {row.idx}) must have the same "
+                    f"Rate: {task_rate_map[task]}, Current Rate: {rate}."
+                )
+        else:
+            task_rate_map[task] = rate
 
 @frappe.whitelist()
 def get_project_tasks(project):
@@ -672,14 +690,31 @@ def export_ra_excel(ra_billing):
                 if (row.uom or "").lower() in ["kg", "kilogram"]:
                     show_mt_total = True
                 cell.border = thin_border; cell.alignment = center_align
-                
+                #unit cell
+                unit_cell = ws_meas.cell(
+                    row=row_num,
+                    column=9,
+                    value=row.uom or ""
+                )
+                unit_cell.border = thin_border
+                unit_cell.alignment = center_align
+                #qty cell
                 qty = flt(row.quantity)
                 task_total_qty += qty
                 steel_weight = steel_subtask_weights.get(
                     (row.task, row.subtask),
                     0
                 )
-                qty_cell = ws_meas.cell(row=row_num, column=10, value=steel_weight)
+                # qty_cell = ws_meas.cell(row=row_num, column=10, value=steel_weight)
+
+                if (row.uom or "").lower() in ["kg", "kilogram"]:
+                    display_qty = steel_subtask_weights.get(
+                        (row.task, row.subtask),
+                        qty
+                    )
+                else:
+                    display_qty = qty
+                qty_cell = ws_meas.cell(row=row_num, column=10, value=display_qty)
                 qty_cell.border = thin_border; qty_cell.alignment = center_align
                 qty_cell.number_format = '0.00'
                 

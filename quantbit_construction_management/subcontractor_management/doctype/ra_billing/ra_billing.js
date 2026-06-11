@@ -46,7 +46,7 @@ frappe.ui.form.on("RA Billing", {
                         child.subtask_subject = row.subtask;
                         child.total_quantity = row.total_quantity;
                         child.total_achieved = row.total_achieved;
-                        child.rate = row.rate;
+                        //child.rate = row.rate;
                         child.billed_quantity = row.billed_quantity;
                         child.billable_quantity = row.billable_quantity;
                         child.amount = row.amount;
@@ -187,6 +187,12 @@ frappe.ui.form.on("RA Billing Details", {
             (sum, r) => sum + flt(r.amount), 0
         );
         frm.set_value("grand_total", total);
+        frappe.call({
+            method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.validate_task_rates",
+            args: {
+                doc: frm.doc
+            },
+        });
     },
     quantity(frm, cdt, cdn) {
         let row = locals[cdt][cdn];
@@ -198,6 +204,7 @@ frappe.ui.form.on("RA Billing Details", {
         frm.set_value("grand_total", total);
     }
 });
+
 
 function calculate_quantity(frm, cdt, cdn) {
     let row = locals[cdt][cdn];

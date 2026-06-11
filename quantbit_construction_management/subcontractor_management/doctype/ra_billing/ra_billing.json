@@ -22,9 +22,9 @@
   "get_details",
   "section_break_xpic",
   "ra_billing_details",
-  "grand_total",
   "abstract_tab",
   "ra_abstract_details",
+  "grand_total",
   "steel_tab",
   "get_details_",
   "section_break_bwox",
@@ -93,12 +93,6 @@
    "label": "Abstract "
   },
   {
-   "fieldname": "grand_total",
-   "fieldtype": "Currency",
-   "label": "Grand Total",
-   "read_only": 1
-  },
-  {
    "fieldname": "column_break_kylo",
    "fieldtype": "Column Break"
   },
@@ -158,6 +152,12 @@
    "fieldtype": "Table",
    "label": "RA Steel Details",
    "options": "RA Steel Details"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -169,7 +169,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-06-04 12:10:00.310923",
+ "modified": "2026-06-11 14:03:47.793499",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",
