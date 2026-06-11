@@ -6,9 +6,11 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "id",
   "item",
   "no_of_fdn",
   "description",
+  "doc_name",
   "column_break_rpct",
   "task",
   "no_of_bar",
@@ -136,13 +138,27 @@
   {
    "fieldname": "column_break_gbpg",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "doc_name",
+   "fieldtype": "Link",
+   "label": "Doc Name",
+   "link_filters": "[]",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "id",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Id",
+   "options": "doc_name"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-04 16:24:47.816044",
+ "modified": "2026-06-10 15:04:06.533205",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Steel Details",
