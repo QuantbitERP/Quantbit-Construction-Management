@@ -219,18 +219,23 @@ def on_purchase_invoice_update(doc, method):
 
 def sync_contractor_billing_payment_status(cb_name):
     billing = frappe.get_doc("Contractor Billing", cb_name)
+    from frappe.utils import flt
     
     is_paid = 0
+    paid_amount = 0.0
+    outstanding_amount = flt(billing.grand_total)
     
     # Check if Purchase Invoice is Paid
     pi_name = frappe.db.get_value("Purchase Invoice", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": cb_name}, "name")
     if pi_name:
-        pi_status = frappe.db.get_value("Purchase Invoice", pi_name, "status")
-        if pi_status == "Paid":
-            is_paid = 1
+        pi_data = frappe.db.get_value("Purchase Invoice", pi_name, ["status", "paid_amount", "outstanding_amount"], as_dict=True)
+        if pi_data:
+            paid_amount = flt(pi_data.paid_amount)
+            outstanding_amount = flt(pi_data.outstanding_amount)
+            if pi_data.status == "Paid":
+                is_paid = 1
     else:
         # Fallback to direct Payment Entry logic
-        from frappe.utils import flt
         direct_payments = frappe.db.get_all(
             "Payment Entry",
             filters={
@@ -240,9 +245,15 @@ def sync_contractor_billing_payment_status(cb_name):
             },
             fields=["paid_amount"]
         )
-        total_paid_amount = sum(flt(p.paid_amount) for p in direct_payments)
-        if flt(total_paid_amount) >= flt(billing.grand_total):
+        paid_amount = sum(flt(p.paid_amount) for p in direct_payments)
+        outstanding_amount = flt(billing.grand_total) - paid_amount
+        if paid_amount >= flt(billing.grand_total):
             is_paid = 1
             
+    # Update the parent Contractor Billing document fields
+    billing.db_set("paid_amount", paid_amount)
+    billing.db_set("outstanding_amount", outstanding_amount)
+    
+    # Update the child records' paid status
     billing.update_paid_status_in_child(is_paid)
 

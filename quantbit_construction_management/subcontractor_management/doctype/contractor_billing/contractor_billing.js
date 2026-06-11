@@ -29,6 +29,10 @@ frappe.ui.form.on("Contractor Billing", {
 		}
     },
 
+
+
+    
+
     get_details: async function(frm) {
 
         if (!frm.doc.project || !frm.doc.start_date || !frm.doc.end_date || !frm.doc.contractor || !frm.doc.type) {
