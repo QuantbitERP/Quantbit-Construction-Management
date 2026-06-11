@@ -1,18 +1,18 @@
 frappe.ui.form.on("RA Billing", {
     setup(frm) {
-        frm.set_query("stage", "ra_billing_details", function() {
+        frm.set_query("stage", "ra_billing_details", function () {
             let filters = { "custom_is_stage": 1 };
             if (frm.doc.project) filters.project = frm.doc.project;
             return { filters: filters };
         });
-        
-        frm.set_query("task", "ra_billing_details", function() {
+
+        frm.set_query("task", "ra_billing_details", function () {
             let filters = { "custom_is_task": 1 };
             if (frm.doc.project) filters.project = frm.doc.project;
             return { filters: filters };
         });
-        
-        frm.set_query("subtask", "ra_billing_details", function() {
+
+        frm.set_query("subtask", "ra_billing_details", function () {
             let filters = { "custom_is_subtask": 1 };
             if (frm.doc.project) filters.project = frm.doc.project;
             return { filters: filters };
@@ -38,19 +38,19 @@ frappe.ui.form.on("RA Billing", {
                     r.message.forEach(row => {
                         let child = frm.add_child("ra_billing_details");
 
-                        child.stage_subject    = row.stage;
-                        child.stage            = row.stage_id;
-                        child.task             = row.task_id;
-                        child.task_subject     = row.task;
-                        child.subtask          = row.subtask_id;
-                        child.subtask_subject  = row.subtask;
-                        child.total_quantity   = row.total_quantity;
-                        child.total_achieved   = row.total_achieved;
-                        child.rate             = row.rate;
-                        child.billed_quantity  = row.billed_quantity;
+                        child.stage_subject = row.stage;
+                        child.stage = row.stage_id;
+                        child.task = row.task_id;
+                        child.task_subject = row.task;
+                        child.subtask = row.subtask_id;
+                        child.subtask_subject = row.subtask;
+                        child.total_quantity = row.total_quantity;
+                        child.total_achieved = row.total_achieved;
+                        child.rate = row.rate;
+                        child.billed_quantity = row.billed_quantity;
                         child.billable_quantity = row.billable_quantity;
-                        child.amount           = row.amount;
-                        child.uom=row.uom;
+                        child.amount = row.amount;
+                        child.uom = row.uom;
                     });
 
                     frm.refresh_field("ra_billing_details");
@@ -63,7 +63,7 @@ frappe.ui.form.on("RA Billing", {
                 } else {
                     frappe.msgprint(__("No tasks found for the selected project."));
                 }
-                
+
                 frappe.show_alert({
                     message: __("Details fetched successfully."),
                     indicator: "green"
@@ -71,7 +71,7 @@ frappe.ui.form.on("RA Billing", {
             }
         });
     },
-    
+
     get_details_(frm) {
         if (!frm.doc.project || !frm.doc.from_date || !frm.doc.to_date) {
             frappe.msgprint(__("Please select Project, From Date and To Date first."));
@@ -91,6 +91,7 @@ frappe.ui.form.on("RA Billing", {
                 frm.clear_table("ra_steel_details");
                 if (steel_res.message && steel_res.message.length) {
                     steel_res.message.forEach(row => {
+
                         let child = frm.add_child("ra_steel_details");
                         child.item = row.item;
                         child.task = row.task;
@@ -98,6 +99,8 @@ frappe.ui.form.on("RA Billing", {
                         child.diamter_of_bar = row.diamter_of_bar;
                         child.unit = row.unit;
                         child.qty = row.qty;
+                        child.id = row.name;
+                        child.doc_name = "Stock Entry";
                     });
                     frm.refresh_field("ra_steel_details");
                     frappe.show_alert({
@@ -120,7 +123,7 @@ frappe.ui.form.on("RA Billing", {
                 )
             );
 
-});
+        });
         if (frm.doc.docstatus === 1) {
 
             frm.add_custom_button(__("Sales Invoice"), function () {
@@ -223,11 +226,11 @@ function calculate_quantity(frm, cdt, cdn) {
 }
 
 frappe.ui.form.on("RA Steel Details", {
-    no_of_fdn: function(frm, cdt, cdn) { calculate_steel_length(frm, cdt, cdn); },
-    no_of_bar: function(frm, cdt, cdn) { calculate_steel_length(frm, cdt, cdn); },
-    cutting_length: function(frm, cdt, cdn) { calculate_steel_length(frm, cdt, cdn); },
-    weight_of_bar: function(frm, cdt, cdn) { calculate_steel_weight(frm, cdt, cdn); },
-    total_length: function(frm, cdt, cdn) { calculate_steel_weight(frm, cdt, cdn); }
+    no_of_fdn: function (frm, cdt, cdn) { calculate_steel_length(frm, cdt, cdn); },
+    no_of_bar: function (frm, cdt, cdn) { calculate_steel_length(frm, cdt, cdn); },
+    cutting_length: function (frm, cdt, cdn) { calculate_steel_length(frm, cdt, cdn); },
+    weight_of_bar: function (frm, cdt, cdn) { calculate_steel_weight(frm, cdt, cdn); },
+    total_length: function (frm, cdt, cdn) { calculate_steel_weight(frm, cdt, cdn); }
 });
 
 function calculate_steel_length(frm, cdt, cdn) {
