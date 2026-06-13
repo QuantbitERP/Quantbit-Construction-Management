@@ -42,6 +42,31 @@ def execute(filters=None):
 
         return task_subject_cache[task]
 
+    def get_task_levels(obj):
+        return {
+            "task_level1": obj.get("task_level1"),
+            "task_level2": obj.get("task_level2"),
+            "task_level3": obj.get("task_level3"),
+            "task_level4": obj.get("task_level4"),
+            "task_level5": obj.get("task_level5"),
+            "task_level6": obj.get("task_level6"),
+            "task_level7": obj.get("task_level7"),
+            "task_level8": obj.get("task_level8"),
+            "task_level9": obj.get("task_level9"),
+            "task_level10": obj.get("task_level10"),
+
+            "level1_subject": obj.get("level1_subject"),
+            "level2_subject": obj.get("level2_subject"),
+            "level3_subject": obj.get("level3_subject"),
+            "level4_subject": obj.get("level4_subject"),
+            "level5_subject": obj.get("level5_subject"),
+            "level6_subject": obj.get("level6_subject"),
+            "level7_subject": obj.get("level7_subject"),
+            "level8_subject": obj.get("level8_subject"),
+            "level9_subject": obj.get("level9_subject"),
+            "level10_subject": obj.get("level10_subject"),
+        }
+
     def get_item_type(item):
 
         if not item:
@@ -80,7 +105,7 @@ def execute(filters=None):
 
     def row(section, **kwargs):
 
-        return {
+        base =  {
             "section": section,
 
             "project_name": kwargs.get("project_name"),
@@ -124,6 +149,9 @@ def execute(filters=None):
             "percent_completed": kwargs.get("percent_completed"),
             "achieved_today": kwargs.get("achieved_today"),
         }
+        base.update(get_task_levels(kwargs))
+
+        return base
 
     # EQUIPMENT USAGE
     equipment_total = 0
@@ -144,7 +172,27 @@ def execute(filters=None):
             eud.amount,
             eud.rate,
             eud.quantity,
-            eud.uom
+            eud.uom,
+            eud.task_level1,
+			eud.task_level2,
+			eud.task_level3,
+			eud.task_level4,
+			eud.task_level5,
+			eud.task_level6,
+			eud.task_level7,
+			eud.task_level8,
+			eud.task_level9,
+			eud.task_level10,
+			eud.level1_subject,
+			eud.level2_subject,
+			eud.level3_subject,
+			eud.level4_subject,
+			eud.level5_subject,
+			eud.level6_subject,
+			eud.level7_subject,
+			eud.level8_subject,
+			eud.level9_subject,
+			eud.level10_subject
 
         FROM `tabEquipment Usage Details` eud
 
@@ -190,7 +238,8 @@ def execute(filters=None):
             amount=e.amount,
             rate=e.rate,
             quantity=e.quantity,
-            uom=e.uom
+            uom=e.uom,
+            **get_task_levels(e)
         ))
 
     data.append(row(
@@ -259,7 +308,27 @@ def execute(filters=None):
             mud.amount,
             mud.uom,
             mud.rate,
-            mud.equipment_item
+            mud.equipment_item,
+            mud.task_level1,
+			mud.task_level2,
+			mud.task_level3,
+			mud.task_level4,
+			mud.task_level5,
+			mud.task_level6,
+			mud.task_level7,
+			mud.task_level8,
+			mud.task_level9,
+			mud.task_level10,
+			mud.level1_subject,
+			mud.level2_subject,
+			mud.level3_subject,
+			mud.level4_subject,
+			mud.level5_subject,
+			mud.level6_subject,
+			mud.level7_subject,
+			mud.level8_subject,
+			mud.level9_subject,
+			mud.level10_subject
 
         FROM `tabManpower Usage Details` mud
 
@@ -297,7 +366,8 @@ def execute(filters=None):
             quantity=m.quantity,
             amount=m.amount,
             rate=m.rate,
-            uom=m.uom
+            uom=m.uom,
+            **get_task_levels(m)
         ))
 
     data.append(row(
@@ -349,7 +419,8 @@ def execute(filters=None):
             warehouse=c.get("s_warehouse"),
 
             rate=c.get("basic_rate"),
-            amount=c.get("amount")
+            amount=c.get("amount"),
+            **get_task_levels(c) if isinstance(c, dict) else {}
         ))
 
     data.append(row(
@@ -455,7 +526,27 @@ def execute(filters=None):
             tp.total_qty,
             tp.achieved_today,
             tp.total_achieved,
-            tp.percent_completed
+            tp.percent_completed,
+            tp.task_level1,
+			tp.task_level2,
+			tp.task_level3,
+			tp.task_level4,
+			tp.task_level5,
+			tp.task_level6,
+			tp.task_level7,
+			tp.task_level8,
+			tp.task_level9,
+			tp.task_level10,
+			tp.level1_subject,
+			tp.level2_subject,
+			tp.level3_subject,
+			tp.level4_subject,
+			tp.level5_subject,
+			tp.level6_subject,
+			tp.level7_subject,
+			tp.level8_subject,
+			tp.level9_subject,
+			tp.level10_subject
         FROM `tabTask Progress Details` tp
         INNER JOIN `tabTask Progress` t
             ON t.name = tp.parent
@@ -485,7 +576,28 @@ def execute(filters=None):
             total_qty=total_qty,
             total_achieved=total_achieved,
             percent_completed=percent_completed,
-            achieved_today=achieved_today or 0
+            achieved_today=achieved_today or 0,
+            task_level1=t.get("task_level1"),
+            task_level2=t.get("task_level2"),
+            task_level3=t.get("task_level3"),
+            task_level4=t.get("task_level4"),
+            task_level5=t.get("task_level5"),
+            task_level6=t.get("task_level6"),
+            task_level7=t.get("task_level7"),
+            task_level8=t.get("task_level8"),
+            task_level9=t.get("task_level9"),
+            task_level10=t.get("task_level10"),
+
+            level1_subject=t.get("level1_subject"),
+            level2_subject=t.get("level2_subject"),
+            level3_subject=t.get("level3_subject"),
+            level4_subject=t.get("level4_subject"),
+            level5_subject=t.get("level5_subject"),
+            level6_subject=t.get("level6_subject"),
+            level7_subject=t.get("level7_subject"),
+            level8_subject=t.get("level8_subject"),
+            level9_subject=t.get("level9_subject"),
+            level10_subject=t.get("level10_subject"),
         ))
 
     data.append(row(
@@ -536,6 +648,115 @@ def get_columns():
         {
             "label": "Subtask Subject",
             "fieldname": "subtask_subject",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Task Level 1",
+            "fieldname": "task_level1",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 1 Subject",
+            "fieldname": "level1_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 2",
+            "fieldname": "task_level2",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 2 Subject",
+            "fieldname": "level2_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 3",
+            "fieldname": "task_level3",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 3 Subject",
+            "fieldname": "level3_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 4",
+            "fieldname": "task_level4",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 4 Subject",
+            "fieldname": "level4_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 5",
+            "fieldname": "task_level5",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 5 Subject",
+            "fieldname": "level5_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 6",
+            "fieldname": "task_level6",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 6 Subject",
+            "fieldname": "level6_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 7",
+            "fieldname": "task_level7",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 7 Subject",
+            "fieldname": "level7_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 8",
+            "fieldname": "task_level8",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 8 Subject",
+            "fieldname": "level8_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 9",
+            "fieldname": "task_level9",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 9 Subject",
+            "fieldname": "level9_subject",
+            "fieldtype": "Data"
+        },
+
+        {
+            "label": "Task Level 10",
+            "fieldname": "task_level10",
+            "fieldtype": "Data"
+        },
+        {
+            "label": "Level 10 Subject",
+            "fieldname": "level10_subject",
             "fieldtype": "Data"
         },
        {

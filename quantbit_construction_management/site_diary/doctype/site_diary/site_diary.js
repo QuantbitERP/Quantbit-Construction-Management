@@ -102,9 +102,7 @@ frappe.ui.form.on("Site Diary", {
                     site_date: frm.doc.site_date
                 },
                 callback: function (r) {
-
                     if (r.message) {
-
 
                         (r.message.manpower || []).forEach(function (d) {
 
@@ -124,6 +122,28 @@ frappe.ui.form.on("Site Diary", {
                             row.daily_wages = d.rate;
                             row.total_wage = d.amount;
                             row.item_type = "Man";
+
+                            row.task_level1 = d.task_level1;
+                            row.task_level2 = d.task_level2;
+                            row.task_level3 = d.task_level3;
+                            row.task_level4 = d.task_level4;
+                            row.task_level5 = d.task_level5;
+                            row.task_level6 = d.task_level6;
+                            row.task_level7 = d.task_level7;
+                            row.task_level8 = d.task_level8;
+                            row.task_level9 = d.task_level9;
+                            row.task_level10 = d.task_level10;
+
+                            row.task1_subject = d.level1_subject;
+                            row.task2_subject = d.level2_subject;
+                            row.task3_subject = d.level3_subject;
+                            row.task4_subject = d.level4_subject;
+                            row.task5_subject = d.level5_subject;
+                            row.task6_subject = d.level6_subject;
+                            row.task7_subject = d.level7_subject;
+                            row.task8_subject = d.level8_subject;
+                            row.task9_subject = d.level9_subject;
+                            row.task10_subject = d.level10_subject;
 
                             if (d.skill_type == "Skilled") {
                                 row.skilled = d.quantity;
@@ -192,7 +212,6 @@ frappe.ui.form.on("Site Diary", {
                             }
 
                             let row = frm.add_child("equipment_log");
-
                             row.parent_task = d.task;
                             row.task = d.subtask;
                             row.item = d.equipment_item;
@@ -201,6 +220,28 @@ frappe.ui.form.on("Site Diary", {
                             row.quantity = d.quantity;
                             row.contractor = d.contractor;
                             row.working_hours = d.working_hrs;
+
+                            row.task_level1 = d.task_level1;
+                            row.task_level2 = d.task_level2;
+                            row.task_level3 = d.task_level3;
+                            row.task_level4 = d.task_level4;
+                            row.task_level5 = d.task_level5;
+                            row.task_level6 = d.task_level6;
+                            row.task_level7 = d.task_level7;
+                            row.task_level8 = d.task_level8;
+                            row.task_level9 = d.task_level9;
+                            row.task_level10 = d.task_level10;
+
+                            row.task1_subject = d.level1_subject;
+                            row.task2_subject = d.level2_subject;
+                            row.task3_subject = d.level3_subject;
+                            row.task4_subject = d.level4_subject;
+                            row.task5_subject = d.level5_subject;
+                            row.task6_subject = d.level6_subject;
+                            row.task7_subject = d.level7_subject;
+                            row.task8_subject = d.level8_subject;
+                            row.task9_subject = d.level9_subject;
+                            row.task10_subject = d.level10_subject;
 
                             frappe.db.get_value(
                                 "Item",
@@ -291,7 +332,7 @@ frappe.ui.form.on("Site Diary", {
                 freeze: true,
                 freeze_message: "Fetching Material Received...",
                 callback: function (r) {
-
+                    console.log(r);
                     frm.clear_table("material_received");
 
                     let data = r.message || [];
@@ -303,7 +344,8 @@ frappe.ui.form.on("Site Diary", {
                         row.item_code = d.item_code;
                         row.quantity = d.qty;
                         row.uom = d.uom;
-
+                        row.transaction = d.reference_type;
+                        row.transaction_type = d.rereference_name;
                         if (d.reference_type == "Purchase Receipt") {
                             row.warehouse = d.warehouse;
                         } else {
@@ -334,7 +376,6 @@ frappe.ui.form.on("Site Diary", {
                 freeze: true,
                 freeze_message: "Fetching Material Deliveries...",
                 callback: function (r) {
-
                     frm.clear_table("material_deliveries");
 
                     let data = r.message || [];
@@ -359,6 +400,29 @@ frappe.ui.form.on("Site Diary", {
                         row.unit = d.uom;
                         row.warehouse = d.s_warehouse;
                         row.item_type = d.item_type;
+
+
+                        row.task_level1 = d.task_level1;
+                        row.task_level2 = d.task_level2;
+                        row.task_level3 = d.task_level3;
+                        row.task_level4 = d.task_level4;
+                        row.task_level5 = d.task_level5;
+                        row.task_level6 = d.task_level6;
+                        row.task_level7 = d.task_level7;
+                        row.task_level8 = d.task_level8;
+                        row.task_level9 = d.task_level9;
+                        row.task_level10 = d.task_level10;
+
+                        row.task1_subject = d.level1_subject;
+                        row.task2_subject = d.level2_subject;
+                        row.task3_subject = d.level3_subject;
+                        row.task4_subject = d.level4_subject;
+                        row.task5_subject = d.level5_subject;
+                        row.task6_subject = d.level6_subject;
+                        row.task7_subject = d.level7_subject;
+                        row.task8_subject = d.level8_subject;
+                        row.task9_subject = d.level9_subject;
+                        row.task10_subject = d.level10_subject;
 
                         row.rate =
                             d.basic_rate ||
@@ -431,13 +495,13 @@ frappe.ui.form.on("Site Diary", {
 
                         data.forEach(function (d) {
 
-                        if (d.parent_task) {
+                            if (d.parent_task) {
                                 unique_tasks.set(d.parent_task, {
                                     task: d.parent_task
                                 });
 
                             }
-                    });
+                        });
                         frm.refresh_field("activity_progress");
                     }
                     resolve();
@@ -484,7 +548,6 @@ frappe.ui.form.on("Site Diary", {
     }
 
 });
-
 
 frappe.ui.form.on("Task Summary", {
 
@@ -540,43 +603,67 @@ function sync_activity_progress(frm) {
         frm.refresh_field("activity_progress");
 
         return;
-    }   
+    }
     let existing_keys = new Set();
     frm.clear_table("activity_progress");
 
     frappe.call({
-                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
-                args: {
-                    project: frm.doc.project,
-                    site_date: frm.doc.site_date
-                },
-                freeze: true,
-                freeze_message: "Fetching Task Progress...",
-                callback(r) {
-                    if (r.message) {
-                        let data = r.message || [];
+        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
+        args: {
+            project: frm.doc.project,
+            site_date: frm.doc.site_date
+        },
+        freeze: true,
+        freeze_message: "Fetching Task Progress...",
+        callback(r) {
+            if (r.message) {
+                //console.log(r);
+                let data = r.message || [];
 
-                        data.forEach(function (d) {
-                        let key = `${d.parent_task}|${d.task}`;
-                        existing_keys.add(key);
-                        let row = frm.add_child("activity_progress");
+                data.forEach(function (d) {
 
-                        row.parent_task = d.parent_task;
-                        row.parent_task_subject = d.parent_task_subject;
-                        row.task = d.task;
-                        row.task_subject = d.task_subject;
-                        row.achieved_today = d.achieved_today;
-                        row.total_qty = d.total_qty;
-                        row.uom = d.uom;
-                        row.percent_completed = d.percent_completed;
-                        row.total_achieved = d.total_achieved;
-                        row.planned_today = d.planned_today;
+                    let key = `${d.parent_task}|${d.task}`;
+                    existing_keys.add(key);
+                    let row = frm.add_child("activity_progress");
 
-                    });
-                        frm.refresh_field("activity_progress");
-                    }
-                }
-  });
+                    row.parent_task = d.parent_task;
+                    row.parent_task_subject = d.parent_task_subject;
+                    row.task = d.task;
+                    row.task_subject = d.task_subject;
+                    row.achieved_today = d.achieved_today;
+                    row.total_qty = d.total_qty;
+                    row.uom = d.uom;
+                    row.percent_completed = d.percent_completed;
+                    row.total_achieved = d.total_achieved;
+                    row.planned_today = d.planned_today;
+
+                    row.task_level1 = d.task_level1;
+                    row.task_level2 = d.task_level2;
+                    row.task_level3 = d.task_level3;
+                    row.task_level4 = d.task_level4;
+                    row.task_level5 = d.task_level5;
+                    row.task_level6 = d.task_level6;
+                    row.task_level7 = d.task_level7;
+                    row.task_level8 = d.task_level8;
+                    row.task_level9 = d.task_level9;
+                    row.task_level10 = d.task_level10;
+
+                    row.task1_subject = d.level1_subject;
+                    row.task2_subject = d.level2_subject;
+                    row.task3_subject = d.level3_subject;
+                    row.task4_subject = d.level4_subject;
+                    row.task5_subject = d.level5_subject;
+                    row.task6_subject = d.level6_subject;
+                    row.task7_subject = d.level7_subject;
+                    row.task8_subject = d.level8_subject;
+                    row.task9_subject = d.level9_subject;
+                    row.task10_subject = d.level10_subject;
+
+                });
+                frm.refresh_field("activity_progress");
+            }
+        }
+    });
 
     frappe.call({
         method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",

@@ -10,6 +10,28 @@
   "parent_task_subject",
   "task",
   "task_subject",
+  "task_level1",
+  "level1_subject",
+  "task_level2",
+  "level2_subject",
+  "column_break_qylu",
+  "task_level3",
+  "level3_subject",
+  "task_level4",
+  "level4_subject",
+  "task_level5",
+  "level5_subject",
+  "task_level6",
+  "level6_subject",
+  "column_break_eflc",
+  "task_level7",
+  "level7_subject",
+  "task_level8",
+  "level8_subject",
+  "task_level9",
+  "level9_subject",
+  "task_level10",
+  "level10_subject",
   "column_break_uawl",
   "uom",
   "total_qty",
@@ -24,7 +46,7 @@
    "fieldname": "parent_task",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Parent Task",
+   "label": "Stage",
    "options": "Task",
    "reqd": 1
   },
@@ -37,7 +59,7 @@
    "fieldname": "parent_task_subject",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Parent Task Subject",
+   "label": "Stage Subject",
    "read_only": 1
   },
   {
@@ -104,13 +126,151 @@
    "in_list_view": 1,
    "label": "Percent Completed",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_qylu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "task_level1",
+   "fieldtype": "Link",
+   "label": "Task ",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level2",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level3",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level4",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level5",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level6",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level1.subject",
+   "fieldname": "level1_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level2.subject",
+   "fieldname": "level2_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level3.subject",
+   "fieldname": "level3_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level4.subject",
+   "fieldname": "level4_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level5.subject",
+   "fieldname": "level5_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level6.subject",
+   "fieldname": "level6_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_eflc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "task_level7",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level7.subject",
+   "fieldname": "level7_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level8",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level9",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level9.subject",
+   "fieldname": "level9_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level10",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level10.subject",
+   "fieldname": "level10_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level9.subject",
+   "fieldname": "level8_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-30 12:31:18.828229",
+ "modified": "2026-06-13 10:09:51.594045",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Task Progress Details",

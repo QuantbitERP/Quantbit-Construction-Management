@@ -4,33 +4,65 @@ from frappe.model.document import Document
 
 class TaskProgress(Document):
 
+    def before_save(self):
+        for i, row in enumerate(self.task_progress_details, start=1):
+
+            task_to_update = self.get_deepest_task(row)
+            if not task_to_update:
+                continue
+
+            data = frappe.db.get_value(
+                "Task",
+                task_to_update,
+                ["subject", "custom_is_subtask"],
+                as_dict=True
+            )
+
+            if not data.custom_is_subtask:
+                frappe.throw(f'Row {i} : Task "{data.subject}" is not a subtask.')
+           
+
     def before_submit(self):
 
         for row in self.task_progress_details:
 
-            if not row.task:
+            task_to_update = self.get_deepest_task(row)
+
+            if not task_to_update:
                 continue
-
-            frappe.db.set_value(
-                "Task",
-                row.task,
-                "progress",
-                row.percent_completed
-            )
-            frappe.db.set_value(
-                "Task",
-                row.task,
-                "custom_total_quantity",
-                row.total_qty
-            )
-            frappe.db.set_value(
-                "Task",
-                row.task,
-                "custom_total_achieved",
-                row.total_achieved
-            )
-
+            frappe.db.set_value("Task", task_to_update, {
+                "progress": row.percent_completed,
+                "custom_total_quantity": row.total_qty,
+                "custom_total_achieved": row.total_achieved,
+                "custom_percent_completed":row.percent_completed
+            })
             self.update_parent_progress(row.task)
+    
+    def get_deepest_task(self,row):
+        levels = [
+            "task",
+            "task_level1",
+            "task_level2",
+            "task_level3",
+            "task_level4",
+            "task_level5",
+            "task_level6",
+            "task_level7",
+            "task_level8",
+            "task_level9",
+            "task_level10"
+        ]
+
+        last_task = None
+
+        for field in levels:
+            task = getattr(row, field, None)
+            if task:
+                last_task = task
+            else:
+                break
+
+        return last_task
 
     def update_parent_progress(self, task):
 
@@ -161,3 +193,40 @@ def get_previous_task_progress(task, current_doc=None):
         })
 
     return data
+
+@frappe.whitelist()
+def has_dependencies(task):
+
+    doc = frappe.get_doc("Task", task)
+
+    return len(doc.depends_on) > 0
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_depends_on_tasks(doctype, txt, searchfield, start, page_len, filters):
+
+    task = filters.get("task")
+
+    if not task:
+        return []
+
+    doc = frappe.get_doc("Task", task)
+
+    results = []
+
+    for d in doc.depends_on:
+        if not d.task:
+            continue
+
+        # optional search filter
+        if txt and txt.lower() not in d.task.lower():
+            continue
+
+        subject = frappe.db.get_value("Task", d.task, "subject")
+
+        results.append([
+            d.task,        # VALUE stored
+            subject or d.task  # DISPLAY text
+        ])
+
+    return results

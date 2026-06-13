@@ -2,28 +2,19 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Equipment Usage", {
-	setup(frm) {
-        frm.set_query("task","equipment_usage_details",function() {
+    setup(frm) {
+        frm.set_query("task", "equipment_usage_details", function () {
             return {
                 filters: {
                     project: frm.doc.project,
-                    "custom_is_task": 1,
+                    "custom_is_stage": 1,
                     "is_group": 1
                 }
             };
         });
-        
-        frm.set_query('subtask', 'equipment_usage_details', function(doc, cdt, cdn) {
-            let row = frappe.get_doc(cdt, cdn);
-            return {
-                filters: {
-                    parent_task: row.task,
-                    custom_is_subtask: 1
-                }
-            };
-        });
-                
-        frm.set_query('equipment_item', 'equipment_usage_details', function(doc, cdt, cdn) {
+
+
+        frm.set_query('equipment_item', 'equipment_usage_details', function (doc, cdt, cdn) {
             let row = frappe.get_doc(cdt, cdn);
             if (!row.contractor) {
                 frappe.msgprint(__("Please select a Contractor first"));
@@ -36,8 +27,47 @@ frappe.ui.form.on("Equipment Usage", {
                 }
             };
         });
-	},
-     onload(frm) {
+        const source_map = {
+            subtask: "task",
+            task_level1: "subtask",
+            task_level2: "task_level1",
+            task_level3: "task_level2",
+            task_level4: "task_level3",
+            task_level5: "task_level4",
+            task_level6: "task_level5",
+            task_level7: "task_level6",
+            task_level8: "task_level7",
+            task_level9: "task_level8",
+            task_level10: "task_level9"
+        };
+        Object.keys(source_map).forEach(fieldname => {
+
+            frm.fields_dict.equipment_usage_details.grid.get_field(fieldname).get_query =
+                function (doc, cdt, cdn) {
+
+                    let row = locals[cdt][cdn];
+
+                    let source_field = source_map[fieldname];
+                    let task_name = row[source_field];
+                    if (!task_name) {
+                        return {
+                            filters: {
+                                name: ["=", "___invalid___"]
+                            }
+                        };
+                    }
+
+                    return {
+                        query: "quantbit_construction_management.site_diary.doctype.equipment_usage.equipment_usage.get_depends_on_tasks",
+                        filters: {
+                            task: task_name
+                        }
+                    };
+                };
+        });
+
+    },
+    onload(frm) {
         if (frm.is_new() && !frm.doc.site_date) {
             frm.set_value("site_date", frappe.datetime.get_today());
         }
@@ -60,27 +90,184 @@ frappe.ui.form.on("Equipment Usage", {
 });
 
 frappe.ui.form.on("Equipment Usage Details", {
-    quantity: function(frm, cdt, cdn) {
+    form_render(frm, cdt, cdn) {
+        setTimeout(() => {
+            refresh_task_levels(frm, cdt, cdn);
+        }, 100);
+    },
+    task: function (frm, cdt, cdn) {
+
+        let row = locals[cdt][cdn];
+
+        if (!row.task) return;
+
+        // clear all selections
+        frappe.model.set_value(cdt, cdn, "subtask", "");
+
+        for (let i = 1; i <= 11; i++) {
+            frappe.model.set_value(cdt, cdn, `task_level${i}`, "");
+        }
+        // show only task field
+        set_level_query(
+            frm,
+            row.name,
+            "task",
+            "subtask"
+        );
+    },
+    subtask: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+    task_level1: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+
+    task_level2: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+
+    task_level3: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+
+    task_level4: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+
+    task_level5: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+    task_level6: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+    task_level7: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+    task_level8: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+    task_level9: function (frm, cdt, cdn) {
+        refresh_task_levels(frm, cdt, cdn);
+    },
+    quantity: function (frm, cdt, cdn) {
         calculate_amount(frm, cdt, cdn);
     },
-    working_hrs: function(frm, cdt, cdn) {
+    working_hrs: function (frm, cdt, cdn) {
         calculate_amount(frm, cdt, cdn);
     },
-    contractor: function(frm, cdt, cdn) {
+    contractor: function (frm, cdt, cdn) {
         validate_equipment(frm, cdt, cdn);
     },
-    equipment_item: function(frm, cdt, cdn) {
+    equipment_item: function (frm, cdt, cdn) {
         validate_equipment(frm, cdt, cdn);
     }
-
-
-
 });
+
+function get_deepest_task(frm, cdt, cdn) {
+    const row = locals[cdt][cdn];
+
+    const levels = [
+        "subtask",
+        "task_level1",
+        "task_level2",
+        "task_level3",
+        "task_level4",
+        "task_level5",
+        "task_level6",
+        "task_level7",
+        "task_level8",
+        "task_level9",
+        "task_level10"
+    ];
+
+    let last_task = null;
+
+    for (let field of levels) {
+        let task = row[field];
+
+        if (task) {
+            last_task = task;
+        } else {
+            break;
+        }
+    }
+
+    return last_task;
+}
+
+function refresh_task_levels(frm, cdt, cdn) {
+    const row = locals[cdt][cdn];
+
+    const levels = [
+        "subtask",
+        "task_level1",
+        "task_level2",
+        "task_level3",
+        "task_level4",
+        "task_level5",
+        "task_level6",
+        "task_level7",
+        "task_level8",
+        "task_level9",
+        "task_level10"
+    ];
+
+    let visible_level = 1;
+
+    // 1. find deepest filled level
+    for (let i = 0; i < levels.length; i++) {
+        if (row[levels[i]]) {
+            visible_level = i + 1;
+        } else {
+            break;
+        }
+    }
+
+    // 2. dependency check ONLY on deepest level
+    const deepest_field = levels[visible_level - 1];
+    const deepest_task = row[deepest_field];
+
+    if (!deepest_task) {
+        apply_visibility(frm, row.name, visible_level);
+        return;
+    }
+
+    if (deepest_task) {
+        frappe.call({
+            method: "quantbit_construction_management.site_diary.doctype.equipment_usage.equipment_usage.has_dependencies",
+            args: {
+                task: deepest_task
+            },
+            callback: function (r) {
+
+                if (r.message) {
+                    visible_level += 1;
+                }
+
+                apply_visibility(frm, row.name, visible_level);
+            }
+        });
+    } else {
+        apply_visibility(frm, row.name, visible_level);
+    }
+}
+
+function apply_visibility(frm, rowname, visible_level) {
+
+    const grid_row = frm.fields_dict.equipment_usage_details.grid.grid_rows_by_docname[rowname];
+    if (!grid_row) return;
+
+    grid_row.toggle_display("subtask", visible_level >= 1);
+
+    for (let i = 1; i <= 11; i++) {
+        grid_row.toggle_display(`task_level${i}`, visible_level >= (i + 1));
+    }
+}
 
 function calculate_amount(frm, cdt, cdn) {
     let row = locals[cdt][cdn];
 
-    row.amount = (row.quantity || 0) * (row.rate || 0)* (row.working_hrs || 0);
+    row.amount = (row.quantity || 0) * (row.rate || 0) * (row.working_hrs || 0);
 
     frm.refresh_field("equipment_usage_details");
 }
@@ -99,7 +286,7 @@ function validate_equipment(frm, cdt, cdn) {
             doctype: "Contractor",
             name: row.contractor
         },
-        callback: function(r) {
+        callback: function (r) {
 
             if (r.message) {
 
@@ -114,7 +301,7 @@ function validate_equipment(frm, cdt, cdn) {
                     frappe.model.set_value(cdt, cdn, "contractor", "");
                     frappe.throw({
                         title: __("Validation Error"),
-                       message: __(`Equipment ${row.equipment_item} does not exist for this contractor, 
+                        message: __(`Equipment ${row.equipment_item} does not exist for this contractor, 
                             Add ${row.equipment_item} in contractor or change the contractor.`),
                         indicator: "red"
                     });
