@@ -10,18 +10,39 @@
   "parent_task_subject",
   "task",
   "task_subject",
-  "item",
+  "task_level1",
+  "task1_subject",
+  "task_level2",
+  "task2_subject",
+  "task_level3",
+  "task3_subject",
+  "task_level4",
+  "task4_subject",
+  "column_break_xuhy",
+  "task_level5",
+  "task5_subject",
+  "task_level6",
+  "task6_subject",
+  "task_level7",
+  "task7_subject",
+  "task_level8",
+  "task8_subject",
+  "task_level9",
+  "task9_subject",
+  "task_level10",
+  "task10_subject",
+  "column_break_rxpv",
   "equipment_name",
   "item_type",
-  "column_break_rxpv",
+  "item",
   "owner_type",
   "hire_supplier",
   "quantity",
   "rate",
-  "working_hours",
-  "work_area",
-  "contractor",
   "column_break_gdea",
+  "working_hours",
+  "contractor",
+  "work_area",
   "remarks",
   "total_amount"
  ],
@@ -123,43 +144,175 @@
   {
    "fieldname": "parent_task",
    "fieldtype": "Link",
-   "label": "Parent Task",
+   "label": "Stage",
    "options": "Task",
    "reqd": 1
   },
   {
    "fieldname": "task",
    "fieldtype": "Link",
-   "label": "Subtask",
-   "options": "Task",
-   "reqd": 1
+   "label": "Task",
+   "options": "Task"
   },
   {
    "fetch_from": "task.subject",
    "fieldname": "task_subject",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Subtask Subject"
+   "label": "Task Subject",
+   "read_only": 1
   },
   {
    "fieldname": "parent_task_subject",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Parent Task Subject"
+   "label": "Stage Subject",
+   "read_only": 1
   },
   {
    "fieldname": "contractor",
    "fieldtype": "Link",
    "label": "Contractor",
    "options": "Contractor"
+  },
+  {
+   "fieldname": "column_break_xuhy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "task_level1",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level1.subject",
+   "fieldname": "task1_subject",
+   "fieldtype": "Data",
+   "label": "Task1 Subject ",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level2",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level2.subject",
+   "fieldname": "task2_subject",
+   "fieldtype": "Data",
+   "label": "Task2 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level3",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level3.subject",
+   "fieldname": "task3_subject",
+   "fieldtype": "Data",
+   "label": "Task3 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level4",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level4.subject",
+   "fieldname": "task4_subject",
+   "fieldtype": "Data",
+   "label": "Task4 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level5",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level5.subject",
+   "fieldname": "task5_subject",
+   "fieldtype": "Data",
+   "label": "Task5 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level6",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level6.subject",
+   "fieldname": "task6_subject",
+   "fieldtype": "Data",
+   "label": "Task6 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level7",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level7.subject",
+   "fieldname": "task7_subject",
+   "fieldtype": "Data",
+   "label": "Task7 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level8",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level8.subject",
+   "fieldname": "task8_subject",
+   "fieldtype": "Data",
+   "label": "Task8 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level9",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level9.subject",
+   "fieldname": "task9_subject",
+   "fieldtype": "Data",
+   "label": "Task9 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level10",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level10.subject",
+   "fieldname": "task10_subject",
+   "fieldtype": "Data",
+   "label": "Task10 Subject",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-23 12:41:58.277106",
+ "modified": "2026-06-12 17:56:10.934375",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Equipment Log",

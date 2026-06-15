@@ -832,14 +832,37 @@ def get_site_diary_details(project, site_date):
     manpower_data = frappe.db.sql("""
         SELECT
             mud.task,
+			mud.stage_subject,
             mud.subtask,
+			mud.task_subject,
             mud.equipment_item,
             mud.contractor,
             mud.uom,
             mud.quantity,
             mud.rate,
             mud.amount,
-            mud.skill_type
+            mud.skill_type,
+			mud.task_level1,
+			mud.task_level2,
+			mud.task_level3,
+			mud.task_level4,
+			mud.task_level5,
+			mud.task_level6,
+			mud.task_level7,
+			mud.task_level8,
+			mud.task_level9,
+			mud.task_level10,
+			mud.level1_subject,
+			mud.level2_subject,
+			mud.level3_subject,
+			mud.level4_subject,
+			mud.level5_subject,
+			mud.level6_subject,
+			mud.level7_subject,
+			mud.level8_subject,
+			mud.level9_subject,
+			mud.level10_subject
+
         FROM `tabManpower Usage Details` mud
         INNER JOIN `tabManpower Usage` mu
             ON mu.name = mud.parent
@@ -848,18 +871,39 @@ def get_site_diary_details(project, site_date):
         AND mu.docstatus = 1
     """, (project, site_date), as_dict=True)
 
-
     equipment_data = frappe.db.sql("""
         SELECT
             eud.task,
+			eud.stage_subject,
             eud.subtask,
+			eud.task_subject,
             eud.equipment_item,
             eud.contractor,
             eud.rate,
             eud.amount,
             eud.uom,
             eud.quantity,
-            eud.working_hrs
+            eud.working_hrs,
+			eud.task_level1,
+			eud.task_level2,
+			eud.task_level3,
+			eud.task_level4,
+			eud.task_level5,
+			eud.task_level6,
+			eud.task_level7,
+			eud.task_level8,
+			eud.task_level9,
+			eud.task_level10,
+			eud.level1_subject,
+			eud.level2_subject,
+			eud.level3_subject,
+			eud.level4_subject,
+			eud.level5_subject,
+			eud.level6_subject,
+			eud.level7_subject,
+			eud.level8_subject,
+			eud.level9_subject,
+			eud.level10_subject
         FROM `tabEquipment Usage Details` eud
         INNER JOIN `tabEquipment Usage` eu
             ON eu.name = eud.parent
@@ -920,7 +964,29 @@ def get_material_deliveries(project, site_date):
             sei.s_warehouse,
             sei.custom_task as task,
             sei.custom_subtask as subtask,
-            sei.project
+            sei.project,
+		sei.custom_task_level1 AS task_level1,
+		sei.custom_task_level2 AS task_level2,
+		sei.custom_task_level3 AS task_level3,
+		sei.custom_task_level4 AS task_level4,
+		sei.custom_task_level5 AS task_level5,
+		sei.custom_task_level6 AS task_level6,
+		sei.custom_task_level7 AS task_level7,
+		sei.custom_task_level8 AS task_level8,
+		sei.custom_task_level9 AS task_level9,
+		sei.custom_task_level10 AS task_level10,
+
+		sei.custom_level1_subject AS level1_subject,
+		sei.custom_level2_subject AS level2_subject,
+		sei.custom_level3_subject AS level3_subject,
+		sei.custom_level4_subject AS level4_subject,
+		sei.custom_level5_subject AS level5_subject,
+		sei.custom_level6_subject AS level6_subject,
+		sei.custom_level7_subject AS level7_subject,
+		sei.custom_level8_subject AS level8_subject,
+		sei.custom_level9_subject AS level9_subject,
+		sei.custom_level10_subject AS level10_subject
+
         FROM `tabStock Entry Detail` sei
         INNER JOIN `tabStock Entry` se ON se.name = sei.parent
         WHERE se.name IN %(entries)s
@@ -955,8 +1021,6 @@ def get_material_deliveries(project, site_date):
         d.task_subject = task_cache.get(d.subtask)
 
     return data
-
-import frappe
 
 @frappe.whitelist()
 def get_material_received(project, site_date):
@@ -1038,11 +1102,6 @@ def get_material_received(project, site_date):
 
     return final_data
 
-
-
-
-
-
 @frappe.whitelist()
 def get_latest_task_progress(project, site_date):
 
@@ -1070,7 +1129,27 @@ def get_latest_task_progress(project, site_date):
             achieved_today,
             total_achieved,
 			planned_today,
-            percent_completed
+            percent_completed,
+			task_level1,
+			task_level2,
+			task_level3,
+			task_level4,
+			task_level5,
+			task_level6,
+			task_level7,
+			task_level8,
+			task_level9,
+			task_level10,
+			level1_subject,
+			level2_subject,
+			level3_subject,
+			level4_subject,
+			level5_subject,
+			level6_subject,
+			level7_subject,
+			level8_subject,
+			level9_subject,
+			level10_subject
         FROM `tabTask Progress Details`
         WHERE parent IN %(parents)s
         ORDER BY parent, idx
