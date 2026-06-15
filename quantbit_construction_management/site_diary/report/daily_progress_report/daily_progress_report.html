@@ -2,7 +2,6 @@
 
     {%
     var report_data = (typeof data !== "undefined" && data) ? data : [];
-    console.log("Report Data:", report_data);
     function fmt_num(v) {
     if (v === undefined || v === null || v === "") return "";
     var n = parseFloat(v);
@@ -127,15 +126,8 @@
                 word-break: break-word;
             }
 
-            thead tr th {
-                padding: 4px 4px;
-                background: #e9ecef;
-                text-align: left;
-                font-weight: 700;
-                border-bottom: 1px solid #999;
-                border-right: 1px solid #ddd;
-                word-wrap: break-word;
-                vertical-align: top;
+            thead th {
+                border-bottom: 1px solid #eee;
             }
 
             thead tr th:last-child {
@@ -145,7 +137,7 @@
             tbody tr td {
                 padding: 3px 4px;
                 vertical-align: top;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #f1f1f1;
                 border-right: 1px solid #f1f1f1;
                 word-wrap: break-word;
             }
@@ -161,9 +153,18 @@
             tr.total-row td {
                 font-weight: 700;
                 background: #f1f3f5;
-                border-top: 2px solid #333;
-                border-bottom: 2px solid #333;
+                border-top: 2px solid #333 !important;
+                border-bottom: 2px solid #333 !important;
+                ;
                 white-space: nowrap;
+            }
+
+            tr.total-row td:first-child {
+                border-left: 1px solid #333;
+            }
+
+            tr.total-row td:last-child {
+                border-right: 1px solid #333;
             }
 
             tr.no-data td {
@@ -172,6 +173,10 @@
                 font-style: italic;
                 padding: 6px;
                 background: #fff;
+            }
+
+            th {
+                font-weight: 700 !important;
             }
 
             .grand-total-block {
@@ -275,8 +280,6 @@
                 width: 10%;
             }
 
-
-            /* ── Manpower: 8 cols ── */
             /* ── Manpower: 9 cols ── */
             .tbl-mp .c-hierarchy {
                 width: 18%;
@@ -314,8 +317,20 @@
                 width: 6%;
             }
 
+            .tbl-mp th {
+                white-space: nowrap;
+            }
+
+            .tbl-mp .c-presenty {
+                width: 6%;
+            }
+
+            .tbl-mp .c-total-presenty {
+                width: 7%;
+            }
+
             .tbl-mp .c-amt {
-                width: 8%;
+                width: 7%;
             }
 
             /* ── Material Consumed: 13 cols ── */
@@ -417,6 +432,10 @@
             }
 
             /* ── Task Progress: 8 cols ── */
+            .tbl-tp {
+                border-bottom: 1px solid #eee;
+            }
+
             .tbl-tp .c-hierarchy {
                 width: 16%;
             }
@@ -616,7 +635,7 @@
                     }
                     if (total_rows["Equipment Usage"]) { %}
                     <tr class="total-row">
-                        <td colspan="10" class="right">Equipment Usage Total</td>
+                        <td colspan="11" class="right">Equipment Usage Total</td>
                         <td class="right nowrap">{%= fmt_num(total_rows["Equipment Usage"].amount) %}</td>
                     </tr>
                     {%
@@ -640,6 +659,8 @@
                     <th class="c-uom center">UOM</th>
                     <th class="c-rate right">Rate</th>
                     <th class="c-qty right">Quantity</th>
+                    <th class="c-presenty right">Presenty</th>
+                    <th class="c-total-presenty right">Total Presenty</th>
                     <th class="c-amt right">Amount</th>
                 </tr>
             </thead>
@@ -662,13 +683,15 @@
                     <td class="c-uom center nowrap">{%= r.uom || "" %}</td>
                     <td class="c-rate right nowrap">{%= fmt_num(r.rate) %}</td>
                     <td class="c-qty right nowrap">{%= fmt_qty(r.quantity) %}</td>
+                    <td class="c-presenty right nowrap">{%= fmt_num(r.presenty) %}</td>
+                    <td class="c-total-presenty right nowrap">{%= fmt_num(r.total_presenty) %}</td>
                     <td class="c-amt right bold nowrap">{%= fmt_num(r.amount) %}</td>
                     </tr>
                     {%
                     }
                     if (total_rows["Manpower Usage"]) { %}
                     <tr class="total-row">
-                        <td colspan="8" class="right">Manpower Usage Total</td>
+                        <td colspan="11" class="right">Manpower Usage Total</td>
                         <td class="right nowrap">{%= fmt_num(total_rows["Manpower Usage"].amount) %}</td>
                     </tr>
                     {%
@@ -724,7 +747,7 @@
                     }
                     if (total_rows["Material Consumed"]) { %}
                     <tr class="total-row">
-                        <td colspan="10" class="right">Material Consumed Total</td>
+                        <td colspan="11" class="right">Material Consumed Total</td>
                         <td class="right nowrap">
                             {%= fmt_num(total_rows["Material Consumed"].amount) %}
                         </td>
