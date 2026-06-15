@@ -130,18 +130,15 @@ def execute(filters=None):
             "company": kwargs.get("company"),
             "time_in": kwargs.get("time_in"),
             "time_out": kwargs.get("time_out"),
-
             "skill_type": kwargs.get("skill_type"),
-
-            "warehouse": kwargs.get("warehouse"),
+            "presenty": kwargs.get("presenty"),
+            "total_presenty": kwargs.get("total_presenty"),
+            "warehouse": kwargs.get("warehouse"),     
             "target_warehouse": kwargs.get("target_warehouse"),
-
             "uom": kwargs.get("uom"),
-
             "quantity": kwargs.get("quantity"),
             "rate": kwargs.get("rate"),
             "amount": kwargs.get("amount") or 0,
-
             "transaction_type": kwargs.get("transaction_type"),
             "entry_id": kwargs.get("entry_id"),
             "total_qty": kwargs.get("total_qty"),
@@ -308,6 +305,8 @@ def execute(filters=None):
             mud.amount,
             mud.uom,
             mud.rate,
+            mud.presenty,
+            mud.total_presenty,
             mud.equipment_item,
             mud.task_level1,
 			mud.task_level2,
@@ -350,19 +349,16 @@ def execute(filters=None):
 
         data.append(row(
             "Manpower Usage",
-
             project_name=project_name,
-
             task=m.task,
             task_subject=get_task_subject(m.task),
             item=get_item_name(m.equipment_item),
-
             subtask=m.subtask,
             subtask_subject=get_task_subject(m.subtask),
-
             contractor=m.contractor,
             skill_type=m.skill_type,
-
+            presenty=m.presenty,
+            total_presenty=m.total_presenty,
             quantity=m.quantity,
             amount=m.amount,
             rate=m.rate,
@@ -823,6 +819,16 @@ def get_columns():
             "label": "Skill Type",
             "fieldname": "skill_type",
             "fieldtype": "Data"
+        },
+        {
+            "label": "Presenty",
+            "fieldname": "presenty",
+            "fieldtype": "Float"
+        },
+        {
+            "label": "Total Presenty",
+            "fieldname": "total_presenty",
+            "fieldtype": "Float"
         },
         {
             "label": "Transaction Type",

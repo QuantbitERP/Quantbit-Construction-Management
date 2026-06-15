@@ -93,7 +93,7 @@ function inject_hierarchy_css() {
 // ─── Determine node type from flags ──────────────────────────────────────────
 function get_node_type(node) {
     if (node.custom_is_stage == 1) return "stage";
-    if (node.custom_is_task == 1)  return "task";
+    if (node.custom_is_task == 1) return "task";
     if (node.custom_is_subtask == 1) return "subtask";
     // fallback: infer from depth if flags are missing
     return "task";
@@ -243,8 +243,8 @@ function compute_costs(node) {
 
 // ─── Border colors by node type ──────────────────────────────────────────────
 function get_border_color(node_type) {
-    if (node_type === "stage")   return "#ffffff";
-    if (node_type === "task")    return "#4FC3F7";
+    if (node_type === "stage") return "#ffffff";
+    if (node_type === "task") return "#4FC3F7";
     if (node_type === "subtask") return "#B0BEC5";
     return "#FFD54F";
 }
@@ -482,7 +482,7 @@ function attach_events(frm, all_tasks) {
                     fieldtype: "Link",
                     options: "Task",
                     get_query() {
-                        return { filters: { custom_is_stage: 1 , is_template:1 } };
+                        return { filters: { custom_is_stage: 1, is_template: 1 } };
                     }
                 },
                 {
@@ -580,7 +580,7 @@ function attach_events(frm, all_tasks) {
                     fieldtype: "Link",
                     options: "Task",
                     get_query() {
-                        return { filters: { custom_is_task: 1 ,is_template:1 } };
+                        return { filters: { custom_is_task: 1, is_template: 1 } };
                     }
                 },
                 {
@@ -751,7 +751,7 @@ function attach_events(frm, all_tasks) {
                     fieldtype: "Link",
                     options: "Task",
                     get_query() {
-                        return { filters: { custom_is_subtask: 1, is_template:1 } };
+                        return { filters: { custom_is_subtask: 1, is_template: 1 } };
                     }
                 },
                 { fieldtype: "Section Break" },
@@ -828,9 +828,9 @@ function attach_events(frm, all_tasks) {
         let node_type = row.data("type");
 
         let type_label =
-            node_type === "stage"   ? "Stage" :
-            node_type === "task"    ? "Task"  :
-                                      "Subtask";
+            node_type === "stage" ? "Stage" :
+                node_type === "task" ? "Task" :
+                    "Subtask";
 
         frappe.db.get_doc("Task", docname).then(doc => {
             frappe.prompt([
