@@ -11,6 +11,7 @@
   "section_break_9z3m",
   "diary_no",
   "project",
+  "site",
   "site_date",
   "day_no_of_contract",
   "shift",
@@ -282,13 +283,21 @@
    "fieldtype": "Table",
    "label": "Material Received",
    "options": "Material Received"
+  },
+  {
+   "fetch_from": "project.custom_site",
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "Site",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-23 17:05:09.316601",
+ "modified": "2026-06-15 17:23:39.697057",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Diary",
