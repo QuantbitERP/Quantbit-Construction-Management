@@ -32,6 +32,7 @@ frappe.ui.form.on("RA Billing", {
             freeze: true,
             freeze_message: __("Fetching project tasks..."),
             callback: function (r) {
+                console.log(r);
                 if (r.message && r.message.length) {
                     frm.clear_table("ra_billing_details");
 
@@ -46,11 +47,51 @@ frappe.ui.form.on("RA Billing", {
                         child.subtask_subject = row.subtask;
                         child.total_quantity = row.total_quantity;
                         child.total_achieved = row.total_achieved;
-                        //child.rate = row.rate;
+                        child.rate = row.rate;
                         child.billed_quantity = row.billed_quantity;
                         child.billable_quantity = row.billable_quantity;
                         child.amount = row.amount;
                         child.uom = row.uom;
+                        for (let i = 1; i <= 10; i++) {
+
+                            if (row[`task_level${i}_id`]) {
+
+                                frappe.model.set_value(
+                                    child.doctype,
+                                    child.name,
+                                    `task_level${i}`,
+                                    row[`task_level${i}_id`]
+                                );
+                            }
+                        }
+                        let max_level = 0;
+
+                        (r.message || []).forEach(row => {
+                            for (let i = 1; i <= 10; i++) {
+                                if (row[`task_level${i}`]) {
+                                    max_level = i;
+                                }
+                            }
+                        });
+                        console.log("Max Level:", max_level);
+                        for (let i = 1; i <= 10; i++) {
+
+                            let show = i <= max_level;
+
+                            frm.fields_dict.ra_billing_details.grid.update_docfield_property(
+                                `task_level${i}`,
+                                "hidden",
+                                !show
+                            );
+
+                            frm.fields_dict.ra_billing_details.grid.update_docfield_property(
+                                `level${i}_subject`,
+                                "hidden",
+                                !show
+                            );
+                        }
+
+
                     });
 
                     frm.refresh_field("ra_billing_details");
