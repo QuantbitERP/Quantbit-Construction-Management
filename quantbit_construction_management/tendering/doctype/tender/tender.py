@@ -121,7 +121,20 @@ def create_project_from_tender(tender_name, project_name):
 	# Update tasks and subtasks from BOQ Details with the new project name and BOQ
 	updated_tasks = set()
 	for item in tender_doc.boq_details:
-		for t_name in [item.task, item.subtask]:
+		task_names = [
+        item.task,
+        item.subtask,
+        item.task_level1,
+        item.task_level2,
+        item.task_level3,
+        item.task_level4,
+        item.task_level5,
+        item.task_level6,
+        item.task_level7,
+        item.task_level8,
+        item.task_level9,
+        item.task_level10]
+		for t_name in task_names: 
 			if t_name and t_name not in updated_tasks:
 				frappe.db.set_value("Task", t_name, {
 					"project": project.name,
@@ -166,6 +179,26 @@ def get_boq_details(boq):
 			"task": item.task,
 			"subtask": item.subtask,
 			"subtask_name": item.subtask_name,
+		    "task_level1": item.task_level1,
+			"level1_subject": item.level1_subject,
+			"task_level2": item.task_level2,
+			"level2_subject": item.level2_subject,
+			"task_level3": item.task_level3,
+			"level3_subject": item.level3_subject,
+			"task_level4": item.task_level4,
+			"level4_subject": item.level4_subject,
+			"task_level5": item.task_level5,
+			"level5_subject": item.level5_subject,
+			"task_level6": item.task_level6,
+			"level6_subject": item.level6_subject,
+			"task_level7": item.task_level7,
+			"level7_subject": item.level7_subject,
+			"task_level8": item.task_level8,
+			"level8_subject": item.level8_subject,
+			"task_level9": item.task_level9,
+			"level9_subject": item.level9_subject,
+			"task_level10": item.task_level10,
+			"level10_subject": item.level10_subject,
 			"item_type": item.item_type,
 			"cost_code": item.cost_code,
 			"item_name": item.item_no
