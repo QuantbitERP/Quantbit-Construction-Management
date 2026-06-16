@@ -10,6 +10,7 @@
   "naming_series",
   "section_break_ghjy",
   "project",
+  "site",
   "column_break_zpnh",
   "site_date",
   "column_break_pqmo",
@@ -63,7 +64,8 @@
   {
    "fieldname": "site_date",
    "fieldtype": "Date",
-   "label": "Site Date"
+   "label": "Site Date",
+   "reqd": 1
   },
   {
    "fieldname": "shift",
@@ -99,13 +101,21 @@
    "fieldtype": "Link",
    "label": "Site Engineer",
    "options": "Employee"
+  },
+  {
+   "fetch_from": "project.custom_site",
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "Site",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-29 16:19:52.288692",
+ "modified": "2026-06-15 17:21:43.488185",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Task Progress",

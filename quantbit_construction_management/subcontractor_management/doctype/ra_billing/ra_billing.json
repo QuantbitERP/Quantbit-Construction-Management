@@ -14,10 +14,11 @@
   "from_date",
   "amended_from",
   "column_break_cwdx",
-  "bill_of_quantities",
+  "site",
   "to_date",
   "column_break_kylo",
   "customer",
+  "bill_of_quantities",
   "section_break_loyl",
   "get_details",
   "section_break_xpic",
@@ -101,17 +102,20 @@
    "fieldname": "customer",
    "fieldtype": "Link",
    "label": "Customer",
-   "options": "Customer"
+   "options": "Customer",
+   "reqd": 1
   },
   {
    "fieldname": "from_date",
    "fieldtype": "Date",
-   "label": "From Date"
+   "label": "From Date",
+   "reqd": 1
   },
   {
    "fieldname": "to_date",
    "fieldtype": "Date",
-   "label": "To Date"
+   "label": "To Date",
+   "reqd": 1
   },
   {
    "fieldname": "section_break_loyl",
@@ -158,6 +162,14 @@
    "fieldtype": "Currency",
    "label": "Grand Total",
    "read_only": 1
+  },
+  {
+   "fetch_from": "project.custom_site",
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "Site",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
@@ -169,7 +181,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-06-11 14:03:47.793499",
+ "modified": "2026-06-15 17:31:36.504356",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",

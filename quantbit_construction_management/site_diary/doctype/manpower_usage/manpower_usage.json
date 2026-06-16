@@ -13,6 +13,7 @@
   "site_engineer",
   "column_break_ltvx",
   "site_date",
+  "site",
   "section_break_smcj",
   "manpower_usage",
   "amended_from"
@@ -36,12 +37,14 @@
    "fieldname": "project",
    "fieldtype": "Link",
    "label": "Project",
-   "options": "Project"
+   "options": "Project",
+   "reqd": 1
   },
   {
    "fieldname": "site_date",
    "fieldtype": "Date",
-   "label": "Site Date"
+   "label": "Site Date",
+   "reqd": 1
   },
   {
    "fieldname": "site_engineer",
@@ -74,13 +77,22 @@
    "fieldtype": "Select",
    "label": "Naming Series",
    "options": "\nMU-"
+  },
+  {
+   "fetch_from": "project.custom_site",
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Site",
+   "options": "Site",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-27 18:25:33.616195",
+ "modified": "2026-06-15 17:17:54.010998",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Manpower Usage",

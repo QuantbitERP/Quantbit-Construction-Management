@@ -14,6 +14,7 @@
   "amended_from",
   "column_break_rfhk",
   "site_date",
+  "site",
   "section_break_fkcm",
   "equipment_usage_details"
  ],
@@ -35,8 +36,10 @@
   {
    "fieldname": "project",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Project",
-   "options": "Project"
+   "options": "Project",
+   "reqd": 1
   },
   {
    "fieldname": "site_engineer",
@@ -47,7 +50,9 @@
   {
    "fieldname": "site_date",
    "fieldtype": "Date",
-   "label": "Site Date"
+   "in_list_view": 1,
+   "label": "Site Date",
+   "reqd": 1
   },
   {
    "fieldname": "section_break_fkcm",
@@ -74,13 +79,22 @@
    "fieldtype": "Select",
    "label": "Naming Series",
    "options": "\nEU-"
+  },
+  {
+   "fetch_from": "project.custom_site",
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Site",
+   "options": "Site",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-27 18:30:21.339711",
+ "modified": "2026-06-15 17:19:20.195575",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Equipment Usage",

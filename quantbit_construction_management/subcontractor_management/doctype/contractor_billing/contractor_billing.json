@@ -10,6 +10,7 @@
   "naming_series",
   "section_break_xsvv",
   "project",
+  "site",
   "contractor",
   "contractor_account",
   "column_break_wcet",
@@ -174,6 +175,14 @@
    "fieldtype": "Link",
    "label": "Contractor Account",
    "options": "Account"
+  },
+  {
+   "fetch_from": "project.custom_site",
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "Site",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
@@ -193,7 +202,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-06-09 12:34:37.280146",
+ "modified": "2026-06-15 17:28:57.930980",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing",
