@@ -47,6 +47,41 @@ frappe.ui.form.on("Tender", {
                     boq: frm.doc.boq
                 },
                 callback: function (r) {
+                    console.log(r);
+                    if (!r.message) return;
+
+                    frm.clear_table("boq_details");
+
+                    let max_level = 0;
+
+                    r.message.forEach(item => {
+
+                        for (let i = 1; i <= 10; i++) {
+
+                            if (item[`task_level${i}`]) {
+                                max_level = Math.max(max_level, i);
+                            }
+                        }
+
+                        let child = frm.add_child("boq_details");
+
+                        Object.assign(child, item);
+                    });
+
+                    // Show only used hierarchy levels
+                    for (let i = 1; i <= 10; i++) {
+
+                        frm.fields_dict.boq_details.grid.toggle_display(
+                            `task_level${i}`,
+                            i <= max_level
+                        );
+
+                        frm.fields_dict.boq_details.grid.toggle_display(
+                            `level${i}_subject`,
+                            i <= max_level
+                        );
+                    }
+                    console.log(max_level);
                     if (r.message) {
                         frm.clear_table("boq_details");
                         r.message.forEach(item => {

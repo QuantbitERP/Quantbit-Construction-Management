@@ -710,6 +710,18 @@ frappe.ui.form.on('Bill of Quantities', {
         if (frm.doc.name && typeof load_hierarchy === "function") {
             load_hierarchy(frm);
         }
+
+        for (let i = 1; i <= 10; i++) {
+
+            let has_data = (frm.doc.boq_items || []).some(
+                r => r[`task_level${i}`]
+            );
+
+            frm.fields_dict.boq_items.grid.toggle_display(
+                `task_level${i}`,
+                has_data
+            );
+        }
     }
 });
 
@@ -882,16 +894,53 @@ function load_hierarchy(frm) {
                     if (stages[parent.name]) stages[parent.name].tasks.push({ data: t, subtasks: [] });
                 }
             });
-
             Object.values(stages).forEach(stage => {
                 stage.tasks.forEach(taskObj => {
                     tasks.forEach(t => {
-                        if (t.parent_task === taskObj.data.name && t.custom_is_subtask == 1) {
+                        if (
+                            t.parent_task === taskObj.data.name &&
+                            (
+                                t.custom_is_subtask == 1 ||
+                                t.custom_is_task == 1
+                            )
+                        ) {
                             taskObj.subtasks.push(t);
                         }
                     });
                 });
             });
+            function renderChildren(parentName, depth) {
+
+                let children = tasks.filter(
+                    t => t.parent_task === parentName
+                );
+
+                children.forEach(child => {
+
+                    let child_type =
+                        child.custom_is_subtask == 1
+                            ? "subtask"
+                            : "task";
+
+                    let expanded =
+                        expanded_nodes.has(child.name);
+
+                    html += render_row(
+                        child,
+                        child_type,
+                        expanded,
+                        depth
+                    );
+
+                    if (expanded) {
+                        renderChildren(
+                            child.name,
+                            depth + 1
+                        );
+                    }
+
+                });
+            }
 
             let html = `<div style="padding:15px;">
         <div class="hierarchy-controls">
@@ -912,7 +961,7 @@ function load_hierarchy(frm) {
                 overall_stage_total += flt(stageObj.data.task_weight || 0);
 
                 const is_stage_expanded = expanded_nodes.has(stageObj.data.name);
-                html += render_row(stageObj.data, "stage", is_stage_expanded);
+                html += render_row(stageObj.data, "stage", is_stage_expanded, 0);
 
                 if (is_stage_expanded) {
                     stageObj.tasks.forEach(taskObj => {
@@ -922,13 +971,37 @@ function load_hierarchy(frm) {
                         });
 
                         const is_task_expanded = expanded_nodes.has(taskObj.data.name);
-                        html += render_row(taskObj.data, "task", is_task_expanded);
+                        html += render_row(taskObj.data, "task", is_task_expanded, 1);
 
                         if (is_task_expanded) {
-                            taskObj.subtasks.forEach(sub => {
-                                html += render_row(sub, "subtask", false);
-                            });
 
+                            taskObj.subtasks.forEach(sub => {
+
+                                let row_type =
+                                    sub.custom_is_task == 1
+                                        ? "task"
+                                        : "subtask";
+
+                                let is_child_expanded =
+                                    expanded_nodes.has(sub.name);
+
+                                html += render_row(
+                                    sub,
+                                    row_type,
+                                    is_child_expanded,
+                                    2
+                                );
+                                // CHILD OF CHILD TASK
+                                if (is_child_expanded) {
+
+                                    renderChildren(
+                                        sub.name,
+                                        3
+                                    );
+
+                                }
+
+                            });
 
                             html += render_total_row(
                                 "subtask percentage",
@@ -1005,8 +1078,9 @@ function calculate_project_progress(tasks) {
 
 }
 
-function render_row(item, type, is_expanded) {
-    let margin = type === "stage" ? "0px" : (type === "task" ? "25px" : "60px");
+function render_row(item, type, is_expanded, depth = 0) {
+    //let margin = type === "stage" ? "0px" : (type === "task" ? "25px" : "60px");
+    let margin = (depth * 35) + "px";
     let bg = type === "stage" ? "#1a365d" : (type === "task" ? "#e9c46a" : "#fdf6e3");
     let color = type === "stage" ? "white" : "#333";
     let btnClass = type === "stage" ? "btn-light" : "btn-default";
@@ -1090,7 +1164,13 @@ function render_row(item, type, is_expanded) {
             : ""}
 
             ${type === "task"
-            ? `<button class="btn btn-default btn-xs add-subtask"
+            ? `
+                 <button class="btn btn-default btn-xs add-child-task"
+                    data-parent="${item.name}"
+                    ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                    + Child Task
+                </button>
+                <button class="btn btn-default btn-xs add-subtask"
                     data-task="${item.name}"
                     ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
                     + Subtask
@@ -1159,7 +1239,7 @@ function attach_events(frm, all_tasks) {
     // EXPAND ALL
     wrapper.find(".expand-all").off("click").on("click", function () {
         all_tasks.forEach(t => {
-            if (t.custom_is_stage || t.custom_is_task)
+            if (t.custom_is_stage || t.custom_is_task || t.custom_is_subtask)
                 expanded_nodes.add(t.name);
         });
         load_hierarchy(frm);
@@ -1665,6 +1745,247 @@ function attach_events(frm, all_tasks) {
             callback: function (r) {
                 d.show();
             }
+        });
+
+        d.show();
+
+    });
+
+    wrapper.find(".add-child-task").off("click").on("click", function (e) {
+
+        e.stopPropagation();
+
+        let parent_name = $(this).data("parent");
+
+        let d = new frappe.ui.Dialog({
+
+            title: "Add Child Task",
+
+            fields: [
+
+                {
+                    label: "Select Existing Task",
+                    fieldname: "existing_task",
+                    fieldtype: "MultiSelectPills",
+
+                    get_data: function (txt) {
+
+                        return frappe.db.get_list("Task", {
+                            filters: [
+                                ["custom_is_task", "=", 1],
+                                ["is_group", "=", 1],
+                                ["is_template", "=", 1],
+                                ["subject", "like", "%" + txt + "%"]
+                            ],
+                            fields: ["name", "subject"],
+                            limit: 20
+                        }).then(records => {
+
+                            return records.map(row => ({
+                                value: row.name,
+                                label: row.subject
+                            }));
+
+                        });
+                    }
+                },
+
+                {
+                    label: "Include Subtasks",
+                    fieldname: "include_children",
+                    fieldtype: "Check",
+                    default: 0,
+                    depends_on:
+                        "eval:doc.existing_task && doc.existing_task.length > 0"
+                },
+
+                {
+                    fieldtype: "Section Break"
+                },
+
+                {
+                    label: "OR Create New Child Task",
+                    fieldname: "section_label",
+                    fieldtype: "HTML",
+                    options: "<b>Create New Child Task</b>"
+                },
+
+                {
+                    label: "Task Name",
+                    fieldname: "subject",
+                    fieldtype: "Data"
+                },
+
+                {
+                    label: "Weight",
+                    fieldname: "task_weight",
+                    fieldtype: "Float"
+                },
+
+                {
+                    label: "Is Template",
+                    fieldname: "is_template",
+                    fieldtype: "Check",
+                    default: 0
+                },
+
+                {
+                    label: "Description",
+                    fieldname: "description",
+                    fieldtype: "Small Text"
+                }
+
+            ],
+
+            primary_action_label: "Add",
+
+            primary_action(values) {
+
+                // LINK EXISTING TASKS
+                if (
+                    values.existing_task &&
+                    values.existing_task.length > 0
+                ) {
+
+                    frappe.call({
+
+                        method:
+                            "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_task",
+
+                        args: {
+                            boq_name: frm.doc.name,
+                            selected_tasks: values.existing_task,
+                            parent_stage: parent_name,
+                            include_children: values.include_children
+                        },
+
+                        freeze: true,
+
+                        callback() {
+
+                            frappe.show_alert({
+                                message: __("Child Task linked successfully"),
+                                indicator: "green"
+                            });
+
+                            expanded_nodes.add(parent_name);
+
+                            d.hide();
+
+                            load_hierarchy(frm);
+                        }
+
+                    });
+
+                    return;
+                }
+
+                // CREATE NEW CHILD TASK
+
+                if (!values.subject) {
+
+                    frappe.msgprint("Enter task details");
+
+                    return;
+                }
+
+                let main_doc = {
+
+                    doctype: "Task",
+
+                    subject: values.subject,
+
+                    custom_boq_name: frm.doc.name,
+
+                    parent_task: parent_name,
+
+                    custom_is_task: 1,
+
+                    is_group: 1,
+
+                    task_weight: values.task_weight || 0,
+
+                    description: values.description,
+
+                    is_template: 0
+                };
+
+                frappe.call({
+
+                    method: "frappe.client.insert",
+
+                    args: {
+                        doc: main_doc
+                    },
+
+                    callback: function () {
+
+                        if (values.is_template) {
+
+                            let template_doc = {
+
+                                doctype: "Task",
+
+                                subject: values.subject,
+
+                                custom_is_task: 1,
+
+                                is_group: 1,
+
+                                task_weight: values.task_weight || 0,
+
+                                description: values.description,
+
+                                is_template: 1
+                            };
+
+                            frappe.call({
+
+                                method: "frappe.client.insert",
+
+                                args: {
+                                    doc: template_doc
+                                },
+
+                                callback: function () {
+
+                                    frappe.show_alert({
+                                        message: __("Child Task Created"),
+                                        indicator: "green"
+                                    });
+
+                                    expanded_nodes.add(parent_name);
+
+                                    d.hide();
+
+                                    load_hierarchy(frm);
+                                    sync_tasks_details(frm);
+
+                                }
+
+                            });
+
+                        } else {
+
+                            frappe.show_alert({
+                                message: __("Child Task Created"),
+                                indicator: "green"
+                            });
+
+                            expanded_nodes.add(parent_name);
+
+                            d.hide();
+
+                            load_hierarchy(frm);
+
+                        }
+
+                    }
+
+                });
+
+            }
+
         });
 
         d.show();
@@ -2209,7 +2530,7 @@ function attach_events(frm, all_tasks) {
                     },
                     freeze: true,
                     freeze_message: __("Deleting..."),
-                    callback: function(r) {
+                    callback: function (r) {
                         if (!r.exc) {
                             frappe.show_alert({
                                 message: __("{0} deleted successfully", [type]),
@@ -2229,7 +2550,6 @@ function attach_events(frm, all_tasks) {
     wrapper.find(".show-bom").off("click").on("click", function (e) {
         e.stopPropagation();
         let docname = $(this).data("name");
-        console.log("BOM Button Clicked for:", docname);
         if (docname) {
             show_bom_dialog(frm, docname);
         } else {
@@ -2239,11 +2559,9 @@ function attach_events(frm, all_tasks) {
 }
 
 function show_bom_dialog(frm, task_name) {
-    console.log("Opening BOM Dialog for Task:", task_name);
 
     frappe.model.with_doc("Task", task_name, function () {
         let task_doc = frappe.get_doc("Task", task_name);
-        console.log("Task Doc Loaded:", task_doc);
 
         let d = new frappe.ui.Dialog({
             title: __("BOQ Details: {0}", [task_doc.subject || task_name]),
@@ -2262,13 +2580,13 @@ function show_bom_dialog(frm, task_name) {
                             label: __("Item"),
                             in_list_view: 1,
                             columns: 2,
-                            onchange: function() {
+                            onchange: function () {
                                 let row = this.doc;
                                 if (!row || !row.item) return;
 
                                 let grid = d.fields_dict.custom_bom_details.grid;
                                 let grid_row = grid.get_row(row.name);
-                                
+
                                 if (!grid_row) return;
 
                                 frappe.db.get_value("Item", row.item, ["item_name", "stock_uom", "custom_item_type"])
@@ -2277,7 +2595,7 @@ function show_bom_dialog(frm, task_name) {
                                             row.item_name = r.message.item_name;
                                             row.uom = r.message.stock_uom;
                                             row.item_type = r.message.custom_item_type;
-                                            
+
                                             grid_row.refresh_field("item_name");
                                             grid_row.refresh_field("uom");
                                             grid_row.refresh_field("item_type");
@@ -2476,7 +2794,6 @@ async function update_boq_items_for_subtask(frm, subtask_name) {
 
             // ADD UPDATED ROWS
             const items = r.message || [];
-
             for (let d of items) {
 
                 const already_exists = (frm.doc.boq_items || []).some(row =>
@@ -2494,7 +2811,7 @@ async function update_boq_items_for_subtask(frm, subtask_name) {
             }
 
             frm.refresh_field("boq_items");
-            
+
             if (!frm.doc.__islocal && frm.is_dirty()) {
                 frm.save();
             }

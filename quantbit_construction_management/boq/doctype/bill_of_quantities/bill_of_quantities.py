@@ -3,6 +3,7 @@
 
 import frappe
 import json
+from frappe.utils import flt
 from frappe.model.document import Document
 from frappe.utils.xlsxutils import build_xlsx_response, read_xlsx_file_from_attached_file
 
@@ -21,8 +22,6 @@ class BillofQuantities(Document):
 
 @frappe.whitelist()
 def update_task_bom_details(task_name, bom_details):
-    import json
-    from frappe.utils import flt
     if isinstance(bom_details, str):
         bom_details = json.loads(bom_details)
     
@@ -41,37 +40,170 @@ def update_task_bom_details(task_name, bom_details):
     task.save(ignore_permissions=True)
     return task.name
 
+def build_task_hierarchy(task_name):
+    hierarchy = []
+
+    current = frappe.get_doc("Task", task_name)
+
+    while current:
+        hierarchy.insert(0, {
+            "name": current.name,
+            "subject": current.subject
+        })
+
+        if not current.parent_task:
+            break
+
+        current = frappe.get_doc("Task", current.parent_task)
+
+    return hierarchy
+def get_flat_hierarchy_for_boq(task_name):
+
+    hierarchy = build_task_hierarchy(task_name)
+
+    row_data = {}
+
+    if not hierarchy:
+        return row_data
+
+    # Stage
+    row_data["task"] = hierarchy[0]["name"]
+    row_data["task_subject"] = hierarchy[0]["subject"]
+
+    # Top Task
+    if len(hierarchy) > 1:
+        top_task = hierarchy[1]
+
+        row_data["subtask"] = top_task["name"]
+        row_data["subtask_name"] = top_task["subject"]
+
+        descendants = []
+
+        def collect_children(parent):
+
+            children = frappe.get_all(
+                "Task",
+                filters={"parent_task": parent},
+                fields=["name", "subject"],
+                order_by="creation asc"
+            )
+
+            for child in children:
+
+                descendants.append(child)
+
+                collect_children(child.name)
+
+        collect_children(top_task["name"])
+
+        level = 1
+
+        for node in descendants:
+
+            if level > 10:
+                break
+
+            row_data[f"task_level{level}"] = node["name"]
+            row_data[f"level{level}_subject"] = node["subject"]
+
+            level += 1
+
+    return row_data
+def fill_hierarchy_fields(task_name):
+
+    hierarchy = build_task_hierarchy(task_name)
+
+    row_data = {}
+
+    if not hierarchy:
+        return row_data
+
+    # Stage
+    row_data["task"] = hierarchy[0]["name"]
+    row_data["task_subject"] = hierarchy[0]["subject"]
+
+    # First task under stage
+    if len(hierarchy) > 1:
+        row_data["subtask"] = hierarchy[1]["name"]
+        row_data["subtask_name"] = hierarchy[1]["subject"]
+
+    # Remaining hierarchy
+    level_index = 1
+
+    for node in hierarchy[2:]:
+
+        if level_index > 10:
+            break
+
+        row_data[f"task_level{level_index}"] = node["name"]
+        row_data[f"level{level_index}_subject"] = node["subject"]
+
+        level_index += 1
+
+    return row_data
+
+def get_all_descendants(task_name):
+
+    descendants = []
+
+    children = frappe.get_all(
+        "Task",
+        filters={"parent_task": task_name},
+        fields=["name"]
+    )
+
+    for child in children:
+
+        descendants.append(child.name)
+
+        descendants.extend(
+            get_all_descendants(child.name)
+        )
+
+    return descendants
 
 @frappe.whitelist()
 def get_boq_items_from_task(task_name):
 
     boq_items = []
 
-    child_tasks = frappe.get_all(
-        "Task",
-        filters={"parent_task": task_name},
-        fields=["name", "subject"]
+    child_task_names = get_all_descendants(task_name)
+
+    child_tasks = [
+        frappe.get_doc("Task", name)
+        for name in child_task_names
+    ]
+
+    frappe.logger().debug(
+        f"get_boq_items_from_task: task={task_name}, child_tasks={[t.name for t in child_tasks]}"
     )
 
-    # Debug: log what we found
-    frappe.logger().debug(f"get_boq_items_from_task: task={task_name}, child_tasks={[t.name for t in child_tasks]}")
-
-    task_subject = frappe.db.get_value("Task", task_name, "subject")
     for task in child_tasks:
 
-        task_doc = frappe.get_doc("Task", task.name)
-
+        task_doc = task
         bom_rows = task_doc.get("custom_bom_details") or []
-        frappe.logger().debug(f"  subtask={task.name}, bom_rows={len(bom_rows)}")
+        if not bom_rows:
+            continue
+        children = frappe.get_all(
+            "Task",
+            filters={"parent_task": task_doc.name},
+            fields=["name"]
+        )
 
+        if children:
+            continue
+
+        frappe.logger().debug(
+            f"subtask={task.name}, bom_rows={len(bom_rows)}"
+        )
+        row_data = fill_hierarchy_fields(task_doc.name)
+
+        # Create BOQ rows
         for row in bom_rows:
 
-            boq_items.append({
-                "task": task_name,
-                "task_subject":task_subject,
-                "subtask": task.name,
-                "subtask_name": task.subject,
+            boq_row = dict(row_data)
 
+            boq_row.update({
                 "item_code": row.item,
                 "item_no": row.item_name,
                 "item_type": row.item_type,
@@ -90,43 +222,45 @@ def get_boq_items_from_task(task_name):
                 "actual_amount": row.total_amount
             })
 
+            boq_items.append(boq_row)
+
     return boq_items
 
 @frappe.whitelist()
 def get_boq_items_from_subtask(subtask_name):
+
     boq_items = []
+
     task_doc = frappe.get_doc("Task", subtask_name)
-    
-    # If the task has a parent, it's a subtask. Otherwise it's a top-level task.
-    if task_doc.parent_task:
-        task_id = task_doc.parent_task
-        subtask_id = task_doc.name
-    else:
-        task_id = task_doc.name
-        subtask_id = ""
-    task_subject = frappe.db.get_value("Task", task_id, "subject")
+    row_data = fill_hierarchy_fields(task_doc.name)
 
     bom_rows = task_doc.get("custom_bom_details") or []
+
     for row in bom_rows:
-        boq_items.append({
-            "task": task_id,
-            "subtask": subtask_id,
-            "task_subject": task_subject,
-            "subtask_name": task_doc.subject,
+
+        boq_row = dict(row_data)
+
+        boq_row.update({
             "item_code": row.item,
             "item_no": row.item_name,
             "item_type": row.item_type,
+
             "quantity": row.qty,
             "unit": row.uom,
             "unit_rate": row.rate,
             "amount": row.total_amount,
+
             "internal_qty": row.qty,
             "internal_rate": row.rate,
             "internal_amount": row.total_amount,
+
             "actual_qty": row.qty,
             "actual_rate": row.rate,
             "actual_amount": row.total_amount
         })
+
+        boq_items.append(boq_row)
+
     return boq_items
 
 @frappe.whitelist()
