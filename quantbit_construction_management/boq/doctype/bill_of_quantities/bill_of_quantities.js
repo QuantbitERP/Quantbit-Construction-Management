@@ -1,305 +1,305 @@
 frappe.ui.form.on("Bill of Quantities", {
-    before_submit: async function (frm) {
+    // before_submit: async function (frm) {
 
-        let all_tasks = await frappe.db.get_list("Task", {
-            filters: {
-                custom_boq_name: frm.doc.name
-            },
-            fields: [
-                "name",
-                "subject",
-                "parent_task",
-                "custom_is_stage",
-                "custom_is_task",
-                "custom_is_subtask",
-                "creation"
-            ],
-            order_by: "creation asc",
-            limit: 1000
-        });
+    //     let all_tasks = await frappe.db.get_list("Task", {
+    //         filters: {
+    //             custom_boq_name: frm.doc.name
+    //         },
+    //         fields: [
+    //             "name",
+    //             "subject",
+    //             "parent_task",
+    //             "custom_is_stage",
+    //             "custom_is_task",
+    //             "custom_is_subtask",
+    //             "creation"
+    //         ],
+    //         order_by: "creation asc",
+    //         limit: 1000
+    //     });
 
-        if (!all_tasks.length) {
-            frappe.throw(__("No Stages found."));
-        }
+    //     if (!all_tasks.length) {
+    //         frappe.throw(__("No Stages found."));
+    //     }
 
-        let errors = [];
+    //     let errors = [];
 
-        // STAGES
-        let stages = all_tasks.filter(d => d.custom_is_stage == 1);
+    //     // STAGES
+    //     let stages = all_tasks.filter(d => d.custom_is_stage == 1);
 
-        stages.forEach((stage, stage_index) => {
+    //     stages.forEach((stage, stage_index) => {
 
-            // TASKS UNDER STAGE
-            let tasks = all_tasks.filter(d =>
-                d.parent_task === stage.name &&
-                d.custom_is_task == 1
-            );
+    //         // TASKS UNDER STAGE
+    //         let tasks = all_tasks.filter(d =>
+    //             d.parent_task === stage.name &&
+    //             d.custom_is_task == 1
+    //         );
 
-            // NO TASK FOUND
-            if (!tasks.length) {
+    //         // NO TASK FOUND
+    //         if (!tasks.length) {
 
-                errors.push(`
-                <div style="
-                    margin-bottom:16px;
-                    padding:14px 16px;
-                    border-radius:12px;
-                    background:#fff5f5;
-                    border:1px solid #fecaca;
-                    box-shadow:0 2px 6px rgba(0,0,0,0.05);
-                ">
+    //             errors.push(`
+    //             <div style="
+    //                 margin-bottom:16px;
+    //                 padding:14px 16px;
+    //                 border-radius:12px;
+    //                 background:#fff5f5;
+    //                 border:1px solid #fecaca;
+    //                 box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    //             ">
 
-                    <div style="
-                        font-size:15px;
-                        font-weight:700;
-                        color:#dc2626;
-                        margin-bottom:8px;
-                    ">
-                        🚫 Stage ${stage_index + 1}
-                    </div>
+    //                 <div style="
+    //                     font-size:15px;
+    //                     font-weight:700;
+    //                     color:#dc2626;
+    //                     margin-bottom:8px;
+    //                 ">
+    //                     🚫 Stage ${stage_index + 1}
+    //                 </div>
 
-                    <div style="
-                        font-size:14px;
-                        color:#111827;
-                        margin-bottom:8px;
-                    ">
-                        <b>Stage Name:</b> ${stage.subject}
-                    </div>
+    //                 <div style="
+    //                     font-size:14px;
+    //                     color:#111827;
+    //                     margin-bottom:8px;
+    //                 ">
+    //                     <b>Stage Name:</b> ${stage.subject}
+    //                 </div>
 
-                    <div style="
-                        color:#b91c1c;
-                        font-size:13px;
-                        font-weight:600;
-                    ">
-                        No Task created under this Stage
-                    </div>
+    //                 <div style="
+    //                     color:#b91c1c;
+    //                     font-size:13px;
+    //                     font-weight:600;
+    //                 ">
+    //                     No Task created under this Stage
+    //                 </div>
 
-                </div>
-            `);
+    //             </div>
+    //         `);
 
-                return;
-            }
+    //             return;
+    //         }
 
-            // TASK LOOP
-            tasks.forEach((task, task_index) => {
+    //         // TASK LOOP
+    //         tasks.forEach((task, task_index) => {
 
-                // SUBTASKS UNDER TASK
-                let subtasks = all_tasks.filter(d =>
-                    d.parent_task === task.name &&
-                    d.custom_is_subtask == 1
-                );
+    //             // SUBTASKS UNDER TASK
+    //             let subtasks = all_tasks.filter(d =>
+    //                 d.parent_task === task.name &&
+    //                 d.custom_is_subtask == 1
+    //             );
 
-                // NO SUBTASK
-                if (!subtasks.length) {
+    //             // NO SUBTASK
+    //             if (!subtasks.length) {
 
-                    errors.push(`
-                    <div style="
-                        margin-bottom:16px;
-                        padding:14px 16px;
-                        border-radius:12px;
-                        background:#fff7ed;
-                        border:1px solid #fdba74;
-                        box-shadow:0 2px 6px rgba(0,0,0,0.05);
-                    ">
+    //                 errors.push(`
+    //                 <div style="
+    //                     margin-bottom:16px;
+    //                     padding:14px 16px;
+    //                     border-radius:12px;
+    //                     background:#fff7ed;
+    //                     border:1px solid #fdba74;
+    //                     box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    //                 ">
 
-                        <div style="
-                            display:flex;
-                            gap:8px;
-                            align-items:center;
-                            margin-bottom:10px;
-                        ">
-                            <span style="
-                                background:#ea580c;
-                                color:white;
-                                padding:4px 10px;
-                                border-radius:20px;
-                                font-size:12px;
-                                font-weight:700;
-                            ">
-                                Stage ${stage_index + 1}
-                            </span>
+    //                     <div style="
+    //                         display:flex;
+    //                         gap:8px;
+    //                         align-items:center;
+    //                         margin-bottom:10px;
+    //                     ">
+    //                         <span style="
+    //                             background:#ea580c;
+    //                             color:white;
+    //                             padding:4px 10px;
+    //                             border-radius:20px;
+    //                             font-size:12px;
+    //                             font-weight:700;
+    //                         ">
+    //                             Stage ${stage_index + 1}
+    //                         </span>
 
-                            <span style="
-                                background:#f59e0b;
-                                color:white;
-                                padding:4px 10px;
-                                border-radius:20px;
-                                font-size:12px;
-                                font-weight:700;
-                            ">
-                                Task ${task_index + 1}
-                            </span>
-                        </div>
+    //                         <span style="
+    //                             background:#f59e0b;
+    //                             color:white;
+    //                             padding:4px 10px;
+    //                             border-radius:20px;
+    //                             font-size:12px;
+    //                             font-weight:700;
+    //                         ">
+    //                             Task ${task_index + 1}
+    //                         </span>
+    //                     </div>
 
-                        <div style="margin-bottom:6px;">
-                            <b>Stage:</b> ${stage.subject}
-                        </div>
+    //                     <div style="margin-bottom:6px;">
+    //                         <b>Stage:</b> ${stage.subject}
+    //                     </div>
 
-                        <div style="margin-bottom:10px;">
-                            <b>Task:</b> ${task.subject}
-                        </div>
+    //                     <div style="margin-bottom:10px;">
+    //                         <b>Task:</b> ${task.subject}
+    //                     </div>
 
-                        <div style="
-                            color:#c2410c;
-                            font-size:13px;
-                            font-weight:600;
-                        ">
-                            No Subtask created under this Task
-                        </div>
+    //                     <div style="
+    //                         color:#c2410c;
+    //                         font-size:13px;
+    //                         font-weight:600;
+    //                     ">
+    //                         No Subtask created under this Task
+    //                     </div>
 
-                    </div>
-                `);
+    //                 </div>
+    //             `);
 
-                    return;
-                }
+    //                 return;
+    //             }
 
-                // SUBTASK LOOP
-                subtasks.forEach((subtask, subtask_index) => {
+    //             // SUBTASK LOOP
+    //             subtasks.forEach((subtask, subtask_index) => {
 
-                    // BOQ ITEMS OF SUBTASK
-                    let boq_items = (frm.doc.boq_items || []).filter(row =>
-                        row.subtask === subtask.name
-                    );
+    //                 // BOQ ITEMS OF SUBTASK
+    //                 let boq_items = (frm.doc.boq_items || []).filter(row =>
+    //                     row.subtask === subtask.name
+    //                 );
 
-                    // NO BOQ ITEMS
-                    if (!boq_items.length) {
+    //                 // NO BOQ ITEMS
+    //                 if (!boq_items.length) {
 
-                        errors.push(`
+    //                     errors.push(`
 
-                        <div style="
-                            margin-bottom:12px;
-                            padding:14px 16px;
-                            border-radius:10px;
-                            background:#fff5f5;
-                            border-left:4px solid #dc2626;
-                        ">
+    //                     <div style="
+    //                         margin-bottom:12px;
+    //                         padding:14px 16px;
+    //                         border-radius:10px;
+    //                         background:#fff5f5;
+    //                         border-left:4px solid #dc2626;
+    //                     ">
 
-                            <div style="
-                                display:flex;
-                                flex-wrap:wrap;
-                                gap:8px;
-                                margin-bottom:12px;
-                            ">
+    //                         <div style="
+    //                             display:flex;
+    //                             flex-wrap:wrap;
+    //                             gap:8px;
+    //                             margin-bottom:12px;
+    //                         ">
 
-                                <span style="
-                                    background:#2563eb;
-                                    color:white;
-                                    padding:4px 10px;
-                                    border-radius:20px;
-                                    font-size:12px;
-                                    font-weight:600;
-                                ">
-                                    Stage ${stage_index + 1}
-                                </span>
+    //                             <span style="
+    //                                 background:#2563eb;
+    //                                 color:white;
+    //                                 padding:4px 10px;
+    //                                 border-radius:20px;
+    //                                 font-size:12px;
+    //                                 font-weight:600;
+    //                             ">
+    //                                 Stage ${stage_index + 1}
+    //                             </span>
 
-                                <span style="
-                                    background:#7c3aed;
-                                    color:white;
-                                    padding:4px 10px;
-                                    border-radius:20px;
-                                    font-size:12px;
-                                    font-weight:600;
-                                ">
-                                    Task ${task_index + 1}
-                                </span>
+    //                             <span style="
+    //                                 background:#7c3aed;
+    //                                 color:white;
+    //                                 padding:4px 10px;
+    //                                 border-radius:20px;
+    //                                 font-size:12px;
+    //                                 font-weight:600;
+    //                             ">
+    //                                 Task ${task_index + 1}
+    //                             </span>
 
-                                <span style="
-                                    background:#dc2626;
-                                    color:white;
-                                    padding:4px 10px;
-                                    border-radius:20px;
-                                    font-size:12px;
-                                    font-weight:600;
-                                ">
-                                    Subtask ${subtask_index + 1}
-                                </span>
+    //                             <span style="
+    //                                 background:#dc2626;
+    //                                 color:white;
+    //                                 padding:4px 10px;
+    //                                 border-radius:20px;
+    //                                 font-size:12px;
+    //                                 font-weight:600;
+    //                             ">
+    //                                 Subtask ${subtask_index + 1}
+    //                             </span>
 
-                            </div>
+    //                         </div>
 
-                            <div style="line-height:1.9;font-size:14px;">
+    //                         <div style="line-height:1.9;font-size:14px;">
 
-                                <div>
-                                    <span style="color:#6b7280;">Stage :</span>
-                                    <b>${stage.subject}</b>
-                                </div>
+    //                             <div>
+    //                                 <span style="color:#6b7280;">Stage :</span>
+    //                                 <b>${stage.subject}</b>
+    //                             </div>
 
-                                <div>
-                                    <span style="color:#6b7280;">Task :</span>
-                                    <b>${task.subject}</b>
-                                </div>
+    //                             <div>
+    //                                 <span style="color:#6b7280;">Task :</span>
+    //                                 <b>${task.subject}</b>
+    //                             </div>
 
-                                <div>
-                                    <span style="color:#6b7280;">Subtask :</span>
-                                    <b>${subtask.subject}</b>
-                                </div>
+    //                             <div>
+    //                                 <span style="color:#6b7280;">Subtask :</span>
+    //                                 <b>${subtask.subject}</b>
+    //                             </div>
 
-                            </div>
+    //                         </div>
 
-                            <div style="
-                                margin-top:12px;
-                                color:#dc2626;
-                                font-size:13px;
-                                font-weight:700;
-                            ">
-                                ⚠ BOQ Item not created
-                            </div>
+    //                         <div style="
+    //                             margin-top:12px;
+    //                             color:#dc2626;
+    //                             font-size:13px;
+    //                             font-weight:700;
+    //                         ">
+    //                             ⚠ BOQ Item not created
+    //                         </div>
 
-                        </div>
+    //                     </div>
 
-                    `);
+    //                 `);
 
-                    }
+    //                 }
 
-                });
+    //             });
 
-            });
+    //         });
 
-        });
+    //     });
 
-        // FINAL THROW
-        if (errors.length) {
+    //     // FINAL THROW
+    //     if (errors.length) {
 
-            frappe.throw({
-                title: __("BOQ Hierarchy Validation Failed"),
-                message: `
-                <div style="
-                    max-height:550px;
-                    overflow:auto;
-                    padding:8px 12px 8px 0;
-                ">
+    //         frappe.throw({
+    //             title: __("BOQ Hierarchy Validation Failed"),
+    //             message: `
+    //             <div style="
+    //                 max-height:550px;
+    //                 overflow:auto;
+    //                 padding:8px 12px 8px 0;
+    //             ">
 
-                    <div style="
-                        margin-bottom:18px;
-                        padding:14px;
-                        border-radius:12px;
-                        background:#eff6ff;
-                        border:1px solid #bfdbfe;
-                        color:#1e3a8a;
-                        font-size:14px;
-                        line-height:1.7;
-                    ">
-                        <div style="
-                            font-size:16px;
-                            font-weight:700;
-                            margin-bottom:6px;
-                        ">
-                            BOQ Structure Validation
-                        </div>
+    //                 <div style="
+    //                     margin-bottom:18px;
+    //                     padding:14px;
+    //                     border-radius:12px;
+    //                     background:#eff6ff;
+    //                     border:1px solid #bfdbfe;
+    //                     color:#1e3a8a;
+    //                     font-size:14px;
+    //                     line-height:1.7;
+    //                 ">
+    //                     <div style="
+    //                         font-size:16px;
+    //                         font-weight:700;
+    //                         margin-bottom:6px;
+    //                     ">
+    //                         BOQ Structure Validation
+    //                     </div>
 
-                        Every Stage must contain Tasks,
-                        every Task must contain Subtasks,
-                        and for every Subtask BOQ Items must be created
-                        before submitting the document.
-                    </div>
+    //                     Every Stage must contain Tasks,
+    //                     every Task must contain Subtasks,
+    //                     and for every Subtask BOQ Items must be created
+    //                     before submitting the document.
+    //                 </div>
 
-                    ${errors.join("")}
+    //                 ${errors.join("")}
 
-                </div>
-            `
-            });
+    //             </div>
+    //         `
+    //         });
 
-        }
+    //     }
 
-    },
+    // },
 
     refresh(frm) {
         if (
@@ -745,7 +745,7 @@ frappe.ui.form.on('Bill of Quantities', {
                             if (r.message) {
                                 frappe.msgprint({
                                     title: __("Project Created"),
-                                    message: __("Project <b>{0}</b> has been created and linked successfully.", [r.message]),
+                                    message: __("Project <a href='/app/project/{0}'><b>{0}</b></a> has been created and linked successfully.", [r.message]),
                                     indicator: "green"
                                 });
                                 frm.set_value("project", r.message);

@@ -221,27 +221,40 @@ def get_project_tasks(project):
 
 @frappe.whitelist()
 def create_sales_invoice(source_name, target_doc=None, item_code=None):
-    item_code = frappe.flags.args.get("item_code")
+    if not item_code:
+        args = getattr(frappe.flags, "args", None) or frappe.form_dict
+        item_code = args.get("item_code")
+
     item_name = frappe.db.get_value("Item", item_code, "item_name")
     uom = frappe.db.get_value(
-    "UOM Conversion Detail",
-    {"parent": item_code},
-    "uom"
-)
+        "UOM Conversion Detail",
+        {"parent": item_code},
+        "uom"
+    )
+    if not uom and item_code:
+        uom = frappe.db.get_value("Item", item_code, "stock_uom")
     
     def set_missing_values(source, target):
-
         target.customer = source.customer
         target.project = source.project
         target.custom_doc_link_doctype = "RA Billing"
         target.custom_doc_link = source.name
+        
         target.append("items", {
             "item_code": item_code,
             "item_name": item_name,
             "qty": 1,
             "uom": uom,
-            "rate": source.grand_total
+            "rate": flt(source.grand_total),
+            "price_list_rate": flt(source.grand_total),
+            "amount": flt(source.grand_total),
+            "base_rate": flt(source.grand_total),
+            "base_amount": flt(source.grand_total),
+            "base_price_list_rate": flt(source.grand_total)
         })
+        
+        target.run_method("set_missing_values")
+        target.run_method("calculate_taxes_and_totals")
 
     doc = get_mapped_doc(
         "RA Billing",
