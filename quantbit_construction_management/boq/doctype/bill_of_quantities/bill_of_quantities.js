@@ -1,7 +1,67 @@
+function getChildren(all_tasks, parent_name) {
+    return all_tasks.filter(
+        t => t.parent_task === parent_name
+    );
+}
+
+function getLeafSubtasks(all_tasks, parent_name) {
+
+    let result = [];
+
+    let children = getChildren(
+        all_tasks,
+        parent_name
+    );
+
+    children.forEach(child => {
+
+        let childChildren =
+            getChildren(all_tasks, child.name);
+
+        if (
+            child.custom_is_subtask == 1 &&
+            !childChildren.length
+        ) {
+
+            result.push(child);
+
+        } else {
+
+            result.push(
+                ...getLeafSubtasks(
+                    all_tasks,
+                    child.name
+                )
+            );
+        }
+
+    });
+
+    return result;
+}
+function getHierarchyPath(all_tasks, task_name) {
+
+    let path = [];
+
+    let current = all_tasks.find(
+        t => t.name === task_name
+    );
+
+    while (current) {
+
+        path.unshift(current.subject);
+
+        current = all_tasks.find(
+            t => t.name === current.parent_task
+        );
+    }
+
+    return path.join(" > ");
+}
 frappe.ui.form.on("Bill of Quantities", {
     before_submit: async function (frm) {
 
-        let all_tasks = await frappe.db.get_list("Task", {
+         let all_tasks = await frappe.db.get_list("Task", {
             filters: {
                 custom_boq_name: frm.doc.name
             },
@@ -16,6 +76,90 @@ frappe.ui.form.on("Bill of Quantities", {
             ],
             order_by: "creation asc",
             limit: 1000
+        });
+        let hierarchy_errors = [];
+
+        all_tasks.forEach(node => {
+
+            let children = all_tasks.filter(
+                t => t.parent_task === node.name
+            );
+
+            // LEAF NODE
+            if (!children.length) {
+
+                // LAST NODE MUST BE SUBTASK
+                if (node.custom_is_subtask != 1) {
+
+                    hierarchy_errors.push(`
+                <div style="
+                    padding:12px;
+                    margin-bottom:10px;
+                    background:#fff5f5;
+                    border-left:4px solid #dc2626;
+                ">
+                    <b>Invalid Hierarchy</b><br>
+
+                    ${getHierarchyPath(
+                        all_tasks,
+                        node.name
+                    )}
+
+                    <br><br>
+
+                    Last node
+                    <b>${node.subject}</b>
+
+                    has no
+                    Subtask.
+                </div>
+            `);
+
+                    return;
+                }
+
+                // CHECK BOQ ITEM
+                let boq_items =
+                    (frm.doc.boq_items || []).filter(row => {
+
+                        return (
+                            row.subtask === node.name ||
+
+                            row.task_level1 === node.name ||
+                            row.task_level2 === node.name ||
+                            row.task_level3 === node.name ||
+                            row.task_level4 === node.name ||
+                            row.task_level5 === node.name ||
+                            row.task_level6 === node.name ||
+                            row.task_level7 === node.name ||
+                            row.task_level8 === node.name ||
+                            row.task_level9 === node.name ||
+                            row.task_level10 === node.name
+                        );
+
+                    });
+
+                if (!boq_items.length) {
+
+                    hierarchy_errors.push(`
+                <div style="
+                    padding:12px;
+                    margin-bottom:10px;
+                    background:#fff7ed;
+                    border-left:4px solid #ea580c;
+                ">
+                    <b>BOQ Item Missing</b><br>
+
+                    ${getHierarchyPath(
+                        all_tasks,
+                        node.name
+                    )}
+                </div>
+            `);
+
+                }
+            }
+
         });
 
         if (!all_tasks.length) {
@@ -35,130 +179,35 @@ frappe.ui.form.on("Bill of Quantities", {
                 d.custom_is_task == 1
             );
 
-            // NO TASK FOUND
-            if (!tasks.length) {
-
-                errors.push(`
-                <div style="
-                    margin-bottom:16px;
-                    padding:14px 16px;
-                    border-radius:12px;
-                    background:#fff5f5;
-                    border:1px solid #fecaca;
-                    box-shadow:0 2px 6px rgba(0,0,0,0.05);
-                ">
-
-                    <div style="
-                        font-size:15px;
-                        font-weight:700;
-                        color:#dc2626;
-                        margin-bottom:8px;
-                    ">
-                        🚫 Stage ${stage_index + 1}
-                    </div>
-
-                    <div style="
-                        font-size:14px;
-                        color:#111827;
-                        margin-bottom:8px;
-                    ">
-                        <b>Stage Name:</b> ${stage.subject}
-                    </div>
-
-                    <div style="
-                        color:#b91c1c;
-                        font-size:13px;
-                        font-weight:600;
-                    ">
-                        No Task created under this Stage
-                    </div>
-
-                </div>
-            `);
-
-                return;
-            }
-
             // TASK LOOP
             tasks.forEach((task, task_index) => {
 
-                // SUBTASKS UNDER TASK
-                let subtasks = all_tasks.filter(d =>
-                    d.parent_task === task.name &&
-                    d.custom_is_subtask == 1
-                );
-
-                // NO SUBTASK
-                if (!subtasks.length) {
-
-                    errors.push(`
-                    <div style="
-                        margin-bottom:16px;
-                        padding:14px 16px;
-                        border-radius:12px;
-                        background:#fff7ed;
-                        border:1px solid #fdba74;
-                        box-shadow:0 2px 6px rgba(0,0,0,0.05);
-                    ">
-
-                        <div style="
-                            display:flex;
-                            gap:8px;
-                            align-items:center;
-                            margin-bottom:10px;
-                        ">
-                            <span style="
-                                background:#ea580c;
-                                color:white;
-                                padding:4px 10px;
-                                border-radius:20px;
-                                font-size:12px;
-                                font-weight:700;
-                            ">
-                                Stage ${stage_index + 1}
-                            </span>
-
-                            <span style="
-                                background:#f59e0b;
-                                color:white;
-                                padding:4px 10px;
-                                border-radius:20px;
-                                font-size:12px;
-                                font-weight:700;
-                            ">
-                                Task ${task_index + 1}
-                            </span>
-                        </div>
-
-                        <div style="margin-bottom:6px;">
-                            <b>Stage:</b> ${stage.subject}
-                        </div>
-
-                        <div style="margin-bottom:10px;">
-                            <b>Task:</b> ${task.subject}
-                        </div>
-
-                        <div style="
-                            color:#c2410c;
-                            font-size:13px;
-                            font-weight:600;
-                        ">
-                            No Subtask created under this Task
-                        </div>
-
-                    </div>
-                `);
-
-                    return;
-                }
-
-                // SUBTASK LOOP
-                subtasks.forEach((subtask, subtask_index) => {
-
-                    // BOQ ITEMS OF SUBTASK
-                    let boq_items = (frm.doc.boq_items || []).filter(row =>
-                        row.subtask === subtask.name
+                let leafSubtasks =
+                    getLeafSubtasks(
+                        all_tasks,
+                        task.name
                     );
+
+                leafSubtasks.forEach((subtask, subtask_index) => {
+                    // BOQ ITEMS OF SUBTASK
+                    let boq_items = (frm.doc.boq_items || []).filter(row => {
+
+                        return (
+                            row.subtask === subtask.name ||
+
+                            row.task_level1 === subtask.name ||
+                            row.task_level2 === subtask.name ||
+                            row.task_level3 === subtask.name ||
+                            row.task_level4 === subtask.name ||
+                            row.task_level5 === subtask.name ||
+                            row.task_level6 === subtask.name ||
+                            row.task_level7 === subtask.name ||
+                            row.task_level8 === subtask.name ||
+                            row.task_level9 === subtask.name ||
+                            row.task_level10 === subtask.name
+                        );
+
+                    });
 
                     // NO BOQ ITEMS
                     if (!boq_items.length) {
@@ -254,47 +303,31 @@ frappe.ui.form.on("Bill of Quantities", {
             });
 
         });
+        // HIERARCHY VALIDATION THROW
+        if (hierarchy_errors.length) {
 
-        // FINAL THROW
+            frappe.throw({
+                title: __("Hierarchy Validation Failed"),
+                message: `
+            <div style="
+                max-height:500px;
+                overflow:auto;
+            ">
+                ${hierarchy_errors.join("")}
+            </div>
+        `
+            });
+
+        }
+
+        // EXISTING VALIDATION THROW
         if (errors.length) {
 
             frappe.throw({
                 title: __("BOQ Hierarchy Validation Failed"),
                 message: `
-                <div style="
-                    max-height:550px;
-                    overflow:auto;
-                    padding:8px 12px 8px 0;
-                ">
-
-                    <div style="
-                        margin-bottom:18px;
-                        padding:14px;
-                        border-radius:12px;
-                        background:#eff6ff;
-                        border:1px solid #bfdbfe;
-                        color:#1e3a8a;
-                        font-size:14px;
-                        line-height:1.7;
-                    ">
-                        <div style="
-                            font-size:16px;
-                            font-weight:700;
-                            margin-bottom:6px;
-                        ">
-                            BOQ Structure Validation
-                        </div>
-
-                        Every Stage must contain Tasks,
-                        every Task must contain Subtasks,
-                        and for every Subtask BOQ Items must be created
-                        before submitting the document.
-                    </div>
-
-                    ${errors.join("")}
-
-                </div>
-            `
+            ...
+        `
             });
 
         }
@@ -554,12 +587,6 @@ frappe.ui.form.on("BOQ Task Details", {
         row._prev_task = row.task;
         fetch_items_for_task(frm, row);
     },
-
-    // before_tasks_details_remove: async function (frm, cdt, cdn) {
-    //     const row = locals[cdt][cdn];
-    //     await remove_boq_items_for_task(frm, row.task);
-    // }
-
 });
 
 async function fetch_items_for_task(frm, row) {
@@ -634,7 +661,6 @@ frappe.ui.form.on("BOQ Item", {
 
 });
 
-
 function render_combined_boq(frm) {
 
     let boq_items = frm.doc.boq_items || [];
@@ -645,7 +671,6 @@ function render_combined_boq(frm) {
         );
         return;
     }
-
     let grouped = {};
     boq_items.forEach(row => {
         if (!grouped[row.item_type]) grouped[row.item_type] = [];
@@ -767,9 +792,7 @@ frappe.realtime.on("project_progress_refresh", (data) => {
 
 
         load_hierarchy(cur_frm);
-
     }
-
 });
 
 function inject_hierarchy_css() {
@@ -911,6 +934,7 @@ function load_hierarchy(frm) {
         callback: function (r) {
             if (!r.message) return;
             const tasks = r.message;
+            window.current_hierarchy_tasks = tasks;
             let taskMap = {};
             tasks.forEach(t => taskMap[t.name] = t);
 
@@ -1111,6 +1135,27 @@ function calculate_project_progress(tasks) {
     return count ? (total / count).toFixed(2) : 0;
 
 }
+function get_descendant_count(all_tasks, task_name) {
+
+    let children = all_tasks.filter(
+        t => t.parent_task === task_name
+    );
+
+    let count = 0;
+
+    children.forEach(child => {
+
+        count += 1;
+
+        count += get_descendant_count(
+            all_tasks,
+            child.name
+        );
+
+    });
+
+    return count;
+}
 
 function render_row(item, type, is_expanded, depth = 0) {
     //let margin = type === "stage" ? "0px" : (type === "task" ? "25px" : "60px");
@@ -1124,18 +1169,30 @@ function render_row(item, type, is_expanded, depth = 0) {
     if (type !== "subtask") {
         icon = is_expanded ? "▼" : "▶";
     }
-
     let progress = item.progress || 0;
-
+    let descendant_count = get_descendant_count(
+    window.current_hierarchy_tasks || [],
+    item.name
+    );
+    let descendant_btn = "";
+    if (
+        type !== "subtask" &&
+        descendant_count > 0
+    ) {
+        descendant_btn = `
+            <button class="btn btn-info btn-xs"
+                title="Descendant Count">
+                ${descendant_count}
+            </button>
+        `;
+    }
     let progress_bar = `
     <div style="margin-top:6px;width:150px;background:#eee;border-radius:6px;height:6px;">
     <div style="width:${progress}%;background:#27ae60;height:6px;border-radius:6px;"></div>
     </div>
     `;
-
     return `
-    <div class="hierarchy-row" data-name="${item.name}" data-type="${type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:${color}; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-      
+    <div class="hierarchy-row" data-name="${item.name}" data-type="${type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:${color}; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">    
       <div class="hover-details">
          <div style="border-bottom: 1px solid #444; margin-bottom: 5px; font-weight: bold; padding-bottom: 3px;">${item.name}</div>
          <div><span class="detail-label">Status:</span> ${item.status || 'Open'}</div>
@@ -1210,7 +1267,7 @@ function render_row(item, type, is_expanded, depth = 0) {
                     + Subtask
                 </button>`
             : ""}
-
+            ${descendant_btn}
             <button class="btn btn-warning btn-xs show-weight"
                 data-name="${item.name}"
                 title="Weight">
