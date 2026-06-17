@@ -202,10 +202,10 @@ def update_payment_status(payment_entry):
         cb_names.add(payment_entry.custom_doc_link)
         
     for ref in payment_entry.get("references", []):
-        if ref.reference_doctype == "Purchase Invoice" and ref.reference_name:
-            pi_link = frappe.db.get_value("Purchase Invoice", ref.reference_name, ["custom_doc_link_doctype", "custom_doc_link"], as_dict=True)
-            if pi_link and pi_link.custom_doc_link_doctype == "Contractor Billing" and pi_link.custom_doc_link:
-                cb_names.add(pi_link.custom_doc_link)
+        if ref.reference_doctype in ["Purchase Invoice", "Journal Entry"] and ref.reference_name:
+            link_info = frappe.db.get_value(ref.reference_doctype, ref.reference_name, ["custom_doc_link_doctype", "custom_doc_link"], as_dict=True)
+            if link_info and link_info.custom_doc_link_doctype == "Contractor Billing" and link_info.custom_doc_link:
+                cb_names.add(link_info.custom_doc_link)
 
     if not cb_names:
         return
@@ -214,6 +214,10 @@ def update_payment_status(payment_entry):
         sync_contractor_billing_payment_status(cb_name)
 
 def on_purchase_invoice_update(doc, method):
+    if doc.custom_doc_link_doctype == "Contractor Billing" and doc.custom_doc_link:
+        sync_contractor_billing_payment_status(doc.custom_doc_link)
+
+def on_journal_entry_update(doc, method):
     if doc.custom_doc_link_doctype == "Contractor Billing" and doc.custom_doc_link:
         sync_contractor_billing_payment_status(doc.custom_doc_link)
 
@@ -228,14 +232,20 @@ def sync_contractor_billing_payment_status(cb_name):
     # Check if Purchase Invoice is Paid
     pi_name = frappe.db.get_value("Purchase Invoice", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": cb_name}, "name")
     if pi_name:
-        pi_data = frappe.db.get_value("Purchase Invoice", pi_name, ["status", "paid_amount", "outstanding_amount"], as_dict=True)
+        pi_data = frappe.db.get_value("Purchase Invoice", pi_name, ["status", "grand_total", "outstanding_amount"], as_dict=True)
         if pi_data:
-            paid_amount = flt(pi_data.paid_amount)
             outstanding_amount = flt(pi_data.outstanding_amount)
-            if pi_data.status == "Paid":
+            paid_amount = flt(pi_data.grand_total) - outstanding_amount
+            if paid_amount > flt(billing.grand_total):
+                paid_amount = flt(billing.grand_total)
+            outstanding_amount = flt(billing.grand_total) - paid_amount
+            if pi_data.status == "Paid" or outstanding_amount <= 0.005:
                 is_paid = 1
     else:
-        # Fallback to direct Payment Entry logic
+        # Fallback to direct Payment Entry / Journal Entry payment logic
+        je_name = frappe.db.get_value("Journal Entry", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": cb_name}, "name")
+        
+        # 1. Fetch direct payments
         direct_payments = frappe.db.get_all(
             "Payment Entry",
             filters={
@@ -243,11 +253,34 @@ def sync_contractor_billing_payment_status(cb_name):
                 "custom_doc_link": cb_name,
                 "docstatus": 1
             },
-            fields=["paid_amount"]
+            fields=["name", "paid_amount"]
         )
-        paid_amount = sum(flt(p.paid_amount) for p in direct_payments)
+        
+        # 2. Fetch payments linked via Journal Entry
+        je_payments = []
+        if je_name:
+            je_payments = frappe.db.get_all(
+                "Payment Entry Reference",
+                filters={
+                    "reference_doctype": "Journal Entry",
+                    "reference_name": je_name,
+                    "docstatus": 1
+                },
+                fields=["parent", "allocated_amount"]
+            )
+            
+        # Combine unique payments to avoid double counting
+        payment_map = {}
+        for p in direct_payments:
+            payment_map[p.name] = flt(p.paid_amount)
+        for p in je_payments:
+            payment_map[p.parent] = flt(p.allocated_amount)
+            
+        paid_amount = sum(payment_map.values())
+        if paid_amount > flt(billing.grand_total):
+            paid_amount = flt(billing.grand_total)
         outstanding_amount = flt(billing.grand_total) - paid_amount
-        if paid_amount >= flt(billing.grand_total):
+        if paid_amount >= flt(billing.grand_total) - 0.005:
             is_paid = 1
             
     # Update the parent Contractor Billing document fields
@@ -256,4 +289,5 @@ def sync_contractor_billing_payment_status(cb_name):
     
     # Update the child records' paid status
     billing.update_paid_status_in_child(is_paid)
+
 
