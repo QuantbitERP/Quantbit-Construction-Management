@@ -254,7 +254,7 @@ def create_sales_invoice(source_name, target_doc=None, item_code=None):
         })
         
         target.run_method("set_missing_values")
-        target.run_method("calculate_taxes_and_totals")
+       
 
     doc = get_mapped_doc(
         "RA Billing",
