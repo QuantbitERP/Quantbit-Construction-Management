@@ -245,7 +245,20 @@ function compute_costs(node) {
 
     return { labour, equipment, material };
 }
+function get_descendant_count(node) {
 
+    if (!node.children || !node.children.length) {
+        return node.custom_is_subtask ? 1 : 0;
+    }
+
+    let total = 0;
+
+    node.children.forEach(child => {
+        total += get_descendant_count(child);
+    });
+
+    return total;
+}
 // ─── Border colors by node type ──────────────────────────────────────────────
 function get_border_color(node_type) {
     if (node_type === "stage") return "#ffffff";
@@ -263,6 +276,11 @@ function render_node(node, depth, frm) {
     let border_color = get_border_color(node_type);
 
     let has_children = node.children && node.children.length > 0;
+    let descendant_count = get_descendant_count(node);
+
+    if (node.custom_is_subtask) {
+        descendant_count = 0;
+    }
     let is_expanded = expanded_nodes.has(node.name);
 
     let icon = has_children ? (is_expanded ? "▼" : "▶") : "•";
@@ -297,16 +315,32 @@ function render_node(node, depth, frm) {
             <button class="btn btn-light btn-xs add-subtask" data-task="${node.name}">+ Subtask</button>`;
     }
     // subtask gets no add button
+    let bg =
+    node_type === "stage"
+        ? "#1a365d"
+        : node_type === "task"
+            ? "#e9c46a"
+            : "#fdf6e3";
+
+    let textColor =
+        node_type === "stage"
+            ? "#ffffff"
+            : "#333333";
 
     let html = `
     <div class="hierarchy-row"
         data-name="${node.name}"
         data-depth="${depth}"
         data-type="${node_type}"
-        style="margin-left:${margin}px; margin-top:10px; padding:12px;
-               background:#1a365d; color:#ffffff;
-               border-left:6px solid ${border_color};
-               border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+        style="margin-left:${margin}px;
+            margin-top:10px;
+            padding:12px;
+            background:${bg};
+            color:${textColor};
+            border-radius:8px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;">
 
         <div class="hover-details">
             <div style="border-bottom:1px solid #444; margin-bottom:5px; font-weight:bold; padding-bottom:3px;">${node.name}</div>
@@ -334,6 +368,7 @@ function render_node(node, depth, frm) {
             <button class="btn btn-light btn-xs assign-item" data-name="${node.name}">👤 Assign</button>
             <button class="btn btn-light btn-xs delete-item" data-name="${node.name}">🗑 Delete</button>
             ${add_child_btn}
+            ${!node.custom_is_subtask && descendant_count > 0 ? `<button class="btn btn-info btn-xs" title="Descendant Count">${descendant_count}</button>` : ''}
             <button class="btn btn-warning btn-xs show-weight" data-name="${node.name}" title="Weight">${node.task_weight || 0}%</button>
         </div>
     </div>`;
@@ -477,6 +512,41 @@ function attach_events(frm, all_tasks) {
         expanded_nodes.clear();
         load_hierarchy(frm);
     });
+        // DELETE TASK
+    wrapper.find(".delete-item").off("click").on("click", function (e) {
+
+        e.stopPropagation();
+
+        let task_name = $(this).data("name");
+
+        frappe.confirm(
+            __("Delete this task and all child tasks?"),
+            function () {
+
+                frappe.call({
+                    method: "quantbit_construction_management.api.delete_task_with_dependencies",
+                    args: {
+                        task_name: task_name
+                    },
+                    freeze: true,
+                    freeze_message: __("Deleting Task..."),
+
+                    callback: function (r) {
+                        frappe.show_alert({
+                            message: __("Task Deleted"),
+                            indicator: "red"
+                        });
+
+                        expanded_nodes.delete(task_name);
+
+                        load_hierarchy(frm);
+                    }
+                });
+
+            }
+        );
+
+    });
 
     // ── Add Stage ────────────────────────────────────────────────────────────
     wrapper.find(".add-stage").off("click").on("click", function () {
@@ -491,6 +561,13 @@ function attach_events(frm, all_tasks) {
                     get_query() {
                         return { filters: { custom_is_stage: 1, is_template: 1 } };
                     }
+                },
+                       {
+                    label: "Weight",
+                    fieldname: "existing_stage_weight",
+                    fieldtype: "Float",
+                    depends_on: "eval:doc.existing_stage",
+                    reqd: 0
                 },
                 {
                     label: "Include Tasks",
@@ -526,7 +603,8 @@ function attach_events(frm, all_tasks) {
                             source_task: values.existing_stage,
                             target_project: frm.doc.name,
                             include_dependencies: values.include_dependencies,
-                            include_children: values.include_children
+                            include_children: values.include_children,
+                            task_weight: values.existing_stage_weight
                         },
                         callback: function (r) {
                             if (r.message) {
@@ -592,6 +670,12 @@ function attach_events(frm, all_tasks) {
                     }
                 },
                 {
+                    label: "Weight",
+                    fieldname: "existing_task_weight",
+                    fieldtype: "Float",
+                    depends_on: "eval:doc.existing_task"
+                },
+                {
                     label: "Include Subtasks",
                     fieldname: "include_children",
                     fieldtype: "Check",
@@ -612,7 +696,8 @@ function attach_events(frm, all_tasks) {
                             source_task: values.existing_task,
                             target_project: frm.doc.name,
                             parent_task: stage,
-                            include_children: values.include_children
+                            include_children: values.include_children,
+                            task_weight: values.existing_task_weight
                         },
                         callback() {
                             frappe.show_alert("New Task Created from existing Task");
@@ -678,6 +763,12 @@ function attach_events(frm, all_tasks) {
                     }
                 },
                 {
+                    label: "Weight",
+                    fieldname: "existing_task_weight",
+                    fieldtype: "Float",
+                    depends_on: "eval:doc.existing_task"
+                },
+                {
                     label: "Include Subtasks",
                     fieldname: "include_children",
                     fieldtype: "Check",
@@ -704,7 +795,8 @@ function attach_events(frm, all_tasks) {
                             source_task: values.existing_task,
                             target_project: frm.doc.name,
                             parent_task: parent_name,
-                            include_children: values.include_children
+                            include_children: values.include_children,
+                            task_weight: values.existing_task_weight
                         },
                         callback() {
                             frappe.show_alert("Child Task Created from existing Task");
@@ -763,6 +855,12 @@ function attach_events(frm, all_tasks) {
                         return { filters: { custom_is_subtask: 1, is_template: 1 } };
                     }
                 },
+                {
+                    label: "Weight",
+                    fieldname: "existing_subtask_weight",
+                    fieldtype: "Float",
+                    depends_on: "eval:doc.existing_subtask"
+                },
                 { fieldtype: "Section Break" },
                 {
                     label: "OR Create New Subtask",
@@ -782,7 +880,8 @@ function attach_events(frm, all_tasks) {
                         args: {
                             source_task: values.existing_subtask,
                             target_project: frm.doc.name,
-                            parent_task: parent_task
+                            parent_task: parent_task,
+                            task_weight: values.existing_subtask_weight
                         },
                         callback() {
                             frappe.show_alert("New Subtask Created from existing Subtask");
@@ -988,50 +1087,4 @@ function attach_events(frm, all_tasks) {
         });
     });
 
-    // ── Delete ───────────────────────────────────────────────────────────────
-    wrapper.find(".delete-item").off("click").on("click", function (e) {
-        e.stopPropagation();
-        let docname = $(this).data("name");
-
-        let has_children = all_tasks.some(t => t.parent_task === docname);
-        if (has_children) {
-            frappe.msgprint({
-                title: __("Cannot Delete"),
-                message: __("This item has children. Please delete the children first."),
-                indicator: "orange"
-            });
-            return;
-        }
-
-        frappe.call({
-            method: "frappe.client.get_list",
-            args: {
-                doctype: "Task Depends On",
-                filters: { task: docname },
-                fields: ["parent"]
-            },
-            callback: function (r) {
-                if (r.message && r.message.length > 0) {
-                    let dependents = r.message.map(d => d.parent).join(", ");
-                    frappe.msgprint({
-                        title: __("Cannot Delete"),
-                        message: __("This task is a dependency for: <b>{0}</b>. Remove these dependencies first.", [dependents]),
-                        indicator: "orange"
-                    });
-                    return;
-                }
-
-                frappe.confirm(__('Are you sure you want to delete {0}?', [docname]), () => {
-                    frappe.call({
-                        method: "frappe.client.delete",
-                        args: { doctype: "Task", name: docname },
-                        callback: function () {
-                            frappe.show_alert({ message: __("Task Deleted"), indicator: "red" });
-                            load_hierarchy(frm);
-                        }
-                    });
-                });
-            }
-        });
-    });
 }
