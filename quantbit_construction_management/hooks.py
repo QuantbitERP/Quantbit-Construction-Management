@@ -273,6 +273,9 @@ doc_events = {
     },
     "Purchase Invoice": {
         "on_update": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_purchase_invoice_update"
+    },
+    "Journal Entry": {
+        "on_update": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_journal_entry_update"
     }
 }
 

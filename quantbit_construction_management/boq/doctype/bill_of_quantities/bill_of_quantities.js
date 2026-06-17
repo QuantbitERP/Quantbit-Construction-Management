@@ -722,6 +722,40 @@ frappe.ui.form.on('Bill of Quantities', {
                 has_data
             );
         }
+
+        if (frm.doc.docstatus === 1 && !frm.doc.project) {
+            frm.add_custom_button(__("Create Project"), () => {
+                frappe.prompt([
+                    {
+                        label: __("Project Name"),
+                        fieldname: "project_name",
+                        fieldtype: "Data",
+                        reqd: 1
+                    }
+                ], function(values) {
+                    frappe.call({
+                        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_project_from_boq",
+                        args: {
+                            boq_name: frm.doc.name,
+                            project_name: values.project_name
+                        },
+                        freeze: true,
+                        freeze_message: __("Creating Project..."),
+                        callback: function(r) {
+                            if (r.message) {
+                                frappe.msgprint({
+                                    title: __("Project Created"),
+                                    message: __("Project <b>{0}</b> has been created and linked successfully.", [r.message]),
+                                    indicator: "green"
+                                });
+                                frm.set_value("project", r.message);
+                                frm.reload_doc();
+                            }
+                        }
+                    });
+                }, __("Create Project"), __("Create"));
+            }).addClass("btn-primary");
+        }
     }
 });
 
