@@ -12,20 +12,41 @@
   "task_subject",
   "subtask",
   "subtask_subject",
-  "description",
+  "task_level1",
+  "level1_subject",
+  "task_level2",
+  "level2_subject",
+  "task_level3",
+  "column_break_txre",
+  "level3_subject",
+  "task_level4",
+  "level4_subject",
+  "task_level5",
+  "level5_subject",
+  "task_level6",
+  "level6_subject",
+  "task_level7",
+  "level7_subject",
+  "task_level8",
+  "level8_subject",
   "column_break_dkzt",
+  "task_level9",
+  "level9_subject",
+  "task_level10",
+  "level10_subject",
   "total_quantity",
   "no1",
   "no2",
+  "column_break_volg",
   "length",
   "width",
   "height",
-  "column_break_volg",
   "quantity",
   "uom",
   "billed_quantity",
   "rate",
-  "amount"
+  "amount",
+  "description"
  ],
  "fields": [
   {
@@ -139,13 +160,147 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "label": "Description"
+  },
+  {
+   "fieldname": "task_level1",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level1.subject",
+   "fieldname": "level1_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level2",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "column_break_txre",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "task_level3",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level2.subject",
+   "fieldname": "level2_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level3.subject",
+   "fieldname": "level3_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level4",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level5",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level6",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level7",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level8",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level9",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level10",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level4.subject",
+   "fieldname": "level4_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level5.subject",
+   "fieldname": "level5_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level6.subject",
+   "fieldname": "level6_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level7.subject",
+   "fieldname": "level7_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level8.subject",
+   "fieldname": "level8_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level9.subject",
+   "fieldname": "level9_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task_level10.subject",
+   "fieldname": "level10_subject",
+   "fieldtype": "Data",
+   "label": "Subject",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-04 14:56:18.357111",
+ "modified": "2026-06-16 17:16:20.172304",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing Details",

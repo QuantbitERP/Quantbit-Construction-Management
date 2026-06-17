@@ -156,19 +156,24 @@ def get_project_tasks(project):
         task = None
         stage = None
 
-        if task_id:
-            task = frappe.db.get_value(
-                "Task",
-                task_id,
-                ["name", "subject", "parent_task"],
-                as_dict=True
-            )
+        hierarchy = []
 
-        if task and task.parent_task:
-            stage = frappe.db.get_value(
+        current_task = subtask
+
+        while current_task:
+
+            hierarchy.insert(0, {
+                "name": current_task.name,
+                "subject": current_task.subject
+            })
+
+            if not current_task.parent_task:
+                break
+
+            current_task = frappe.db.get_value(
                 "Task",
-                task.parent_task,
-                ["name", "subject"],
+                current_task.parent_task,
+                ["name", "subject", "parent_task"],
                 as_dict=True
             )
 
@@ -176,22 +181,42 @@ def get_project_tasks(project):
         rate = flt(subtask.custom_rate)
         achieved_qty = flt(subtask.custom_total_achieved)
         billable_qty = achieved_qty - billed_qty
-
-        result.append({
-            "stage":            stage.subject if stage else "",
-            "stage_id":         stage.name if stage else "",
-            "task_id":          task.name if task else "",
-            "task":             task.subject if task else "",
-            "subtask_id":       subtask.name,
-            "subtask":          subtask.subject,
-            "total_quantity":   subtask.custom_total_quantity,
-            "total_achieved":   achieved_qty,
-            "rate":             rate,
-            "billed_quantity":  billed_qty,
+        row = {
+            "total_quantity": subtask.custom_total_quantity,
+            "total_achieved": achieved_qty,
+            "billed_quantity": billed_qty,
             "billable_quantity": billable_qty,
-            "uom":              subtask.custom_uom
-        })
+            "rate": flt(subtask.custom_rate),
+            "uom": subtask.custom_uom
+        }
 
+        # Map hierarchy sequentially
+        field_order = [
+            "stage",
+            "task",
+            "subtask",
+            "task_level1",
+            "task_level2",
+            "task_level3",
+            "task_level4",
+            "task_level5",
+            "task_level6",
+            "task_level7",
+            "task_level8",
+            "task_level9",
+            "task_level10"
+        ]
+
+        for idx, node in enumerate(hierarchy):
+
+            if idx >= len(field_order):
+                break
+
+            fieldname = field_order[idx]
+
+            row[fieldname] = node["subject"]
+            row[f"{fieldname}_id"] = node["name"]
+        result.append(row)
     return result
 
 @frappe.whitelist()
