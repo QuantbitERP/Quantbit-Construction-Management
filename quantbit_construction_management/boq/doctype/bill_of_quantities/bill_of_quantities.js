@@ -745,7 +745,7 @@ frappe.ui.form.on('Bill of Quantities', {
                             if (r.message) {
                                 frappe.msgprint({
                                     title: __("Project Created"),
-                                    message: __("Project <b>{0}</b> has been created and linked successfully.", [r.message]),
+                                    message: __("Project <a href='/app/project/{0}'><b>{0}</b></a> has been created and linked successfully.", [r.message]),
                                     indicator: "green"
                                 });
                                 frm.set_value("project", r.message);

@@ -581,29 +581,14 @@ def delete_task_with_dependencies(task_name):
 
 @frappe.whitelist()
 def create_project_from_boq(boq_name, project_name):
-    # 1. Validation: At least one Stage, Task, Subtask, and Child Task are mandatory.
+    # 1. Validation: At least one Stage, Task, Subtask, or Child Task is mandatory.
     tasks = frappe.get_all(
         "Task",
         filters={"custom_boq_name": boq_name},
-        fields=["name", "custom_is_stage", "custom_is_task", "custom_is_subtask", "parent_task"]
+        limit=1
     )
-    
-    stage_ids = {t.name for t in tasks if t.custom_is_stage == 1}
-    task_ids = {t.name for t in tasks if t.custom_is_task == 1}
-    
-    has_stage = len(stage_ids) > 0
-    has_task = any(t.custom_is_task == 1 and t.parent_task in stage_ids for t in tasks)
-    has_child_task = any(t.custom_is_task == 1 and t.parent_task in task_ids for t in tasks)
-    has_subtask = any(t.custom_is_subtask == 1 for t in tasks)
-    
-    if not has_stage:
-        frappe.throw("At least one Stage is mandatory to create a project.")
-    if not has_task:
-        frappe.throw("At least one Task is mandatory to create a project.")
-    if not has_child_task:
-        frappe.throw("At least one Child Task is mandatory to create a project.")
-    if not has_subtask:
-        frappe.throw("At least one Subtask is mandatory to create a project.")
+    if not tasks:
+        frappe.throw("At least one Stage, Task, Subtask, or Child Task is mandatory to create a project.")
 
     # 2. Create the Project
     project = frappe.get_doc({
