@@ -3269,19 +3269,6 @@
   "docstatus": 0,
   "doctype": "UOM",
   "enabled": 1,
-  "modified": "2026-03-10 12:16:15.064421",
-  "must_be_whole_number": 0,
-  "name": "Cubic Meter",
-  "symbol": null,
-  "uom_name": "Cubic Meter"
- },
- {
-  "category": null,
-  "common_code": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "UOM",
-  "enabled": 1,
   "modified": "2026-03-10 12:16:15.273343",
   "must_be_whole_number": 0,
   "name": "Square Foot",
@@ -3352,5 +3339,31 @@
   "name": "Ton",
   "symbol": null,
   "uom_name": "Ton"
+ },
+ {
+  "category": null,
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-03-10 12:16:15.064421",
+  "must_be_whole_number": 0,
+  "name": "Cubic Meter",
+  "symbol": null,
+  "uom_name": "Cubic Meter"
+ },
+ {
+  "category": null,
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-06-13 17:52:16.291258",
+  "must_be_whole_number": 0,
+  "name": "NO",
+  "symbol": null,
+  "uom_name": "NO"
  }
 ]

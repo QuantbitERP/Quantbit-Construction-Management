@@ -56,6 +56,20 @@ def clone_task_hierarchy(source_task, target_project, parent_task=None, include_
             clone_task_hierarchy(child.name, target_project, new_task.name, include_dependencies, True)
     return new_task.name
 
+
+@frappe.whitelist()
+def link_boq_tasks_to_project(boq_name, project_name):
+    if not boq_name or not project_name:
+        return False
+
+    frappe.db.sql("""
+        UPDATE `tabTask`
+        SET `project` = %s
+        WHERE `custom_boq_name` = %s
+    """, (project_name, boq_name))
+    frappe.db.commit()
+    return True
+
 @frappe.whitelist()
 def delete_task_with_dependencies(task_name):
     dependencies = frappe.get_all("Task Depends On", filters={"task": task_name}, pluck="name")
