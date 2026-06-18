@@ -756,13 +756,21 @@ frappe.ui.form.on('Bill of Quantities', {
                         fieldname: "project_name",
                         fieldtype: "Data",
                         reqd: 1
+                    },
+                    {
+                        label: __("Site Name"),
+                        fieldname: "site_name",
+                        fieldtype: "Link",
+                        options: "Site",
+                        reqd: 1
                     }
                 ], function(values) {
                     frappe.call({
                         method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_project_from_boq",
                         args: {
                             boq_name: frm.doc.name,
-                            project_name: values.project_name
+                            project_name: values.project_name,  
+                            site_name: values.site_name
                         },
                         freeze: true,
                         freeze_message: __("Creating Project..."),
