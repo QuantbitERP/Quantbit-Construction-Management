@@ -1177,7 +1177,7 @@ function render_row(item, type, is_expanded, depth = 0) {
     if (type !== "subtask") {
         icon = is_expanded ? "▼" : "▶";
     }
-    let progress = item.progress || 0;
+    let progress = flt(item.progress || 0);
     let descendant_count = get_descendant_count(
     window.current_hierarchy_tasks || [],
     item.name
@@ -1206,7 +1206,7 @@ function render_row(item, type, is_expanded, depth = 0) {
          <div><span class="detail-label">Status:</span> ${item.status || 'Open'}</div>
          <div><span class="detail-label">Priority:</span> ${item.priority || 'Medium'}</div>
          <div><span class="detail-label">Weight:</span> ${item.task_weight || 0}</div>
-         <div><span class="detail-label">Progress %:</span> ${item.progress || 0}</div>
+         <div><span class="detail-label">Progress %:</span>${progress.toFixed(2)}</div>
          <div style="margin-top:5px; font-style: italic; color: #ecf0f1;">${item.description || 'No description provided.'}</div>
       </div>
 
@@ -1220,6 +1220,9 @@ function render_row(item, type, is_expanded, depth = 0) {
       </div>
 
     <div style="display:flex; gap:5px; align-items:center;">
+          <button class="btn btn-success btn-xs">
+             ${progress.toFixed(2)}%
+           </button>
     
            <button class="btn ${btnClass} btn-xs redirect-item"
                 data-name="${item.name}"

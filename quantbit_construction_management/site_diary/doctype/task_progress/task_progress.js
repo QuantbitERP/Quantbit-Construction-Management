@@ -17,6 +17,18 @@ frappe.ui.form.on("Task Progress", {
                 }
             };
         };
+        frm.fields_dict.task_progress_details.grid.get_field(
+            "item"
+        ).get_query = function (doc, cdt, cdn) {
+
+            let child = locals[cdt][cdn];
+
+            return {
+                filters: {
+                    "custom_item_type": "Task"
+                }
+            };
+        };
 
         const source_map = {
             task: "parent_task",
@@ -171,15 +183,55 @@ frappe.ui.form.on("Task Progress Details", {
     },
     achieved_today(frm, cdt, cdn) {
         calculate_progress(frm, cdt, cdn);
-        validate_deepest_task(frm, cdt, cdn);
+        calculate_amount(cdt, cdn);
     },
     total_qty(frm, cdt, cdn) {
         calculate_progress(frm, cdt, cdn);
         validate_deepest_task(frm, cdt, cdn);
+    },
+    is_lumsum_task(frm, cdt, cdn) {
+        frappe.model.set_value(cdt, cdn, "item", "");
+        frappe.model.set_value(cdt, cdn, "contractor", "");
+        frappe.model.set_value(cdt, cdn, "uom", "");
+        frappe.model.set_value(cdt, cdn, "rate", "");
+        frappe.model.set_value(cdt, cdn, "amount", "");
+    },
+   item(frm, cdt, cdn) {
+    let row = locals[cdt][cdn];
+
+    if (!row.contractor || !row.item) return;
+
+    frappe.db.get_doc("Contractor", row.contractor).then(doc => {
+
+        let contractor_item = (doc.site_diary_contractor_item_details || []).find(
+            d => d.item === row.item
+        );
+        if (contractor_item) {
+            frappe.model.set_value(cdt, cdn, "rate", contractor_item.rate);
+            frappe.model.set_value(cdt, cdn, "uom", contractor_item.uom);
+            setTimeout(() => {
+                calculate_amount(cdt, cdn);
+            }, 100);
+        } else {
+            let item_code = row.item;
+            frappe.db.get_value("Item", item_code, "item_name")
+                .then(r => {
+                    let item_name = r.message.item_name || item_code;
+                    frappe.model.set_value(cdt, cdn, "item", "");
+                    frappe.throw(
+                        __("Please add Item <strong>{0}</strong> in Contractor Item Details for Contractor <strong>{1}</strong>.",
+                        [item_name, row.contractor])
+                    );
+                });
+        }
+    });
     }
-
-});
-
+}); 
+function calculate_amount(cdt, cdn) {
+    let row = locals[cdt][cdn];
+    let amount = flt(row.achieved_today) * flt(row.rate);
+    frappe.model.set_value(cdt, cdn, "amount", amount);
+}
 function get_deepest_task(frm, cdt, cdn) {
     const row = locals[cdt][cdn];
 
@@ -212,27 +264,8 @@ function get_deepest_task(frm, cdt, cdn) {
     return last_task;
 }
 
-// function validate_deepest_task(frm, cdt, cdn) {
-//     let task = get_deepest_task(frm, cdt, cdn);
-//     if (!task) return;
-
-//     frappe.db.get_value('Task', task, ['custom_is_subtask', 'subject'])
-//         .then(r => {
-//             let data = r.message;
-
-//             let is_subtask = data ? data.custom_is_subtask : 0;
-//             let subject = data ? data.subject : '';
-
-//             if (!is_subtask) {
-//                 frappe.throw(`Task "${subject}" is not a subtask.`);
-//             }
-//         });
-// }
-
-
 function refresh_task_levels(frm, cdt, cdn) {
     const row = locals[cdt][cdn];
-
     const levels = [
         "task",
         "task_level1",
@@ -246,9 +279,7 @@ function refresh_task_levels(frm, cdt, cdn) {
         "task_level9",
         "task_level10"
     ];
-
     let visible_level = 1;
-
     // 1. find deepest filled level
     for (let i = 0; i < levels.length; i++) {
         if (row[levels[i]]) {
@@ -257,7 +288,6 @@ function refresh_task_levels(frm, cdt, cdn) {
             break;
         }
     }
-
     // 2. dependency check ONLY on deepest level
     const deepest_field = levels[visible_level - 1];
     const deepest_task = row[deepest_field];

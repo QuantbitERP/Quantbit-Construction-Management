@@ -33,13 +33,18 @@
   "task_level10",
   "level10_subject",
   "column_break_uawl",
-  "uom",
   "total_qty",
   "achieved_today",
   "planned_today",
+  "is_lumsum_task",
+  "contractor",
+  "item",
+  "uom",
+  "rate",
   "column_break_uhda",
   "total_achieved",
-  "percent_completed"
+  "percent_completed",
+  "amount"
  ],
  "fields": [
   {
@@ -82,8 +87,7 @@
    "read_only": 1
   },
   {
-   "fetch_from": "task.custom_uom",
-   "fetch_if_empty": 1,
+   "depends_on": "eval:doc.is_lumsum_task==1",
    "fieldname": "uom",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -264,13 +268,45 @@
    "fieldtype": "Data",
    "label": "Subject",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_lumsum_task",
+   "fieldtype": "Check",
+   "label": "Is Lumsum Task"
+  },
+  {
+   "depends_on": "eval:doc.is_lumsum_task==1",
+   "fieldname": "contractor",
+   "fieldtype": "Link",
+   "label": "Contractor",
+   "options": "Contractor"
+  },
+  {
+   "depends_on": "eval:doc.is_lumsum_task==1",
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "depends_on": "eval:doc.is_lumsum_task==1",
+   "fieldname": "rate",
+   "fieldtype": "Float",
+   "label": "Rate"
+  },
+  {
+   "depends_on": "eval:doc.is_lumsum_task==1",
+   "fieldname": "amount",
+   "fieldtype": "Float",
+   "label": "Amount"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-13 10:09:51.594045",
+ "modified": "2026-06-18 15:53:23.614450",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Task Progress Details",

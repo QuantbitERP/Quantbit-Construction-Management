@@ -100,7 +100,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Type",
-   "options": "\nManpower\nEquipment",
+   "options": "\nManpower\nEquipment\nTask",
    "reqd": 1
   },
   {
@@ -202,7 +202,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-06-15 17:28:57.930980",
+ "modified": "2026-06-18 16:08:07.661000",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "Contractor Billing",

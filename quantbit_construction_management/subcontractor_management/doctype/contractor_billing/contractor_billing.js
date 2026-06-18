@@ -29,10 +29,6 @@ frappe.ui.form.on("Contractor Billing", {
 		}
     },
 
-
-
-    
-
     get_details: async function(frm) {
 
         if (!frm.doc.project || !frm.doc.start_date || !frm.doc.end_date || !frm.doc.contractor || !frm.doc.type) {
@@ -48,11 +44,15 @@ frappe.ui.form.on("Contractor Billing", {
 
         if (frm.doc.type === "Manpower") {
             doctype = "Manpower Usage";
-            child_table = "manpower_usage"; // change if different
+            child_table = "manpower_usage"; 
         }
         else if (frm.doc.type === "Equipment") {
             doctype = "Equipment Usage";
-            child_table = "equipment_usage_details"; // change if different
+            child_table = "equipment_usage_details"; 
+        }
+        else if (frm.doc.type === "Task") {
+            doctype = "Task Progress";
+            child_table = "task_progress_details"; 
         }
 
         // get filtered parent docs
@@ -100,7 +100,7 @@ frappe.ui.form.on("Contractor Billing", {
                 child.site_date = data.site_date;
                 child.item = row.equipment_item || row.item;
                 child.uom = row.uom;
-                child.quantity = row.quantity || row.qty;
+                child.quantity = row.quantity || row.qty || row.achieved_today;
                 child.rate = row.rate;
                 child.working_hrs = row.working_hrs;
                 child.amount = row.amount;
