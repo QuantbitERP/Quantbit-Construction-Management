@@ -1,0 +1,13 @@
+[
+ {
+  "dimension_defaults": [],
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Accounting Dimension",
+  "document_type": "Site",
+  "fieldname": "site",
+  "label": "Site",
+  "modified": "2026-06-18 11:37:41.125379",
+  "name": "Site"
+ }
+]
