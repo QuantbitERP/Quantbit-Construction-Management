@@ -18,16 +18,39 @@ frappe.ui.form.on('Project', {
         }
     },
     custom_bill_of_quantities: function (frm) {
-        if (frm.doc.custom_bill_of_quantities && typeof load_hierarchy === "function") {
-            load_hierarchy(frm);
+        if (!frm.doc.custom_bill_of_quantities) {
+            frm.fields_dict.custom_task_hierarchy.$wrapper.html('');
         }
     },
     custom_get_details: function (frm) {
-        if (frm.doc.name && typeof load_hierarchy === "function") {
-            load_hierarchy(frm);
+        if (!frm.doc.custom_bill_of_quantities) {
+            frappe.msgprint(__("Please select a Bill of Quantities first."));
+            return;
+        }
+        if (frm.is_new() || frm.is_dirty()) {
+            frm.save().then(() => {
+                link_and_load_hierarchy(frm);
+            });
+        } else {
+            link_and_load_hierarchy(frm);
         }
     }
 });
+
+function link_and_load_hierarchy(frm) {
+    frappe.call({
+        method: "quantbit_construction_management.api.link_boq_tasks_to_project",
+        args: {
+            boq_name: frm.doc.custom_bill_of_quantities,
+            project_name: frm.doc.name
+        },
+        callback: function (r) {
+            if (r.message && typeof load_hierarchy === "function") {
+                load_hierarchy(frm);
+            }
+        }
+    });
+}
 
 function render_report_view(frm) {
     if (!frm.doc.custom_report_name_) return;
