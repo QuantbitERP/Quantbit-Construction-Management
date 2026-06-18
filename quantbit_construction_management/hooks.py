@@ -47,6 +47,16 @@ fixtures = [
     {
         "doctype": "UOM Conversion Rate"
     },
+
+    {
+        "dt": "Accounting Dimension", "filters": [
+            [
+                "name", "in", [
+                    "Site"
+                ]
+            ]
+        ]
+    },
     {
         "doctype": "Role"
     },

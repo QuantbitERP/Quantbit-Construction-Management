@@ -580,7 +580,7 @@ def delete_task_with_dependencies(task_name):
     return True
 
 @frappe.whitelist()
-def create_project_from_boq(boq_name, project_name):
+def create_project_from_boq(boq_name, project_name,site_name):
     # 1. Validation: At least one Stage, Task, Subtask, or Child Task is mandatory.
     tasks = frappe.get_all(
         "Task",
@@ -595,7 +595,8 @@ def create_project_from_boq(boq_name, project_name):
         "doctype": "Project",
         "project_name": project_name,
         "status": "Open",
-        "custom_bill_of_quantities": boq_name
+        "custom_bill_of_quantities": boq_name,
+        "custom_site": site_name
     })
     project.insert(ignore_permissions=True)
     
