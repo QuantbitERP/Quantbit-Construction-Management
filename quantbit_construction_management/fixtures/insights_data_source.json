@@ -1,0 +1,38 @@
+[
+ {
+  "allow_imports": 1,
+  "connection_string": null,
+  "database_name": null,
+  "database_type": "SQLite",
+  "docstatus": 0,
+  "doctype": "Insights Data Source",
+  "host": null,
+  "is_site_db": 0,
+  "modified": "2022-01-01 00:01:00",
+  "name": "Query Store",
+  "password": null,
+  "port": null,
+  "status": "Active",
+  "title": "Query Store",
+  "use_ssl": 0,
+  "username": null
+ },
+ {
+  "allow_imports": 0,
+  "connection_string": null,
+  "database_name": null,
+  "database_type": "MariaDB",
+  "docstatus": 0,
+  "doctype": "Insights Data Source",
+  "host": null,
+  "is_site_db": 1,
+  "modified": "2022-01-01 00:01:00",
+  "name": "Site DB",
+  "password": null,
+  "port": null,
+  "status": "Active",
+  "title": "Site DB",
+  "use_ssl": 0,
+  "username": null
+ }
+]

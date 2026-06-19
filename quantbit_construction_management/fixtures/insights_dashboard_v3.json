@@ -1,0 +1,249 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Insights Dashboard v3",
+  "has_workbook_access": true,
+  "is_public": 0,
+  "is_shared_with_organization": false,
+  "items": "[\n {\n  \"filter_name\": \"Project\",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"4qxk5i7q\",\n   \"moved\": false,\n   \"w\": 8,\n   \"x\": 0,\n   \"y\": 0\n  },\n  \"links\": {\n   \"1707gpp6iq\": \"`q7ebq8t9fr`.`project_name`\",\n   \"29cmu6vdhl\": \"`q7ebq8t9fr`.`project_name`\",\n   \"2o2ohde5mm\": \"`q7ebq8t9fr`.`project_name`\",\n   \"3imbb8tv4k\": \"`q7ebq8t9fr`.`project_name`\",\n   \"96t4od2cs6\": \"`q7ebq8t9fr`.`project_name`\",\n   \"a9lucusl2p\": \"`mlcr20vqge`.`project_name`\",\n   \"iju521f1nl\": \"`vsm4sfctc9`.`project`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"chart\": \"96t4od2cs6\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"cr1yc11z\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"1707gpp6iq\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"92gt8ely\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"29cmu6vdhl\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"25u7tu2.\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 8,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"3imbb8tv4k\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"bmcdcsun\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 12,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"2o2ohde5mm\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"2sxvyu7j\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 16,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"a9lucusl2p\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"lndfje48\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"iju521f1nl\",\n  \"layout\": {\n   \"h\": 9,\n   \"i\": \"1q6pusq2\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 7\n  },\n  \"type\": \"chart\"\n },\n {\n  \"filter_name\": \"Task\",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"hmclc2f5\",\n   \"moved\": false,\n   \"w\": 12,\n   \"x\": 8,\n   \"y\": 0\n  },\n  \"links\": {\n   \"iju521f1nl\": \"`vsm4sfctc9`.`task_name`\"\n  },\n  \"type\": \"filter\"\n }\n]",
+  "linked_charts": [
+   {
+    "chart": "96t4od2cs6"
+   },
+   {
+    "chart": "1707gpp6iq"
+   },
+   {
+    "chart": "29cmu6vdhl"
+   },
+   {
+    "chart": "3imbb8tv4k"
+   },
+   {
+    "chart": "2o2ohde5mm"
+   },
+   {
+    "chart": "a9lucusl2p"
+   },
+   {
+    "chart": "iju521f1nl"
+   }
+  ],
+  "modified": "2026-06-19 17:26:29.056730",
+  "name": "cqs8ndnl9p",
+  "old_name": null,
+  "people_with_access": [
+   {
+    "email": "vivek.kumbhar@erpdata.in",
+    "full_name": "vivek",
+    "user_image": null
+   },
+   {
+    "email": "vedika.patil@erpdata.in",
+    "full_name": "Vedika",
+    "user_image": null
+   }
+  ],
+  "preview_image": "/private/files/0jp64svfi0-preview.jpeg?a7bd",
+  "read_only": false,
+  "share_link": null,
+  "title": "CMS- Project Manager",
+  "vertical_compact_layout": 0,
+  "workbook": "1"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Insights Dashboard v3",
+  "has_workbook_access": true,
+  "is_public": 0,
+  "is_shared_with_organization": false,
+  "items": "[\n {\n  \"chart\": \"96t4od2cs6\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"czv905f4\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"1707gpp6iq\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"iqifhaqf\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"29cmu6vdhl\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"32fw5iml\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 12,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"2o2ohde5mm\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"5wybkp6f\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"3imbb8tv4k\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"k79d58r9\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 8,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"j0mudnvltf\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"4naodlnf\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"jg3aqi6664\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"fwh9ug66\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 8,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"filter_name\": \"Project\",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"5x6fx0b5\",\n   \"moved\": false,\n   \"w\": 16,\n   \"x\": 0,\n   \"y\": 0\n  },\n  \"links\": {\n   \"1707gpp6iq\": \"`q7ebq8t9fr`.`project_name`\",\n   \"29cmu6vdhl\": \"`q7ebq8t9fr`.`project_name`\",\n   \"2o2ohde5mm\": \"`q7ebq8t9fr`.`project_name`\",\n   \"3imbb8tv4k\": \"`q7ebq8t9fr`.`project_name`\",\n   \"73sj3j914s\": \"`6nelkom1gd`.`Project Name`\",\n   \"96t4od2cs6\": \"`q7ebq8t9fr`.`project_name`\",\n   \"bnvl9c91ce\": \"`k091ffcoul`.`Project Name`\",\n   \"j0mudnvltf\": \"`q7ebq8t9fr`.`project_name`\",\n   \"jg3aqi6664\": \"`q7ebq8t9fr`.`project_name`\",\n   \"kkvqlmlken\": \"`j153j5n35b`.`Project Name`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"chart\": \"73sj3j914s\",\n  \"layout\": {\n   \"h\": 8,\n   \"i\": \"dqbadh3u\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 7\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"bnvl9c91ce\",\n  \"layout\": {\n   \"h\": 8,\n   \"i\": \"2mmsb3pu\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 15\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"kkvqlmlken\",\n  \"layout\": {\n   \"h\": 8,\n   \"i\": \"2vc4dhnz\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 23\n  },\n  \"type\": \"chart\"\n }\n]",
+  "linked_charts": [
+   {
+    "chart": "96t4od2cs6"
+   },
+   {
+    "chart": "1707gpp6iq"
+   },
+   {
+    "chart": "29cmu6vdhl"
+   },
+   {
+    "chart": "2o2ohde5mm"
+   },
+   {
+    "chart": "3imbb8tv4k"
+   },
+   {
+    "chart": "j0mudnvltf"
+   },
+   {
+    "chart": "jg3aqi6664"
+   },
+   {
+    "chart": "73sj3j914s"
+   },
+   {
+    "chart": "bnvl9c91ce"
+   },
+   {
+    "chart": "kkvqlmlken"
+   }
+  ],
+  "modified": "2026-06-19 17:27:05.398204",
+  "name": "c4t86jrvkn",
+  "old_name": null,
+  "people_with_access": [
+   {
+    "email": "vedika.patil@erpdata.in",
+    "full_name": "Vedika",
+    "user_image": null
+   }
+  ],
+  "preview_image": "/private/files/0jp64svfi0-preview.jpeg?60e7",
+  "read_only": false,
+  "share_link": null,
+  "title": "CMS - Finance Manager  ",
+  "vertical_compact_layout": 0,
+  "workbook": "1"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Insights Dashboard v3",
+  "has_workbook_access": true,
+  "is_public": 0,
+  "is_shared_with_organization": false,
+  "items": "[\n {\n  \"chart\": \"109ekhsheu\",\n  \"layout\": {\n   \"h\": 9,\n   \"i\": \"5soo4vap\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"3vcahfffb5\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"df8ijv00\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 10\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"4gp3nu07eh\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"8azbxubb\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 10\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"4tbquhonok\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"hi5xsgpo\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 8,\n   \"y\": 10\n  },\n  \"type\": \"chart\"\n },\n {\n  \"filter_name\": \"Site\",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"gloviip9\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 0\n  },\n  \"links\": {\n   \"109ekhsheu\": \"`c6l3aj7u4l`.`Site`\",\n   \"3vcahfffb5\": \"`c6l3aj7u4l`.`Site`\",\n   \"4gp3nu07eh\": \"`c6l3aj7u4l`.`Site`\",\n   \"4tbquhonok\": \"`c6l3aj7u4l`.`Site`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"filter_name\": \"Project\",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"adnmri8g\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 0\n  },\n  \"links\": {\n   \"109ekhsheu\": \"`c6l3aj7u4l`.`Site`\",\n   \"3vcahfffb5\": \"`c6l3aj7u4l`.`Site`\",\n   \"4gp3nu07eh\": \"`c6l3aj7u4l`.`Site`\",\n   \"4tbquhonok\": \"`c6l3aj7u4l`.`Site`\",\n   \"i202g6qg9e\": \"`c6l3aj7u4l`.`Site`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"chart\": \"i202g6qg9e\",\n  \"layout\": {\n   \"h\": 9,\n   \"i\": \"fvbqqhc.\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 13\n  },\n  \"type\": \"chart\"\n }\n]",
+  "linked_charts": [
+   {
+    "chart": "109ekhsheu"
+   },
+   {
+    "chart": "3vcahfffb5"
+   },
+   {
+    "chart": "4gp3nu07eh"
+   },
+   {
+    "chart": "4tbquhonok"
+   },
+   {
+    "chart": "i202g6qg9e"
+   }
+  ],
+  "modified": "2026-06-19 16:41:12.642264",
+  "name": "2t1jvrg9q1",
+  "old_name": null,
+  "people_with_access": [],
+  "preview_image": "/private/files/0jp64svfi0-preview.jpeg?57d7",
+  "read_only": false,
+  "share_link": null,
+  "title": "BOQ Estimation",
+  "vertical_compact_layout": 0,
+  "workbook": "1"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Insights Dashboard v3",
+  "has_workbook_access": true,
+  "is_public": 0,
+  "is_shared_with_organization": false,
+  "items": "[\n {\n  \"chart\": \"jj9jdoej48\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"l6gy4pww\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"o42l5dk99s\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"jqb076sz\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"filter_name\": \"Date\",\n  \"filter_type\": \"Date\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"d5btm9b9\",\n   \"moved\": false,\n   \"w\": 8,\n   \"x\": 0,\n   \"y\": 0\n  },\n  \"links\": {\n   \"28qrcs8kit\": \"`usjn0sfrju`.`Posting Date`\",\n   \"jj9jdoej48\": \"`3pikjepaj5`.`usage_date`\",\n   \"o42l5dk99s\": \"`mkpu36v8bb`.`usage_date`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"chart\": \"psu47udhoj\",\n  \"layout\": {\n   \"h\": 8,\n   \"i\": \"ja8s7hlz\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"filter_name\": \"Project\",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"4v3qado3\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 8,\n   \"y\": 0\n  },\n  \"links\": {\n   \"28qrcs8kit\": \"`usjn0sfrju`.`Project Name`\",\n   \"psu47udhoj\": \"`cjehb5hrpn`.`Project Name`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"chart\": \"28qrcs8kit\",\n  \"layout\": {\n   \"h\": 8,\n   \"i\": \"gshv6iyd\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 12\n  },\n  \"type\": \"chart\"\n }\n]",
+  "linked_charts": [
+   {
+    "chart": "jj9jdoej48"
+   },
+   {
+    "chart": "o42l5dk99s"
+   },
+   {
+    "chart": "psu47udhoj"
+   },
+   {
+    "chart": "28qrcs8kit"
+   }
+  ],
+  "modified": "2026-06-19 17:26:51.259036",
+  "name": "1a95a6o76h",
+  "old_name": null,
+  "people_with_access": [
+   {
+    "email": "vivek.kumbhar@erpdata.in",
+    "full_name": "vivek",
+    "user_image": null
+   },
+   {
+    "email": "vedika.patil@erpdata.in",
+    "full_name": "Vedika",
+    "user_image": null
+   }
+  ],
+  "preview_image": "/private/files/0jp64svfi0-preview.jpeg?a13d",
+  "read_only": false,
+  "share_link": null,
+  "title": "CMS - Site Manager",
+  "vertical_compact_layout": 0,
+  "workbook": "1"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Insights Dashboard v3",
+  "has_workbook_access": true,
+  "is_public": 0,
+  "is_shared_with_organization": false,
+  "items": "[\n {\n  \"filter_name\": \"Site\",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"dvsh6rm2\",\n   \"moved\": false,\n   \"w\": 6,\n   \"x\": 0,\n   \"y\": 0\n  },\n  \"links\": {\n   \"1707gpp6iq\": \"`q7ebq8t9fr`.`site_name`\",\n   \"29cmu6vdhl\": \"`q7ebq8t9fr`.`site_name`\",\n   \"2o2ohde5mm\": \"`q7ebq8t9fr`.`site_name`\",\n   \"3imbb8tv4k\": \"`q7ebq8t9fr`.`site_name`\",\n   \"96t4od2cs6\": \"`q7ebq8t9fr`.`site_name`\",\n   \"j0mudnvltf\": \"`q7ebq8t9fr`.`site_name`\",\n   \"jg3aqi6664\": \"`q7ebq8t9fr`.`site_name`\",\n   \"qt6hu1ivq5\": \"`mlcr20vqge`.`site_name`\",\n   \"vv2aobaq2i\": \"`q7ebq8t9fr`.`site_name`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"filter_name\": \"Project \",\n  \"filter_type\": \"String\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"ccr43dga\",\n   \"moved\": false,\n   \"w\": 5,\n   \"x\": 6,\n   \"y\": 0\n  },\n  \"links\": {\n   \"1707gpp6iq\": \"`q7ebq8t9fr`.`project_name`\",\n   \"29cmu6vdhl\": \"`q7ebq8t9fr`.`project_name`\",\n   \"2o2ohde5mm\": \"`q7ebq8t9fr`.`project_name`\",\n   \"3imbb8tv4k\": \"`q7ebq8t9fr`.`project_name`\",\n   \"96t4od2cs6\": \"`q7ebq8t9fr`.`project_name`\",\n   \"j0mudnvltf\": \"`q7ebq8t9fr`.`project_name`\",\n   \"jg3aqi6664\": \"`q7ebq8t9fr`.`project_name`\",\n   \"kkvqlmlken\": \"`j153j5n35b`.`Project Name`\",\n   \"nlulg8aqlr\": \"`mk4dbvnck2`.`Project`\",\n   \"qt6hu1ivq5\": \"`mlcr20vqge`.`project_name`\",\n   \"vv2aobaq2i\": \"`q7ebq8t9fr`.`project_name`\"\n  },\n  \"type\": \"filter\"\n },\n {\n  \"chart\": \"96t4od2cs6\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"axqsxbic\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"j0mudnvltf\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"f5nqyenc\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"jg3aqi6664\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"kbannyjr\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 8,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"1707gpp6iq\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"13qc9w14\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 12,\n   \"y\": 1\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"29cmu6vdhl\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"kyurjzmh\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 0,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"2o2ohde5mm\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"4je1egcu\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 8,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"3imbb8tv4k\",\n  \"layout\": {\n   \"h\": 3,\n   \"i\": \"3ct1tgg6\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 4,\n   \"y\": 4\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"qt6hu1ivq5\",\n  \"layout\": {\n   \"h\": 8,\n   \"i\": \"mcw6mdst\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 7\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"kkvqlmlken\",\n  \"layout\": {\n   \"h\": 8,\n   \"i\": \"hpnp4df8\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 15\n  },\n  \"type\": \"chart\"\n },\n {\n  \"chart\": \"nlulg8aqlr\",\n  \"layout\": {\n   \"h\": 9,\n   \"i\": \"ic849pi5\",\n   \"moved\": false,\n   \"w\": 20,\n   \"x\": 0,\n   \"y\": 23\n  },\n  \"type\": \"chart\"\n },\n {\n  \"filter_name\": \"Date\",\n  \"filter_type\": \"Date\",\n  \"layout\": {\n   \"h\": 1,\n   \"i\": \"lpo2deca\",\n   \"moved\": false,\n   \"w\": 4,\n   \"x\": 11,\n   \"y\": 0\n  },\n  \"links\": {\n   \"nlulg8aqlr\": \"`mk4dbvnck2`.`Posting Date`\"\n  },\n  \"type\": \"filter\"\n }\n]",
+  "linked_charts": [
+   {
+    "chart": "96t4od2cs6"
+   },
+   {
+    "chart": "j0mudnvltf"
+   },
+   {
+    "chart": "jg3aqi6664"
+   },
+   {
+    "chart": "1707gpp6iq"
+   },
+   {
+    "chart": "29cmu6vdhl"
+   },
+   {
+    "chart": "2o2ohde5mm"
+   },
+   {
+    "chart": "3imbb8tv4k"
+   },
+   {
+    "chart": "qt6hu1ivq5"
+   },
+   {
+    "chart": "kkvqlmlken"
+   },
+   {
+    "chart": "nlulg8aqlr"
+   }
+  ],
+  "modified": "2026-06-19 10:24:06.504939",
+  "name": "0jp64svfi0",
+  "old_name": null,
+  "people_with_access": [
+   {
+    "email": "vedika.patil@erpdata.in",
+    "full_name": "Vedika",
+    "user_image": null
+   },
+   {
+    "email": "akshay.m@erpdata.in",
+    "full_name": "Akshay",
+    "user_image": null
+   }
+  ],
+  "preview_image": "/private/files/0jp64svfi0-preview.jpeg?f294",
+  "read_only": false,
+  "share_link": null,
+  "title": "CMS- Top Management",
+  "vertical_compact_layout": 0,
+  "workbook": "1"
+ }
+]
