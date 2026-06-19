@@ -33,13 +33,17 @@ doctype_js = {
 }
 
 fixtures = [
+
     {
-        "doctype": "Custom Field",
+        "dt": "Custom Field",
         "filters": [
-            ["dt", "in", ["Task", "Project","Item","Warehouse", "Stock Entry Detail", "Journal Entry", "Payment Entry", "Sales Invoice", "Purchase Invoice"]]
+            [
+                "module",
+                "in",
+                ["Quantbit Construction Management"]
+            ]
         ]
     },
-
     {
         "doctype": "UOM"
     },

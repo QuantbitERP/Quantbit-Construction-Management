@@ -2,6 +2,13 @@
  {
   "docstatus": 0,
   "doctype": "Item Type",
+  "item_type_name": "Task",
+  "modified": "2026-06-18 15:33:43.665998",
+  "name": "Task"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Item Type",
   "item_type_name": "Tools",
   "modified": "2026-06-12 13:18:05.121628",
   "name": "Tools"
@@ -37,7 +44,7 @@
  {
   "docstatus": 0,
   "doctype": "Item Type",
-  "item_type_name": "steel",
+  "item_type_name": "Steel",
   "modified": "2026-06-04 12:11:35.354052",
   "name": "steel"
  }
