@@ -590,13 +590,16 @@ def create_project_from_boq(boq_name, project_name,site_name):
     if not tasks:
         frappe.throw("At least one Stage, Task, Subtask, or Child Task is mandatory to create a project.")
 
+    contract_value = frappe.db.get_value("Bill of Quantities", boq_name, "contract_value") or 0.0
+
     # 2. Create the Project
     project = frappe.get_doc({
         "doctype": "Project",
         "project_name": project_name,
         "status": "Open",
         "custom_bill_of_quantities": boq_name,
-        "custom_site": site_name
+        "custom_site": site_name,
+        "custom_contractalu_v": contract_value
     })
     project.insert(ignore_permissions=True)
     
