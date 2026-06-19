@@ -1,4 +1,6 @@
 window.expanded_nodes = window.expanded_nodes || new Set();
+window.last_project_progress =
+    window.last_project_progress || null;
 
 frappe.ui.form.on('Project', {
     refresh: function (frm) {
@@ -87,12 +89,12 @@ function render_report_view(frm) {
     });
 }
 
-frappe.realtime.on("project_progress_refresh", (data) => {
-    if (!cur_frm || cur_frm.doc.doctype !== "Project") return;
-    if (cur_frm.doc.name === data.project) {
-        load_hierarchy(cur_frm);
-    }
-});
+// frappe.realtime.on("project_progress_refresh", (data) => {
+//     if (!cur_frm || cur_frm.doc.doctype !== "Project") return;
+//     if (cur_frm.doc.name === data.project) {
+//         load_hierarchy(cur_frm);
+//     }
+// });
 
 function inject_hierarchy_css() {
     const css = `
@@ -282,6 +284,48 @@ function get_descendant_count(node) {
 
     return total;
 }
+function calculate_progress(node) {
+    // Leaf node (subtask)
+    if (!node.children || node.children.length === 0) {
+        return flt(node.progress || 0);
+    }
+    let total_progress = 0;
+    node.children.forEach(child => {
+        let child_progress = calculate_progress(child);
+        total_progress += (
+            flt(child.task_weight || 0) *
+            flt(child_progress)
+        ) / 100;
+
+    });
+    node.calculated_progress = total_progress;
+    frappe.call({
+    method: "frappe.client.set_value",
+    args: {
+        doctype: "Task",
+        name: node.name,
+        fieldname: {
+            progress: flt(total_progress)
+        }
+    }
+});
+    return total_progress;
+}
+function calculate_project_progress(roots) {
+    let project_progress = 0;
+    roots.forEach(stage => {
+        let stage_progress =
+            flt(stage.calculated_progress || 0);
+
+        project_progress += (
+            flt(stage.task_weight || 0) *
+            stage_progress
+        ) / 100;
+
+    });
+
+    return project_progress;
+}
 // ─── Border colors by node type ──────────────────────────────────────────────
 function get_border_color(node_type) {
     if (node_type === "stage") return "#ffffff";
@@ -308,7 +352,12 @@ function render_node(node, depth, frm) {
 
     let icon = has_children ? (is_expanded ? "▼" : "▶") : "•";
 
-    let progress = flt(node.progress || 0);
+   // let progress = flt(node.progress || 0);
+    let progress = flt(
+    node.calculated_progress != null
+        ? node.calculated_progress
+        : node.progress || 0
+    );
     let progress_color = "#fb8c00";
     if (progress >= 100) progress_color = "#2ecc71";
     else if (progress > 70) progress_color = "#27ae60";
@@ -385,7 +434,7 @@ function render_node(node, depth, frm) {
         </div>
 
         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
-            <button class="btn btn-success btn-xs" title="Progress">${node.progress || 0}%</button>
+            <button class="btn btn-success btn-xs" title="Progress">${progress.toFixed(2)}%</button>
             <button class="btn btn-light btn-xs redirect-item" data-name="${node.name}" title="Open Form View">Redirect</button>
             <button class="btn btn-light btn-xs edit-item" data-name="${node.name}">✏ Edit</button>
             <button class="btn btn-light btn-xs assign-item" data-name="${node.name}">👤 Assign</button>
@@ -431,12 +480,39 @@ function load_hierarchy(frm) {
         },
         callback: function (r) {
             if (!r.message) return;
-
             const tasks = r.message;
-
             // Build recursive tree
             let roots = build_tree(tasks);
+            roots.forEach(root => {
+                compute_costs(root);
+                calculate_progress(root);
+            });
+            let project_progress = calculate_project_progress(roots);
+            let progress_value = flt(project_progress);
+            if (
+            window.last_project_progress === null ||
+            Math.abs(
+                flt(window.last_project_progress) -
+                progress_value
+            ) > 0.01
+        ) {
 
+            window.last_project_progress =
+                progress_value;
+            frappe.call({
+                method: "frappe.client.set_value",
+                args: {
+                    doctype: "Project",
+                    name: frm.doc.name,
+                    fieldname: {
+                        percent_complete: progress_value
+                    }
+                },
+                callback: function () {
+                    frm.doc.percent_complete = progress_value;
+                }
+            });
+        }
             // Roll up costs recursively
             roots.forEach(root => compute_costs(root));
 
@@ -461,18 +537,6 @@ function load_hierarchy(frm) {
             attach_events(frm, tasks);
         }
     });
-}
-
-function calculate_project_progress(tasks) {
-    let total = 0;
-    let count = 0;
-    tasks.forEach(t => {
-        if (t.custom_is_stage) {
-            total += flt(t.progress || 0);
-            count++;
-        }
-    });
-    return count ? (total / count).toFixed(2) : 0;
 }
 
 function render_total_row(label, total, margin_left) {
@@ -627,7 +691,8 @@ function attach_events(frm, all_tasks) {
                             target_project: frm.doc.name,
                             include_dependencies: values.include_dependencies,
                             include_children: values.include_children,
-                            task_weight: values.existing_stage_weight
+                            task_weight: values.existing_stage_weight,
+                            custom_boq_name: frm.doc.custom_bill_of_quantities,
                         },
                         callback: function (r) {
                             if (r.message) {
@@ -720,7 +785,8 @@ function attach_events(frm, all_tasks) {
                             target_project: frm.doc.name,
                             parent_task: stage,
                             include_children: values.include_children,
-                            task_weight: values.existing_task_weight
+                            task_weight: values.existing_task_weight,
+                            custom_boq_name: frm.doc.custom_bill_of_quantities
                         },
                         callback() {
                             frappe.show_alert("New Task Created from existing Task");
@@ -819,7 +885,8 @@ function attach_events(frm, all_tasks) {
                             target_project: frm.doc.name,
                             parent_task: parent_name,
                             include_children: values.include_children,
-                            task_weight: values.existing_task_weight
+                            task_weight: values.existing_task_weight,
+                            custom_boq_name: frm.doc.custom_bill_of_quantities,
                         },
                         callback() {
                             frappe.show_alert("Child Task Created from existing Task");
@@ -904,7 +971,8 @@ function attach_events(frm, all_tasks) {
                             source_task: values.existing_subtask,
                             target_project: frm.doc.name,
                             parent_task: parent_task,
-                            task_weight: values.existing_subtask_weight
+                            task_weight: values.existing_subtask_weight,
+                            custom_boq_name: frm.doc.custom_bill_of_quantities
                         },
                         callback() {
                             frappe.show_alert("New Subtask Created from existing Subtask");

@@ -28,7 +28,7 @@ def get_template_subtasks(doctype, txt, searchfield, start, page_len, filters):
     })
 
 @frappe.whitelist()
-def clone_task_hierarchy(source_task, target_project, parent_task=None, include_dependencies=False, include_children=False,task_weight=None):
+def clone_task_hierarchy(source_task, target_project, parent_task=None, include_dependencies=False, include_children=False,task_weight=None, custom_boq_name=None):
     include_dependencies = frappe.parse_json(include_dependencies)
     include_children = frappe.parse_json(include_children)
     source_doc = frappe.get_doc("Task", source_task)
@@ -44,7 +44,7 @@ def clone_task_hierarchy(source_task, target_project, parent_task=None, include_
     new_task.act_start_date = None
     new_task.act_end_date = None
     new_task.task_weight = task_weight or source_task.task_weight
-
+    new_task.custom_boq_name = custom_boq_name or source_task.custom_boq_name
     if not include_dependencies:
         new_task.depends_on = []
     new_task.insert()
