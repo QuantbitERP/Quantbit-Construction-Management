@@ -46,6 +46,7 @@
   "section_break_decv",
   "visitors",
   "section_break_xpve",
+  "equipment_usage_disel_details",
   "amended_from"
  ],
  "fields": [
@@ -291,13 +292,19 @@
    "label": "Site",
    "options": "Site",
    "reqd": 1
+  },
+  {
+   "fieldname": "equipment_usage_disel_details",
+   "fieldtype": "Table",
+   "label": "Equipment Usage Disel Details",
+   "options": "Equipment Usage Disel Details"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-06-15 17:23:39.697057",
+ "modified": "2026-06-20 09:51:14.270362",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Diary",

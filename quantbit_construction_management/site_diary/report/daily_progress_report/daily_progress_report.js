@@ -2,7 +2,8 @@
 // For license information, please see license.txt
 
 frappe.query_reports["Daily Progress Report"] = {
-
+    tree: true,
+    initial_depth: 0,
     filters: [
 
         {
