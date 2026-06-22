@@ -82,11 +82,15 @@ fixtures = [
     {
         "doctype": "Contract Type"
     },
-   
     {
-        "dt": "Property Setter",
-        "filters": [
-            ["doc_type", "in", ["Task", "Stock Entry Detail"]]
+        "dt": "Property Setter", "filters":
+        [
+            [
+                "module", "in", [
+                        "Quantbit Construction Management"
+
+                ]
+            ]
         ]
     },
 
