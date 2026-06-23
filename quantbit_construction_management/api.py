@@ -43,8 +43,8 @@ def clone_task_hierarchy(source_task, target_project, parent_task=None, include_
     new_task.completed_on = None
     new_task.act_start_date = None
     new_task.act_end_date = None
-    new_task.task_weight = task_weight or source_task.task_weight
-    new_task.custom_boq_name = custom_boq_name or source_task.custom_boq_name
+    new_task.task_weight = task_weight or source_doc.task_weight
+    new_task.custom_boq_name = custom_boq_name or source_doc.custom_boq_name
     if not include_dependencies:
         new_task.depends_on = []
     new_task.insert()

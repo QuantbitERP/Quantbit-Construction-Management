@@ -1008,8 +1008,13 @@ function load_hierarchy(frm) {
                 });
 
                 if (children.length > 0) {
-                    let child_weight_total = children.reduce((sum, c) => sum + flt(c.task_weight || 0), 0);
-                    html += render_total_row("Child weight total", child_weight_total.toFixed(2), (depth * 35) + 28);
+                    children.forEach(child => {
+                        html += render_total_row(
+                            child.subject,
+                            flt(child.task_weight || 0).toFixed(2),
+                            (depth * 35) + 28
+                        );
+                    });
                 }
             }
 
@@ -1074,11 +1079,13 @@ function load_hierarchy(frm) {
 
                             });
 
-                            html += render_total_row(
-                                "Child weight total",
-                                subtask_total.toFixed(2),
-                                98
-                            );
+                            taskObj.subtasks.forEach(sub => {
+                                html += render_total_row(
+                                    sub.subject,
+                                    flt(sub.task_weight || 0).toFixed(2),
+                                    98
+                                );
+                            });
                         }
                     });
 
@@ -1087,16 +1094,24 @@ function load_hierarchy(frm) {
                     stageObj.tasks.forEach(tObj => {
                         task_weight_sum += flt(tObj.data.task_weight || 0);
                     });
-                    html += render_total_row(
-                        "Child weight total",
-                        task_weight_sum.toFixed(2),
-                        63
-                    );
+                    stageObj.tasks.forEach(tObj => {
+                        html += render_total_row(
+                            tObj.data.subject,
+                            flt(tObj.data.task_weight || 0).toFixed(2),
+                            63
+                        );
+                    });
                 }
             });
 
 
-            html += render_total_row("Stage percentage", overall_stage_total.toFixed(2), 0);
+            Object.values(stages).forEach(stageObj => {
+                html += render_total_row(
+                    stageObj.data.subject,
+                    flt(stageObj.data.task_weight || 0).toFixed(2),
+                    0
+                );
+            });
 
             html += "</div>";
             frm.fields_dict.task_hierarchy.$wrapper.html(html);

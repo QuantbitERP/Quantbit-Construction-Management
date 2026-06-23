@@ -381,7 +381,13 @@ def import_boq_tasks(file_url, boq_name):
 @frappe.whitelist()
 def create_stage_task(boq_name=None, selected_stages=None, values=None, include_tasks=0, include_children=0):
         if isinstance(selected_stages, str):
-            selected_stages = json.loads(selected_stages)
+            if selected_stages.startswith("[") or selected_stages.startswith("{"):
+                try:
+                    selected_stages = json.loads(selected_stages)
+                except Exception:
+                    selected_stages = [s.strip() for s in selected_stages.split(",") if s.strip()]
+            else:
+                selected_stages = [s.strip() for s in selected_stages.split(",") if s.strip()]
 
         if isinstance(include_tasks, str):
             include_tasks = frappe.parse_json(include_tasks)
@@ -389,6 +395,27 @@ def create_stage_task(boq_name=None, selected_stages=None, values=None, include_
             include_children = frappe.parse_json(include_children)
 
         created = []
+
+        def get_all_dependencies(task_name, visited=None):
+            if visited is None:
+                visited = set()
+            if task_name in visited:
+                return []
+            visited.add(task_name)
+            
+            direct_deps = frappe.get_all(
+                "Task Depends On",
+                filters={"parent": task_name},
+                fields=["task"]
+            )
+            
+            dep_tasks = []
+            for d in direct_deps:
+                if d.task:
+                    dep_tasks.append(d.task)
+                    dep_tasks.extend(get_all_dependencies(d.task, visited))
+                    
+            return dep_tasks
 
         for stage_name in selected_stages:
 
@@ -398,8 +425,8 @@ def create_stage_task(boq_name=None, selected_stages=None, values=None, include_
                 "doctype": "Task",
                 "subject": old_doc.subject,
                 "custom_is_stage": 1,
-                "is_group":1,
-                "custom_boq_name":boq_name,
+                "is_group": 1,
+                "custom_boq_name": boq_name,
                 "task_weight": old_doc.task_weight,
                 "description": old_doc.description
             })
@@ -408,49 +435,80 @@ def create_stage_task(boq_name=None, selected_stages=None, values=None, include_
 
             created.append(new_doc.name)
 
+            cloned_map = { stage_name: new_doc.name }
+
             if include_tasks:
-                tasks = frappe.get_all("Task", filters={"parent_task": stage_name, "custom_is_task": 1})
-                for t in tasks:
-                    old_task = frappe.get_doc("Task", t.name)
+                tasks_to_clone = []
+                visited_tasks = set()
+
+                def add_task_to_clone(t_name):
+                    if t_name in visited_tasks:
+                        return
+                    visited_tasks.add(t_name)
+                    tasks_to_clone.append(t_name)
+                    
+                    if include_children:
+                        subtasks = frappe.get_all("Task", filters={"parent_task": t_name, "custom_is_subtask": 1}, pluck="name")
+                        for st_name in subtasks:
+                            add_task_to_clone(st_name)
+
+                # 1. Direct children of the stage
+                direct_children = frappe.get_all("Task", filters={"parent_task": stage_name, "custom_is_task": 1}, pluck="name")
+                for t_name in direct_children:
+                    add_task_to_clone(t_name)
+
+                # 2. Recursive dependencies of the stage
+                dep_tasks = get_all_dependencies(stage_name)
+                for t_name in dep_tasks:
+                    if t_name != stage_name:
+                        add_task_to_clone(t_name)
+
+                # Clone all collected tasks
+                for t_name in tasks_to_clone:
+                    old_task = frappe.get_doc("Task", t_name)
                     new_task = frappe.get_doc({
                         "doctype": "Task",
                         "subject": old_task.subject,
-                        "custom_is_task": 1,
-                        "is_group": 1,
+                        "custom_is_task": old_task.custom_is_task,
+                        "custom_is_subtask": old_task.custom_is_subtask,
+                        "is_group": old_task.is_group,
                         "custom_boq_name": boq_name,
-                        "parent_task": new_doc.name,
+                        "parent_task": cloned_map.get(old_task.parent_task, new_doc.name),
                         "task_weight": old_task.task_weight,
                         "description": old_task.description
                     })
                     new_task.insert(ignore_permissions=True)
-                    
-                    if include_children:
-                        subtasks = frappe.get_all("Task", filters={"parent_task": old_task.name, "custom_is_subtask": 1})
-                        for st in subtasks:
-                            old_subtask = frappe.get_doc("Task", st.name)
-                            new_subtask = frappe.get_doc({
-                                "doctype": "Task",
-                                "subject": old_subtask.subject,
-                                "custom_is_subtask": 1,
-                                "custom_boq_name": boq_name,
-                                "parent_task": new_task.name,
-                                "task_weight": old_subtask.task_weight,
-                                "description": old_subtask.description
+                    cloned_map[t_name] = new_task.name
+
+                    if old_task.get("custom_bom_details"):
+                        for row in old_task.custom_bom_details:
+                            new_task.append("custom_bom_details", {
+                                "item": row.item,
+                                "item_name": row.item_name,
+                                "qty": row.qty,
+                                "uom": row.uom,
+                                "rate": row.rate,
+                                "item_type": row.item_type,
+                                "total_amount": row.total_amount
                             })
-                            new_subtask.insert(ignore_permissions=True)
-                            
-                            if old_subtask.get("custom_bom_details"):
-                                for row in old_subtask.custom_bom_details:
-                                    new_subtask.append("custom_bom_details", {
-                                        "item": row.item,
-                                        "item_name": row.item_name,
-                                        "qty": row.qty,
-                                        "uom": row.uom,
-                                        "rate": row.rate,
-                                        "item_type": row.item_type,
-                                        "total_amount": row.total_amount
-                                    })
-                                new_subtask.save(ignore_permissions=True)
+                        new_task.save(ignore_permissions=True)
+
+                # Recreate dependencies between cloned tasks
+                for old_name, new_name in cloned_map.items():
+                    if old_name == stage_name:
+                        continue
+                    old_task = frappe.get_doc("Task", old_name)
+                    if old_task.depends_on:
+                        new_task = frappe.get_doc("Task", new_name)
+                        updated = False
+                        for dep in old_task.depends_on:
+                            if dep.task in cloned_map:
+                                new_task.append("depends_on", {
+                                    "task": cloned_map[dep.task]
+                                })
+                                updated = True
+                        if updated:
+                            new_task.save(ignore_permissions=True)
 
         return created
 
