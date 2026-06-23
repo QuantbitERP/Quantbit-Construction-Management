@@ -732,9 +732,24 @@ def build_hierarchy(flat_data, project_name):
             if totals["total_qty"] > 0:
                 node_row["percent_completed"] = (totals["total_achieved"] / totals["total_qty"]) * 100.0
                 
+            # If it's a task node (indent > 0) and has leaves, merge the first leaf into the node row itself.
+            if node.indent > 0 and len(node.leaves) > 0:
+                first_leaf = node.leaves[0]
+                for key, val in first_leaf.items():
+                    if key not in ["section", "indent", "is_group", "project_name"]:
+                        node_row[key] = val
+                
+                # If there are no children nodes and only one leaf, it's a leaf row in the report.
+                if len(node.children) == 0 and len(node.leaves) == 1:
+                    node_row["is_group"] = 0
+                else:
+                    node_row["is_group"] = 1
+
             flat_list = [node_row]
             
-            for leaf in node.leaves:
+            # If we merged the first leaf, we only add the remaining leaves to flat_list
+            leaves_to_add = node.leaves[1:] if (node.indent > 0 and len(node.leaves) > 0) else node.leaves
+            for leaf in leaves_to_add:
                 leaf_row = leaf.copy()
                 
                 if leaf_row.get("item"):

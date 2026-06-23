@@ -452,8 +452,13 @@ function render_node(node, depth, frm) {
         });
 
         // Show child weight total
-        let child_weight_total = node.children.reduce((sum, c) => sum + flt(c.task_weight || 0), 0);
-        html += render_total_row("Child weight total", child_weight_total.toFixed(2), margin + 28);
+        node.children.forEach(child => {
+            html += render_total_row(
+                child.subject,
+                flt(child.task_weight || 0).toFixed(2),
+                ((depth + 1) * 35) + 28
+            );
+        });
     }
 
     return html;
@@ -530,7 +535,13 @@ function load_hierarchy(frm) {
                 html += render_node(root, 0, frm);
             });
 
-            html += render_total_row("Stage percentage", overall_stage_total.toFixed(2), 0);
+            roots.forEach(root => {
+                html += render_total_row(
+                    root.subject,
+                    flt(root.task_weight || 0).toFixed(2),
+                    0
+                );
+            });
             html += "</div>";
 
             frm.fields_dict.custom_task_hierarchy.$wrapper.html(html);

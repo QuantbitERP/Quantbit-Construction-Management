@@ -34,43 +34,6 @@ doctype_js = {
 
 fixtures = [
     {
-        "dt": "Insights Workbook"
-    },
-    {
-        "dt": "Insights Query"
-    },
-    {
-        "dt": "Insights Chart"
-    },
-    {
-        "dt": "Insights Dashboard"
-    },
-    {
-        "dt": "Insights Query v3"
-    },
-    {
-        "dt": "Insights Chart v3"
-    },
-    {
-        "dt": "Insights Dashboard v3"
-    },
-    {
-        "dt": "Insights Data Source"
-    },
-    {
-        "dt": "Insights Table v3"
-    },
-    {
-        "dt": "Insights Table Link v3"
-    },
-    {
-        "dt": "Insights Dashboard Chart v3"
-    },
-    {
-        "dt": "Insights Data Source v3"
-    },
-
-    {
         "dt": "Custom Field",
         "filters": [
             [

@@ -708,19 +708,6 @@
   "docstatus": 0,
   "doctype": "UOM",
   "enabled": 1,
-  "modified": "2026-03-10 12:16:15.070097",
-  "must_be_whole_number": 0,
-  "name": "Day",
-  "symbol": null,
-  "uom_name": "Day"
- },
- {
-  "category": null,
-  "common_code": null,
-  "description": null,
-  "docstatus": 0,
-  "doctype": "UOM",
-  "enabled": 1,
   "modified": "2026-03-10 12:16:15.071871",
   "must_be_whole_number": 0,
   "name": "Decigram/Litre",
@@ -3365,5 +3352,18 @@
   "name": "Kg",
   "symbol": null,
   "uom_name": "Kg"
+ },
+ {
+  "category": null,
+  "common_code": null,
+  "description": null,
+  "docstatus": 0,
+  "doctype": "UOM",
+  "enabled": 1,
+  "modified": "2026-03-10 12:16:15.070097",
+  "must_be_whole_number": 0,
+  "name": "Day",
+  "symbol": null,
+  "uom_name": "Day"
  }
 ]

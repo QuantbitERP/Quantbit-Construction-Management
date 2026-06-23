@@ -27,8 +27,7 @@ def get_columns() -> list[dict]:
 		{
 			"label": _("Equipment Item"),
 			"fieldname": "equipment_item",
-			"fieldtype": "Link",
-			"options": "Item",
+			"fieldtype": "Data",
 			"width": 180,
 		},
 		{
@@ -75,6 +74,14 @@ def get_data(filters: dict) -> list[dict]:
 		conditions.append("eu.project = %(project)s")
 		values["project"] = filters.get("project")
 
+	if filters.get("equipment_item"):
+		conditions.append("eud.equipment_item = %(equipment_item)s")
+		values["equipment_item"] = filters.get("equipment_item")
+
+	if filters.get("contractor"):
+		conditions.append("eud.contractor = %(contractor)s")
+		values["contractor"] = filters.get("contractor")
+
 	condition_str = ""
 	if conditions:
 		condition_str = "AND " + " AND ".join(conditions)
@@ -82,7 +89,7 @@ def get_data(filters: dict) -> list[dict]:
 	data = frappe.db.sql(f"""
 		SELECT
 			eud.contractor,
-			eud.equipment_item,
+			item.item_name AS equipment_item,
 			eud.uom,
 			eud.quantity,
 			eud.working_hrs,
@@ -91,6 +98,8 @@ def get_data(filters: dict) -> list[dict]:
 			`tabEquipment Usage Details` eud
 		INNER JOIN
 			`tabEquipment Usage` eu ON eu.name = eud.parent
+		LEFT JOIN
+			`tabItem` item ON item.name = eud.equipment_item
 		WHERE
 			eu.docstatus = 1
 			{condition_str}
@@ -99,3 +108,5 @@ def get_data(filters: dict) -> list[dict]:
 	""", values, as_dict=True)
 
 	return data
+
+

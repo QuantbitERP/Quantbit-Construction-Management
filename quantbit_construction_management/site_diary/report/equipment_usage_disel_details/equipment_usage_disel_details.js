@@ -22,6 +22,18 @@ frappe.query_reports["Equipment Usage Disel Details"] = {
 			label: __("Project"),
 			fieldtype: "Link",
 			options: "Project"
+		},
+		{
+			fieldname: "equipment_item",
+			label: __("Equipment Item"),
+			fieldtype: "Link",
+			options: "Item"
+		},
+		{
+			fieldname: "contractor",
+			label: __("Contractor"),
+			fieldtype: "Link",
+			options: "Contractor"
 		}
 	]
 };
