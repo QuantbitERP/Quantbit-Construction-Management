@@ -62,19 +62,30 @@ fixtures = [
         ]
     },
     {
-        "doctype": "Role"
+        "dt": "Role", "filters":
+        [
+            [
+                "name", "in", [
+                        "Preliminary Approver",
+                        "Commercial Approver",
+                        "Top Management",
+                        "Business Head",
+                        "Analyzer",
+                        "Technical Evaluator",
+                        "Financial Evaluator",
+                        "Sales Evaluator",
+                        "Business Developer",
+                        "All"
+
+                ]
+            ]
+        ]
     },
     {
         "doctype": "Workspace",
         "filters": [
             ["name", "=", "Construction Management System"]
         ]
-    },
-    {
-        "doctype": "Workspace Link"
-    },
-    {
-        "doctype": "Workspace Shortcut"
     },
     {
         "doctype": "Item Type"
