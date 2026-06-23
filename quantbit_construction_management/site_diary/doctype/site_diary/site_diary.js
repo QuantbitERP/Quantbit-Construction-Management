@@ -81,6 +81,7 @@ frappe.ui.form.on("Site Diary", {
         frm.clear_table("task");
         frm.clear_table("activity_progress");
         frm.clear_table("visitors");
+        frm.clear_table("equipment_usage_disel_details");
 
         frm.refresh_fields([
             "manpower_log",
@@ -89,7 +90,8 @@ frappe.ui.form.on("Site Diary", {
             "material_received",
             "task",
             "activity_progress",
-            "visitors"
+            "visitors",
+            "equipment_usage_disel_details"
         ]);
 
         // MANPOWER / EQUIPMENT / VISITOR
@@ -309,9 +311,58 @@ frappe.ui.form.on("Site Diary", {
 
                         });
 
+                        (r.message.equipment_usage_disel_details || []).forEach(function (d) {
+
+                            if (d.task) {
+                                unique_tasks.set(d.task, {
+                                    task: d.task
+                                });
+                            }
+
+                            let row = frm.add_child("equipment_usage_disel_details");
+                            row.task = d.task;
+                            row.stage_subject = d.stage_subject;
+                            row.subtask = d.subtask;
+                            row.task_subject = d.task_subject;
+                            row.task_level1 = d.task_level1;
+                            row.level1_subject = d.level1_subject;
+                            row.task_level2 = d.task_level2;
+                            row.level2_subject = d.level2_subject;
+                            row.task_level3 = d.task_level3;
+                            row.level3_subject = d.level3_subject;
+                            row.task_level4 = d.task_level4;
+                            row.level4_subject = d.level4_subject;
+                            row.task_level5 = d.task_level5;
+                            row.level5_subject = d.level5_subject;
+                            row.task_level6 = d.task_level6;
+                            row.level6_subject = d.level6_subject;
+                            row.task_level7 = d.task_level7;
+                            row.level7_subject = d.level7_subject;
+                            row.task_level8 = d.task_level8;
+                            row.level8_subject = d.level8_subject;
+                            row.task_level9 = d.task_level9;
+                            row.level9_subject = d.level9_subject;
+                            row.task_level10 = d.task_level10;
+                            row.level10_subject = d.level10_subject;
+                            row.contractor = d.contractor;
+                            row.equipment_item = d.equipment_item;
+                            row.uom = d.uom;
+                            row.closing_reading = d.closing_reading;
+                            row.quantity = d.quantity;
+                            row.rate = d.rate;
+                            row.working_hrs = d.working_hrs;
+                            row.diesel_filledin_ltr = d.diesel_filledin_ltr;
+                            row.amount = d.amount;
+                            row.opening_reading = d.opening_reading;
+                            row.billed = d.billed;
+                            row.paid = d.paid;
+
+                        });
+
                         frm.refresh_field("manpower_log");
                         frm.refresh_field("equipment_log");
                         frm.refresh_field("visitors");
+                        frm.refresh_field("equipment_usage_disel_details");
                     }
 
                     resolve();

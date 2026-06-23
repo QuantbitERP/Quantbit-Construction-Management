@@ -931,11 +931,57 @@ def get_site_diary_details(project, site_date):
         AND pv.docstatus = 1
     """, (project, site_date), as_dict=True)
 
+    equipment_usage_disel_data = frappe.db.sql("""
+        SELECT
+            eud.task,
+            eud.stage_subject,
+            eud.subtask,
+            eud.task_subject,
+            eud.task_level1,
+            eud.level1_subject,
+            eud.task_level2,
+            eud.level2_subject,
+            eud.task_level3,
+            eud.level3_subject,
+            eud.task_level4,
+            eud.level4_subject,
+            eud.task_level5,
+            eud.level5_subject,
+            eud.task_level6,
+            eud.level6_subject,
+            eud.task_level7,
+            eud.level7_subject,
+            eud.task_level8,
+            eud.level8_subject,
+            eud.task_level9,
+            eud.level9_subject,
+            eud.task_level10,
+            eud.level10_subject,
+            eud.contractor,
+            eud.equipment_item,
+            eud.uom,
+            eud.closing_reading,
+            eud.quantity,
+            eud.rate,
+            eud.working_hrs,
+            eud.diesel_filledin_ltr,
+            eud.amount,
+            eud.opening_reading,
+            eud.billed,
+            eud.paid
+        FROM `tabEquipment Usage Details` eud
+        INNER JOIN `tabEquipment Usage` eu
+            ON eu.name = eud.parent
+        WHERE eu.project = %s
+        AND eu.site_date = %s
+        AND eu.docstatus = 1
+    """, (project, site_date), as_dict=True)
 
     return {
         "manpower": manpower_data,
         "equipment": equipment_data,
-        "visitor": visitors_data
+        "visitor": visitors_data,
+        "equipment_usage_disel_details": equipment_usage_disel_data
     }
 
 @frappe.whitelist()

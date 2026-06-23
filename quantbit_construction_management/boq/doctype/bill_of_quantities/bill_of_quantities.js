@@ -1006,6 +1006,11 @@ function load_hierarchy(frm) {
                     }
 
                 });
+
+                if (children.length > 0) {
+                    let child_weight_total = children.reduce((sum, c) => sum + flt(c.task_weight || 0), 0);
+                    html += render_total_row("Child weight total", child_weight_total.toFixed(2), (depth * 35) + 28);
+                }
             }
 
             let html = `<div style="padding:15px;">
@@ -1070,9 +1075,9 @@ function load_hierarchy(frm) {
                             });
 
                             html += render_total_row(
-                                "subtask percentage",
+                                "Child weight total",
                                 subtask_total.toFixed(2),
-                                80
+                                98
                             );
                         }
                     });
@@ -1083,37 +1088,15 @@ function load_hierarchy(frm) {
                         task_weight_sum += flt(tObj.data.task_weight || 0);
                     });
                     html += render_total_row(
-                        "Total task percentage",
+                        "Child weight total",
                         task_weight_sum.toFixed(2),
-                        40
+                        63
                     );
                 }
             });
 
 
-            html += `
-      <div style="
-          margin-top:15px;
-          display:flex;
-          justify-content:flex-end;
-          align-items:center;
-          gap:10px;
-          font-weight:600;">
-
-          <div>stage percentage :</div>
-
-          <div style="
-              background:#27ae60;
-              color:white;
-              padding:4px 10px;
-              border-radius:4px;
-              min-width:50px;
-              text-align:center;">
-              ${overall_stage_total.toFixed(2)} %
-          </div>
-
-      </div>
-      `;
+            html += render_total_row("Stage percentage", overall_stage_total.toFixed(2), 0);
 
             html += "</div>";
             frm.fields_dict.task_hierarchy.$wrapper.html(html);
@@ -1290,8 +1273,11 @@ function render_row(item, type, is_expanded, depth = 0) {
 }
 
 function render_total_row(label, total, margin_left) {
-    let bg_color = "#27ae60";
-    if (total > 100) bg_color = "#e74c3c";
+    let bg_color = "#fb8c00";
+    if (total > 100) bg_color = "#c0392b";
+    else if (total >= 100) bg_color = "#2ecc71";
+    else if (total > 70) bg_color = "#27ae60";
+    else if (total > 30) bg_color = "#f1c40f";
 
     return `
     <div style="

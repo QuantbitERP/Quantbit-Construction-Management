@@ -610,151 +610,183 @@ def execute(filters=None):
         project_name=project_name
     ))
 
+    data = build_hierarchy(data, project_name)
+
     return columns, data
+
+def build_hierarchy(flat_data, project_name):
+    sections = []
+    current_section = None
+    
+    for row in flat_data:
+        if not row:
+            continue
+        
+        sec = row.get("section")
+        if not sec:
+            continue
+            
+        if sec.endswith(" TOTAL") or sec == "GRAND TOTAL":
+            continue
+            
+        is_header = True
+        for key in ["contractor", "item", "entry_id", "achieved_today", "quantity", "visitor_name", "skill_type"]:
+            if row.get(key) is not None:
+                is_header = False
+                break
+                
+        if is_header:
+            current_section = {
+                "name": sec,
+                "project_name": row.get("project_name") or project_name,
+                "site_engineer": row.get("site_engineer"),
+                "rows": []
+            }
+            sections.append(current_section)
+        else:
+            if current_section:
+                current_section["rows"].append(row)
+                
+    hierarchical_data = []
+    overall_grand_total = 0.0
+    
+    for section in sections:
+        sec_name = section["name"]
+        
+        class Node:
+            def __init__(self, name, label, indent):
+                self.name = name
+                self.label = label
+                self.indent = indent
+                self.children = {}
+                self.leaves = []
+                
+        root = Node(sec_name, sec_name, 0)
+        
+        for row in section["rows"]:
+            path = []
+            
+            for i in range(1, 11):
+                lvl_id = row.get(f"task_level{i}")
+                lvl_subj = row.get(f"level{i}_subject")
+                if lvl_id:
+                    path.append((lvl_id, lvl_subj))
+                    
+            subtask_id = row.get("subtask")
+            subtask_subj = row.get("subtask_subject")
+            if subtask_id and not any(p[0] == subtask_id for p in path):
+                path.append((subtask_id, subtask_subj))
+                
+            task_id = row.get("task")
+            task_subj = row.get("task_subject")
+            if task_id and not any(p[0] == task_id for p in path):
+                path.insert(0, (task_id, task_subj))
+                
+            curr = root
+            for idx, (tid, tsubj) in enumerate(path):
+                label = f"{tid}: {tsubj}" if tsubj else tid
+                if tid not in curr.children:
+                    curr.children[tid] = Node(tid, label, idx + 1)
+                curr = curr.children[tid]
+                
+            curr.leaves.append(row)
+            
+        def flatten(node):
+            totals = {
+                "total_qty": 0.0,
+                "achieved_today": 0.0,
+                "total_achieved": 0.0,
+                "presenty": 0.0,
+                "total_presenty": 0.0,
+                "quantity": 0.0,
+                "amount": 0.0,
+                "working_hours": 0.0
+            }
+            
+            for leaf in node.leaves:
+                for k in totals.keys():
+                    try:
+                        totals[k] += float(leaf.get(k) or 0.0)
+                    except (ValueError, TypeError):
+                        pass
+            
+            child_rows = []
+            for child_key in sorted(node.children.keys()):
+                child_node = node.children[child_key]
+                child_totals, child_flat = flatten(child_node)
+                for k in totals.keys():
+                    totals[k] += child_totals[k]
+                child_rows.extend(child_flat)
+                
+            node_row = {
+                "section": node.label,
+                "indent": node.indent,
+                "is_group": 1,
+                "project_name": project_name
+            }
+            
+            for k, val in totals.items():
+                if val != 0.0:
+                    node_row[k] = val
+                    
+            if totals["total_qty"] > 0:
+                node_row["percent_completed"] = (totals["total_achieved"] / totals["total_qty"]) * 100.0
+                
+            flat_list = [node_row]
+            
+            for leaf in node.leaves:
+                leaf_row = leaf.copy()
+                
+                if leaf_row.get("item"):
+                    leaf_row["section"] = leaf_row["item"]
+                elif leaf_row.get("visitor_name"):
+                    leaf_row["section"] = leaf_row["visitor_name"]
+                elif leaf_row.get("contractor"):
+                    leaf_row["section"] = leaf_row["contractor"]
+                elif leaf_row.get("skill_type"):
+                    leaf_row["section"] = leaf_row["skill_type"]
+                elif leaf_row.get("subtask"):
+                    leaf_row["section"] = f"{leaf_row['subtask']}: {leaf_row['subtask_subject'] or ''}"
+                else:
+                    leaf_row["section"] = ""
+                    
+                leaf_row["indent"] = node.indent + 1
+                leaf_row["is_group"] = 0
+                flat_list.append(leaf_row)
+                
+            flat_list.extend(child_rows)
+            return totals, flat_list
+            
+        sec_totals, section_flat = flatten(root)
+        hierarchical_data.extend(section_flat)
+        overall_grand_total += sec_totals.get("amount") or 0.0
+        
+    grand_total_row = {
+        "section": "GRAND TOTAL",
+        "indent": 0,
+        "is_group": 1,
+        "amount": overall_grand_total,
+        "project_name": project_name
+    }
+    hierarchical_data.append(grand_total_row)
+    
+    return hierarchical_data
 
 def get_columns():
 
     return [
         {
-            "label": "Section",
+            "label": "Section / Task / Item",
             "fieldname": "section",
             "fieldtype": "Data",
-            "width": 160
+            "width": 300
         },
         {
             "label": "Site Engineer",
             "fieldname": "site_engineer",
             "fieldtype": "Data"
         },
-        {
-            "label": "Task",
-            "fieldname": "task",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Task Subject",
-            "fieldname": "task_subject",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Subtask",
-            "fieldname": "subtask",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Subtask Subject",
-            "fieldname": "subtask_subject",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Task Level 1",
-            "fieldname": "task_level1",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 1 Subject",
-            "fieldname": "level1_subject",
-            "fieldtype": "Data"
-        },
 
-        {
-            "label": "Task Level 2",
-            "fieldname": "task_level2",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 2 Subject",
-            "fieldname": "level2_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 3",
-            "fieldname": "task_level3",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 3 Subject",
-            "fieldname": "level3_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 4",
-            "fieldname": "task_level4",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 4 Subject",
-            "fieldname": "level4_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 5",
-            "fieldname": "task_level5",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 5 Subject",
-            "fieldname": "level5_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 6",
-            "fieldname": "task_level6",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 6 Subject",
-            "fieldname": "level6_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 7",
-            "fieldname": "task_level7",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 7 Subject",
-            "fieldname": "level7_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 8",
-            "fieldname": "task_level8",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 8 Subject",
-            "fieldname": "level8_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 9",
-            "fieldname": "task_level9",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 9 Subject",
-            "fieldname": "level9_subject",
-            "fieldtype": "Data"
-        },
-
-        {
-            "label": "Task Level 10",
-            "fieldname": "task_level10",
-            "fieldtype": "Data"
-        },
-        {
-            "label": "Level 10 Subject",
-            "fieldname": "level10_subject",
-            "fieldtype": "Data"
-        },
        {
             "label": "Total Qty",
             "fieldname": "total_qty",
