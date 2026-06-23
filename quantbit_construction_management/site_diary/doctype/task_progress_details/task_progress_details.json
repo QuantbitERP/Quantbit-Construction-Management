@@ -138,6 +138,8 @@
   {
    "fieldname": "task_level1",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Task ",
    "options": "Task"
   },
@@ -175,6 +177,8 @@
    "fetch_from": "task_level1.subject",
    "fieldname": "level1_subject",
    "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Subject",
    "read_only": 1
   },
@@ -306,7 +310,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-18 15:53:23.614450",
+ "modified": "2026-06-22 14:01:29.841296",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Task Progress Details",

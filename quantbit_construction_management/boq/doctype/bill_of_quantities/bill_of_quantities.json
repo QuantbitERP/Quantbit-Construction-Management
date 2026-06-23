@@ -260,8 +260,13 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2026-05-21 10:28:48.952798",
+ "links": [
+  {
+   "link_doctype": "Project",
+   "link_fieldname": "custom_bill_of_quantities"
+  }
+ ],
+ "modified": "2026-06-22 15:20:10.537395",
  "modified_by": "Administrator",
  "module": "BOQ",
  "name": "Bill of Quantities",

@@ -98,7 +98,24 @@ fixtures = [
         ]
     },
     {
-        "doctype": "Role"
+        "dt": "Role", "filters":
+        [
+            [
+                "name", "in", [
+                        "Preliminary Approver",
+                        "Commercial Approver",
+                        "Top Management",
+                        "Business Head",
+                        "Analyzer",
+                        "Technical Evaluator",
+                        "Financial Evaluator",
+                        "Sales Evaluator",
+                        "Business Developer",
+                        "All"
+
+                ]
+            ]
+        ]
     },
     {
         "doctype": "Workspace",
@@ -107,22 +124,20 @@ fixtures = [
         ]
     },
     {
-        "doctype": "Workspace Link"
-    },
-    {
-        "doctype": "Workspace Shortcut"
-    },
-    {
         "doctype": "Item Type"
     },
     {
         "doctype": "Contract Type"
     },
-   
     {
-        "dt": "Property Setter",
-        "filters": [
-            ["doc_type", "in", ["Task", "Stock Entry Detail"]]
+        "dt": "Property Setter", "filters":
+        [
+            [
+                "module", "in", [
+                        "Quantbit Construction Management"
+
+                ]
+            ]
         ]
     },
 

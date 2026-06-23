@@ -12,6 +12,7 @@
  "fields": [
   {
    "default": "0",
+   "description": "If check, this will create Journal Entry on submission of Contractor Billing",
    "fieldname": "create_jv",
    "fieldtype": "Check",
    "label": "Create JV"
@@ -22,6 +23,7 @@
   },
   {
    "default": "0",
+   "description": "If check, this will create Purchase Invoice on submission of Contractor Billing",
    "fieldname": "create_purchase_invoice",
    "fieldtype": "Check",
    "label": "Create Purchase Invoice"
@@ -31,7 +33,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-09 10:55:57.036962",
+ "modified": "2026-06-22 15:12:16.921792",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "Billing Settings",
