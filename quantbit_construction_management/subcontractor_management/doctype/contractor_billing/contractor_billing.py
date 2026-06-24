@@ -50,6 +50,8 @@ class ContractorBilling(Document):
             child_doctype = "Manpower Usage Details"
         elif self.type == "Equipment":
             child_doctype = "Equipment Usage Details"
+        elif self.type == "Task":
+            child_doctype = "Task Progress Details"    
         
         if not child_doctype:
             return
@@ -145,7 +147,9 @@ class ContractorBilling(Document):
             child_doctype = "Manpower Usage Details"
         elif self.type == "Equipment":
             child_doctype = "Equipment Usage Details"
-        
+        elif self.type == "Task":
+            child_doctype = "Task Progress Details"
+
         if not child_doctype:
             return
 
@@ -232,15 +236,28 @@ def sync_contractor_billing_payment_status(cb_name):
     # Check if Purchase Invoice is Paid
     pi_name = frappe.db.get_value("Purchase Invoice", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": cb_name}, "name")
     if pi_name:
-        pi_data = frappe.db.get_value("Purchase Invoice", pi_name, ["status", "grand_total", "outstanding_amount"], as_dict=True)
-        if pi_data:
-            outstanding_amount = flt(pi_data.outstanding_amount)
-            paid_amount = flt(pi_data.grand_total) - outstanding_amount
-            if paid_amount > flt(billing.grand_total):
-                paid_amount = flt(billing.grand_total)
-            outstanding_amount = flt(billing.grand_total) - paid_amount
-            if pi_data.status == "Paid" or outstanding_amount <= 0.005:
-                is_paid = 1
+        payment_refs = frappe.db.get_all(
+            "Payment Entry Reference",
+            filters={
+                "reference_doctype": "Purchase Invoice",
+                "reference_name": pi_name
+            },
+            fields=["allocated_amount", "parent"]
+        )
+
+        paid_amount = sum(
+            flt(d.allocated_amount)
+            for d in payment_refs
+            if frappe.db.get_value("Payment Entry", d.parent, "docstatus") == 1
+        )
+
+        if paid_amount > flt(billing.grand_total):
+            paid_amount = flt(billing.grand_total)
+
+        outstanding_amount = flt(billing.grand_total) - paid_amount
+
+        if outstanding_amount <= 0.005:
+            is_paid = 1
     else:
         # Fallback to direct Payment Entry / Journal Entry payment logic
         je_name = frappe.db.get_value("Journal Entry", {"custom_doc_link_doctype": "Contractor Billing", "custom_doc_link": cb_name}, "name")
