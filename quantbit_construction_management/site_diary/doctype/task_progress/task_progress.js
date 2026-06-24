@@ -196,37 +196,37 @@ frappe.ui.form.on("Task Progress Details", {
         frappe.model.set_value(cdt, cdn, "rate", "");
         frappe.model.set_value(cdt, cdn, "amount", "");
     },
-   item(frm, cdt, cdn) {
-    let row = locals[cdt][cdn];
+    item(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
 
-    if (!row.contractor || !row.item) return;
+        if (!row.contractor || !row.item) return;
 
-    frappe.db.get_doc("Contractor", row.contractor).then(doc => {
+        frappe.db.get_doc("Contractor", row.contractor).then(doc => {
 
-        let contractor_item = (doc.site_diary_contractor_item_details || []).find(
-            d => d.item === row.item
-        );
-        if (contractor_item) {
-            frappe.model.set_value(cdt, cdn, "rate", contractor_item.rate);
-            frappe.model.set_value(cdt, cdn, "uom", contractor_item.uom);
-            setTimeout(() => {
-                calculate_amount(cdt, cdn);
-            }, 100);
-        } else {
-            let item_code = row.item;
-            frappe.db.get_value("Item", item_code, "item_name")
-                .then(r => {
-                    let item_name = r.message.item_name || item_code;
-                    frappe.model.set_value(cdt, cdn, "item", "");
-                    frappe.throw(
-                        __("Please add Item <strong>{0}</strong> in Contractor Item Details for Contractor <strong>{1}</strong>.",
-                        [item_name, row.contractor])
-                    );
-                });
-        }
-    });
+            let contractor_item = (doc.site_diary_contractor_item_details || []).find(
+                d => d.item === row.item
+            );
+            if (contractor_item) {
+                frappe.model.set_value(cdt, cdn, "rate", contractor_item.rate);
+                frappe.model.set_value(cdt, cdn, "uom", contractor_item.uom);
+                setTimeout(() => {
+                    calculate_amount(cdt, cdn);
+                }, 100);
+            } else {
+                let item_code = row.item;
+                frappe.db.get_value("Item", item_code, "item_name")
+                    .then(r => {
+                        let item_name = r.message.item_name || item_code;
+                        frappe.model.set_value(cdt, cdn, "item", "");
+                        frappe.throw(
+                            __("Please add Item <strong>{0}</strong> in Contractor Item Details for Contractor <strong>{1}</strong>.",
+                                [item_name, row.contractor])
+                        );
+                    });
+            }
+        });
     }
-}); 
+});
 function calculate_amount(cdt, cdn) {
     let row = locals[cdt][cdn];
     let amount = flt(row.achieved_today) * flt(row.rate);
@@ -350,8 +350,9 @@ function apply_visibility(frm, rowname, visible_level) {
     if (!grid_row) return;
 
     grid_row.toggle_display("task", visible_level >= 1);
+    grid_row.toggle_display("task_level1", true);
 
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 2; i <= 11; i++) {
         grid_row.toggle_display(`task_level${i}`, visible_level >= (i + 1));
     }
 }
