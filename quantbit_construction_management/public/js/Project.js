@@ -435,10 +435,11 @@ function render_node(node, depth, frm) {
 
         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
             <button class="btn btn-success btn-xs" title="Progress">${progress.toFixed(2)}%</button>
-            <button class="btn btn-light btn-xs redirect-item" data-name="${node.name}" title="Open Form View">Redirect</button>
+            <button class="btn btn-light btn-xs redirect-item" data-name="${node.name}" title="Open Form View">Show Details</button>
             <button class="btn btn-light btn-xs edit-item" data-name="${node.name}">✏ Edit</button>
             <button class="btn btn-light btn-xs assign-item" data-name="${node.name}">👤 Assign</button>
             <button class="btn btn-light btn-xs delete-item" data-name="${node.name}">🗑 Delete</button>
+            <button class="btn btn-light btn-xs update-item" data-name="${node.name}" title="Update" style="${node.custom_is_subtask ? '' : 'display:none;'}">⬆ Update</button>
             ${add_child_btn}
             ${!node.custom_is_subtask && descendant_count > 0 ? `<button class="btn btn-info btn-xs" title="Descendant Count">${descendant_count}</button>` : ''}
             <button class="btn btn-warning btn-xs show-weight" data-name="${node.name}" title="Weight">${node.task_weight || 0}%</button>
@@ -689,7 +690,7 @@ function attach_events(frm, all_tasks) {
                     options: "<b>Create New Stage</b>"
                 },
                 { label: "Stage Name", fieldname: "subject", fieldtype: "Data" },
-                { label: "Weight", fieldname: "task_weight", fieldtype: "Float" },
+                { label: "Weightage", fieldname: "task_weight", fieldtype: "Float" },
                 { label: "Description", fieldname: "description", fieldtype: "Small Text" }
             ],
             primary_action_label: "Add",
@@ -1189,4 +1190,1162 @@ function attach_events(frm, all_tasks) {
         });
     });
 
+    // ── Update ───────────────────────────────────────────────────────────────
+    wrapper.find(".update-item").off("click").on("click", function (e) {
+        e.stopPropagation();
+        let task_name = $(this).data("name");
+
+        frappe.db.get_value("Task", task_name, ["project", "subject", "parent_task"]).then(r => {
+            let project    = r.message && r.message.project;
+            let task_subject = r.message && r.message.subject;
+
+            const options = [
+                { key: "manpower",  label: "Manpower Usage",   doctype: "Manpower Usage"   },
+                { key: "equipment", label: "Equipment Usage",   doctype: "Equipment Usage"  },
+                { key: "progress",  label: "Task Progress",     doctype: "Task Progress"    },
+                { key: "material",  label: "Material Consumed", doctype: "Stock Entry"      },
+                { key: "material_receipt", label: "Material Received", doctype: "Stock Entry" }
+            ];
+
+            let cards_html = `
+                <style>
+                    .update-option-card {
+                        display: flex; align-items: center; gap: 12px;
+                        padding: 12px 16px; border: 2px solid #e0e0e0;
+                        border-radius: 8px; cursor: pointer;
+                        transition: all 0.2s; margin-bottom: 8px; background: #fff;
+                    }
+                    .update-option-card:hover  { border-color:#5e64ff; background:#f0f0ff; }
+                    .update-option-card.selected { border-color:#5e64ff; background:#eef0ff; font-weight:600; }
+                    .update-option-label { font-size:14px; color:#333; }
+                </style>
+                <div style="padding:4px 0 8px;">
+                    <div style="font-size:12px;color:#888;margin-bottom:10px;">Task: <b>${task_subject || task_name}</b></div>
+            `;
+            options.forEach(opt => {
+                cards_html += `
+                    <div class="update-option-card" data-key="${opt.key}" data-doctype="${opt.doctype}">
+                        <span class="update-option-label">${opt.label}</span>
+                    </div>`;
+            });
+            cards_html += `</div>`;
+
+            let selected_key = null;
+            let selected_doctype = null;
+
+            let d = new frappe.ui.Dialog({
+                title: __("Update Task"),
+                fields: [{ fieldtype: "HTML", fieldname: "update_options_html", options: cards_html }],
+                primary_action_label: __("Open"),
+                primary_action() {
+                    if (!selected_doctype) {
+                        frappe.show_alert({ message: __("Please select an option"), indicator: "orange" });
+                        return;
+                    }
+                    d.hide();
+                    if (selected_key === "manpower") {
+                        open_manpower_usage_dialog(task_name, project);
+                    } else if (selected_key === "equipment") {
+                        open_equipment_usage_dialog(task_name, project);
+                    } else if (selected_key === "progress") {
+                        open_task_progress_dialog(task_name, project);
+                    } else if (selected_key === "material") {
+                        open_material_consumed_dialog(task_name, project);
+                    } else if (selected_key === "material_receipt") {
+                        open_material_received_dialog(task_name, project);
+                    } else {
+                        frappe.new_doc(selected_doctype, { project: project || "" });
+                    }
+                }
+            });
+
+            d.show();
+
+            d.$wrapper.find(".update-option-card").on("click", function () {
+                d.$wrapper.find(".update-option-card").removeClass("selected");
+                $(this).addClass("selected");
+                selected_key      = $(this).data("key");
+                selected_doctype  = $(this).data("doctype");
+            });
+        });
+    });
+
+}
+
+// ── Manpower Usage inline dialog ─────────────────────────────────────────────
+function open_manpower_usage_dialog(task_name, project) {
+    let today = frappe.datetime.get_today();
+
+    async function get_ancestors(name) {
+        let ancestors = [];
+        let current = name;
+        while (current) {
+            let res = await frappe.db.get_value("Task", current,
+                ["name", "subject", "parent_task", "custom_is_stage", "custom_is_task", "custom_is_subtask"]);
+            if (!res.message) break;
+            ancestors.unshift(res.message);
+            current = res.message.parent_task;
+        }
+        return ancestors; // [stage, ...tasks, subtask_clicked]
+    }
+
+    Promise.all([
+        frappe.db.get_value("Employee", { user_id: frappe.session.user }, "name"),
+        frappe.db.get_value("Project", project || "", "custom_site"),
+        get_ancestors(task_name)
+    ]).then(([emp_r, proj_r, ancestors]) => {
+        let employee = emp_r.message && emp_r.message.name;
+        let site     = proj_r.message && proj_r.message.custom_site;
+
+        let breadcrumbs = ancestors.map(a => a.subject || a.name).join(' <i class="fa fa-chevron-right text-muted"></i> ');
+let first_row = {};
+        if (ancestors.length >= 1) first_row.task       = ancestors[0].name;
+        if (ancestors.length >= 2) first_row.subtask    = ancestors[1].name;
+        for (let i = 2; i < ancestors.length; i++) {
+            first_row[`task_level${i - 1}`] = ancestors[i].name;
+        }
+
+        // Shared recalculate function
+        function calculate_row(row) {
+            if (!row) return;
+
+            // Time calculation using moment
+            if (row.time_in && row.time_out) {
+                let t1 = moment(row.time_in, "HH:mm:ss");
+                let t2 = moment(row.time_out, "HH:mm:ss");
+                if (t2.isBefore(t1)) {
+                    t2.add(1, 'days');
+                }
+                row.hours = parseFloat(t2.diff(t1, 'hours', true).toFixed(2));
+            }
+
+            // Amount calculations
+            row.total_presenty = parseFloat(((row.quantity || 0) * (row.presenty || 0)).toFixed(4));
+            row.amount = parseFloat((row.total_presenty * (row.rate || 0)).toFixed(2));
+
+            // In Dialog tables, setting the row object and manually refreshing the grid is more reliable
+            if (d && d.fields_dict && d.fields_dict.manpower_usage) {
+                d.fields_dict.manpower_usage.grid.refresh();
+            }
+        }
+
+        let d = new frappe.ui.Dialog({
+            title: __("New Manpower Usage"),
+            size: "extra-large",
+            fields: [
+                {
+                    label: __("Project"),     fieldname: "project",
+                    fieldtype: "Link",        options: "Project",
+                    default: project,         read_only: 1, reqd: 1
+                },
+                {
+                    label: __("Site"),        fieldname: "site",
+                    fieldtype: "Link",        options: "Site",
+                    default: site,            reqd: 1
+                },
+                { fieldtype: "Column Break" },
+                {
+                    label: __("Site Date"),   fieldname: "site_date",
+                    fieldtype: "Date",        default: today, reqd: 1
+                },
+                {
+                    label: __("Site Engineer"), fieldname: "site_engineer",
+                    fieldtype: "Link",          options: "Employee",
+                    default: employee
+                },
+{ fieldtype: "Section Break", label: __("Manpower Details") },
+                {
+                    label: __("Manpower Usage"),
+                    fieldname: "manpower_usage",
+                    fieldtype: "Table",
+                    options: "Manpower Usage Details",
+                    data: [first_row],
+                    on_add_row: function(idx) {
+                        let row = d.fields_dict.manpower_usage.df.data[idx - 1];
+                        for (let k in first_row) {
+                            if (k.includes("task") || k.includes("warehouse")) {
+                                row[k] = first_row[k];
+                            }
+                        }
+                        d.fields_dict.manpower_usage.grid.refresh();
+                    },
+                    fields: [
+                        { label: __("Stage"),    fieldname: "task",        fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("Task"),     fieldname: "subtask",     fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("SubTask"),  fieldname: "task_level1", fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: "Task Level 1", fieldname: "custom_task_level2", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level2" },
+                        { label: "Task Level 2", fieldname: "custom_task_level3", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level3" },
+                        { label: "Task Level 3", fieldname: "custom_task_level4", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level4" },
+                        { label: "Task Level 4", fieldname: "custom_task_level5", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level5" },
+                        { label: "Task Level 5", fieldname: "custom_task_level6", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level6" },
+                        { label: "Task Level 6", fieldname: "custom_task_level7", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level7" },
+                        { label: "Task Level 7", fieldname: "custom_task_level8", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level8" },
+                        { label: "Task Level 8", fieldname: "custom_task_level9", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level9" },
+                        { label: "Task Level 9", fieldname: "custom_task_level10", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level10" },
+                        { label: "Task Level 1", fieldname: "task_level2", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level2" },
+                        { label: "Task Level 2", fieldname: "task_level3", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level3" },
+                        { label: "Task Level 3", fieldname: "task_level4", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level4" },
+                        { label: "Task Level 4", fieldname: "task_level5", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level5" },
+                        { label: "Task Level 5", fieldname: "task_level6", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level6" },
+                        { label: "Task Level 6", fieldname: "task_level7", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level7" },
+                        { label: "Task Level 7", fieldname: "task_level8", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level8" },
+                        { label: "Task Level 8", fieldname: "task_level9", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level9" },
+                        { label: "Task Level 9", fieldname: "task_level10", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.task_level10" },
+                        
+                        {
+                            label: __("Contractor"), fieldname: "contractor",
+                            fieldtype: "Link",       options: "Contractor",
+                            in_list_view: 1, reqd: 1, columns: 2,
+                            onchange: function() {
+                                let row = this.doc;
+                                if (row) {
+                                    row.equipment_item = "";
+                                    row.rate = 0;
+                                    row.uom = "";
+                                    row.skill_type = "";
+                                    d.fields_dict.manpower_usage.grid.refresh();
+                                    
+                                    // Fetch and cache the manpower items for this contractor
+                                    if (row.contractor) {
+                                        frappe.call({
+                                            method: "frappe.desk.search.search_link",
+                                            args: {
+                                                txt: "",
+                                                searchfield: "name",
+                                                start: 0,
+                                                page_length: 1000,
+                                                doctype: "Item",
+                                                reference_doctype: "Manpower Usage",
+                                                query: "quantbit_construction_management.site_diary.doctype.manpower_usage.manpower_usage.get_contractor_manpower_items",
+                                                filters: { contractor: row.contractor }
+                                            },
+                                            callback: function(r) {
+                                                if (r.results) {
+                                                    row._valid_items = r.results.map(x => x.value);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            label: __("Manpower Item"), fieldname: "equipment_item",
+                            fieldtype: "Link",          options: "Item",
+                            in_list_view: 1, reqd: 1,  columns: 2,
+                            get_query: function (doc, cdt, cdn) {
+                                let row = d.fields_dict.manpower_usage.df.data.find(r => r.name === cdn);
+                                if (!row) {
+                                    // fallback if standard dialog behavior acts weird
+                                    row = locals[cdt] && locals[cdt][cdn];
+                                }
+                                if (!row || !row.contractor) {
+                                    frappe.msgprint(__("Please select a Contractor first"));
+                                    return {};
+                                }
+                                if (row._valid_items && row._valid_items.length > 0) {
+                                    return { filters: [["name", "in", row._valid_items]] };
+                                } else {
+                                    return {
+                                        query: "quantbit_construction_management.site_diary.doctype.manpower_usage.manpower_usage.get_contractor_manpower_items",
+                                        filters: { contractor: row.contractor }
+                                    };
+                                }
+                            },
+                            onchange: function() {
+                                let row = this.doc;
+                                if (!row || !row.equipment_item || !row.contractor) return;
+                                
+                                // Get UOM and Skill Type
+                                frappe.db.get_value("Item", row.equipment_item, ["stock_uom", "custom_skill_type"]).then(r => {
+                                    if (r.message) {
+                                        row.uom = r.message.stock_uom || "";
+                                        row.skill_type = r.message.custom_skill_type || "";
+                                        d.fields_dict.manpower_usage.grid.refresh();
+                                    }
+                                });
+
+                                // Get Rate from contractor
+                                frappe.call({
+                                    method: "frappe.client.get",
+                                    args: { doctype: "Contractor", name: row.contractor },
+                                    callback: function(r) {
+                                        if (r.message && r.message.site_diary_contractor_item_details) {
+                                            let item_row = r.message.site_diary_contractor_item_details.find(d => d.item === row.equipment_item);
+                                            if (item_row) {
+                                                row.rate = item_row.rate || 0;
+                                                calculate_row(row);
+                                            } else {
+                                                row.equipment_item = "";
+                                                d.fields_dict.manpower_usage.grid.refresh();
+                                                frappe.msgprint({
+                                                    title: __("Validation Error"),
+                                                    message: __(`Equipment ${row.equipment_item} does not exist for this contractor.`),
+                                                    indicator: "red"
+                                                });
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        { label: __("UOM"),        fieldname: "uom",       fieldtype: "Link",     options: "UOM",              in_list_view: 1, reqd: 1, columns: 1 },
+                        { label: __("Skill Type"), fieldname: "skill_type",fieldtype: "Select",   options: "Skilled\nUnskilled", in_list_view: 1, columns: 1 },
+                        { 
+                            label: __("Rate"), fieldname: "rate", fieldtype: "Currency", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { 
+                            label: __("Quantity"), fieldname: "quantity", fieldtype: "Float", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { label: __("Amount"),     fieldname: "amount",    fieldtype: "Currency",  in_list_view: 1, read_only: 1, columns: 1 },
+                        { 
+                            label: __("Time In"), fieldname: "time_in", fieldtype: "Time", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { 
+                            label: __("Time Out"), fieldname: "time_out", fieldtype: "Time", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { 
+                            label: __("Presenty"), fieldname: "presenty", fieldtype: "Float", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { label: __("Hours"),      fieldname: "hours",     fieldtype: "Float",     in_list_view: 1, read_only: 1, columns: 1 },
+                        { label: __("Total Presenty"), fieldname: "total_presenty", fieldtype: "Float", in_list_view: 1, read_only: 1, columns: 1 }
+                    ]
+                }
+            ],
+            primary_action_label: __("Save"),
+            primary_action(values) {
+                frappe.call({
+                    method: "frappe.client.insert",
+                    args: {
+                        doc: {
+                            doctype: "Manpower Usage",
+                            docstatus: 1,
+                            naming_series: "MU-",
+                            project:       values.project,
+                            site:          values.site,
+                            site_date:     values.site_date,
+                            site_engineer: values.site_engineer,
+                            manpower_usage: (values.manpower_usage || []).map(row => ({
+                                doctype:         "Manpower Usage Details",
+                                task:            row.task,
+                                subtask:         row.subtask,
+                                task_level1: row.task_level1,
+                                task_level2: row.task_level2,
+                                task_level3: row.task_level3,
+                                task_level4: row.task_level4,
+                                task_level5: row.task_level5,
+                                task_level6: row.task_level6,
+                                task_level7: row.task_level7,
+                                task_level8: row.task_level8,
+                                task_level9: row.task_level9,
+                                task_level10: row.task_level10,
+                                contractor:      row.contractor,
+                                equipment_item:  row.equipment_item,
+                                uom:             row.uom,
+                                skill_type:      row.skill_type,
+                                rate:            row.rate,
+                                quantity:        row.quantity,
+                                amount:          row.amount,
+                                time_in:         row.time_in,
+                                time_out:        row.time_out,
+                                presenty:        row.presenty,
+                                hours:           row.hours,
+                                total_presenty:  row.total_presenty
+                            }))
+                        }
+                    },
+                    freeze: true,
+                    freeze_message: __("Saving Manpower Usage..."),
+                    callback(r) {
+                        if (r.message) {
+                            frappe.msgprint({
+                                title: __("Manpower Usage Created"),
+                                message: __("Manpower Usage <a href='/app/manpower-usage/{0}'><b>{0}</b></a> has been saved.", [r.message.name]),
+                                indicator: "green"
+                            });
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+d.show();
+    });
+}
+
+// ── Equipment Usage inline dialog ────────────────────────────────────────────
+function open_equipment_usage_dialog(task_name, project) {
+    let today = frappe.datetime.get_today();
+
+    async function get_ancestors(name) {
+        let ancestors = [];
+        let current = name;
+        while (current) {
+            let res = await frappe.db.get_value("Task", current,
+                ["name", "subject", "parent_task", "custom_is_stage", "custom_is_task", "custom_is_subtask"]);
+            if (!res.message) break;
+            ancestors.unshift(res.message);
+            current = res.message.parent_task;
+        }
+        return ancestors; // [stage, ...tasks, subtask_clicked]
+    }
+
+    Promise.all([
+        frappe.db.get_value("Employee", { user_id: frappe.session.user }, "name"),
+        frappe.db.get_value("Project", project || "", "custom_site"),
+        get_ancestors(task_name)
+    ]).then(([emp_r, proj_r, ancestors]) => {
+        let employee = emp_r.message && emp_r.message.name;
+        let site     = proj_r.message && proj_r.message.custom_site;
+
+        let first_row = {};
+        if (ancestors.length >= 1) first_row.task       = ancestors[0].name;
+        if (ancestors.length >= 2) first_row.subtask    = ancestors[1].name;
+        for (let i = 2; i < ancestors.length; i++) {
+            first_row[`task_level${i - 1}`] = ancestors[i].name;
+        }
+
+        function calculate_row(row) {
+            if (!row) return;
+
+            row.amount = parseFloat(((row.quantity || 0) * (row.rate || 0) * (row.working_hrs || 0)).toFixed(2));
+
+            if (d && d.fields_dict && d.fields_dict.equipment_usage_details) {
+                d.fields_dict.equipment_usage_details.grid.refresh();
+            }
+        }
+
+        let d = new frappe.ui.Dialog({
+            title: __("New Equipment Usage"),
+            size: "extra-large",
+            fields: [
+                {
+                    label: __("Project"),     fieldname: "project",
+                    fieldtype: "Link",        options: "Project",
+                    default: project,         read_only: 1, reqd: 1
+                },
+                {
+                    label: __("Site"),        fieldname: "site",
+                    fieldtype: "Link",        options: "Site",
+                    default: site,            reqd: 1
+                },
+                { fieldtype: "Column Break" },
+                {
+                    label: __("Site Date"),   fieldname: "site_date",
+                    fieldtype: "Date",        default: today, reqd: 1
+                },
+                {
+                    label: __("Site Engineer"), fieldname: "site_engineer",
+                    fieldtype: "Link",          options: "Employee",
+                    default: employee
+                },
+                { fieldtype: "Section Break", label: __("Equipment Details") },
+                {
+                    label: __("Equipment Usage"),
+                    fieldname: "equipment_usage_details",
+                    fieldtype: "Table",
+                    options: "Equipment Usage Details",
+                    data: [first_row],
+                    on_add_row: function(idx) {
+                        let row = d.fields_dict.equipment_usage_details.df.data[idx - 1];
+                        for (let k in first_row) {
+                            if (k.includes("task") || k.includes("warehouse")) {
+                                row[k] = first_row[k];
+                            }
+                        }
+                        d.fields_dict.equipment_usage_details.grid.refresh();
+                    },
+                    fields: [
+                        { label: __("Stage"),    fieldname: "task",        fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("Task"),     fieldname: "subtask",     fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("SubTask"),  fieldname: "task_level1", fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        
+                        {
+                            label: __("Contractor"), fieldname: "contractor",
+                            fieldtype: "Link",       options: "Contractor",
+                            in_list_view: 1, reqd: 1, columns: 2,
+                            onchange: function() {
+                                let row = this.doc;
+                                if (row) {
+                                    row.equipment_item = "";
+                                    row.rate = 0;
+                                    row.uom = "";
+                                    d.fields_dict.equipment_usage_details.grid.refresh();
+                                    
+                                    if (row.contractor) {
+                                        frappe.call({
+                                            method: "frappe.desk.search.search_link",
+                                            args: {
+                                                txt: "",
+                                                searchfield: "name",
+                                                start: 0,
+                                                page_length: 1000,
+                                                doctype: "Item",
+                                                reference_doctype: "Equipment Usage",
+                                                query: "quantbit_construction_management.site_diary.doctype.equipment_usage.equipment_usage.get_contractor_items",
+                                                filters: { contractor: row.contractor }
+                                            },
+                                            callback: function(r) {
+                                                if (r.results) {
+                                                    row._valid_items = r.results.map(x => x.value);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            label: __("Equipment Item"), fieldname: "equipment_item",
+                            fieldtype: "Link",           options: "Item",
+                            in_list_view: 1, reqd: 1,    columns: 2,
+                            get_query: function (doc, cdt, cdn) {
+                                let row = d.fields_dict.equipment_usage_details.df.data.find(r => r.name === cdn);
+                                if (!row) row = locals[cdt] && locals[cdt][cdn];
+                                
+                                if (!row || !row.contractor) {
+                                    frappe.msgprint(__("Please select a Contractor first"));
+                                    return {};
+                                }
+                                if (row._valid_items && row._valid_items.length > 0) {
+                                    return { filters: [["name", "in", row._valid_items]] };
+                                } else {
+                                    return {
+                                        query: "quantbit_construction_management.site_diary.doctype.equipment_usage.equipment_usage.get_contractor_items",
+                                        filters: { contractor: row.contractor }
+                                    };
+                                }
+                            },
+                            onchange: function() {
+                                let row = this.doc;
+                                if (!row || !row.equipment_item || !row.contractor) return;
+                                
+                                // Get UOM
+                                frappe.db.get_value("Item", row.equipment_item, "stock_uom").then(r => {
+                                    if (r.message) {
+                                        row.uom = r.message.stock_uom || "";
+                                        d.fields_dict.equipment_usage_details.grid.refresh();
+                                    }
+                                });
+
+                                // Get Rate from contractor
+                                frappe.call({
+                                    method: "frappe.client.get",
+                                    args: { doctype: "Contractor", name: row.contractor },
+                                    callback: function(r) {
+                                        if (r.message && r.message.site_diary_contractor_item_details) {
+                                            let item_row = r.message.site_diary_contractor_item_details.find(dx => dx.item === row.equipment_item);
+                                            if (item_row) {
+                                                row.rate = item_row.rate || 0;
+                                                calculate_row(row);
+                                            } else {
+                                                row.equipment_item = "";
+                                                d.fields_dict.equipment_usage_details.grid.refresh();
+                                                frappe.msgprint({
+                                                    title: __("Validation Error"),
+                                                    message: __(`Equipment ${row.equipment_item} does not exist for this contractor.`),
+                                                    indicator: "red"
+                                                });
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        },
+                        { label: __("UOM"),        fieldname: "uom",       fieldtype: "Link",     options: "UOM", in_list_view: 1, reqd: 1, columns: 1 },
+                        { 
+                            label: __("Rate"), fieldname: "rate", fieldtype: "Currency", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { 
+                            label: __("Quantity"), fieldname: "quantity", fieldtype: "Float", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { 
+                            label: __("Working Hrs"), fieldname: "working_hrs", fieldtype: "Float", in_list_view: 1, columns: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { label: __("Opening Reading"), fieldname: "opening_reading", fieldtype: "Float", in_list_view: 1, columns: 1 },
+                        { label: __("Closing Reading"), fieldname: "closing_reading", fieldtype: "Float", in_list_view: 1, columns: 1 },
+                        { label: __("Diesel filled(in LTR)"), fieldname: "diesel_filledin_ltr", fieldtype: "Float", in_list_view: 1, columns: 1 },
+                        { label: __("Amount"),     fieldname: "amount",    fieldtype: "Currency",  in_list_view: 1, read_only: 1, columns: 1 }
+                    ]
+                }
+            ],
+            primary_action_label: __("Save"),
+            primary_action(values) {
+                frappe.call({
+                    method: "frappe.client.insert",
+                    args: {
+                        doc: {
+                            doctype: "Equipment Usage",
+                            docstatus: 1,
+                            naming_series: "EU-",
+                            project:       values.project,
+                            site:          values.site,
+                            site_date:     values.site_date,
+                            site_engineer: values.site_engineer,
+                            equipment_usage_details: (values.equipment_usage_details || []).map(row => ({
+                                doctype:             "Equipment Usage Details",
+                                task:                row.task,
+                                subtask:             row.subtask,
+                                task_level1: row.task_level1,
+                                task_level2: row.task_level2,
+                                task_level3: row.task_level3,
+                                task_level4: row.task_level4,
+                                task_level5: row.task_level5,
+                                task_level6: row.task_level6,
+                                task_level7: row.task_level7,
+                                task_level8: row.task_level8,
+                                task_level9: row.task_level9,
+                                task_level10: row.task_level10,
+                                contractor:          row.contractor,
+                                equipment_item:      row.equipment_item,
+                                uom:                 row.uom,
+                                rate:                row.rate,
+                                quantity:            row.quantity,
+                                working_hrs:         row.working_hrs,
+                                opening_reading:     row.opening_reading,
+                                closing_reading:     row.closing_reading,
+                                diesel_filledin_ltr: row.diesel_filledin_ltr,
+                                amount:              row.amount
+                            }))
+                        }
+                    },
+                    freeze: true,
+                    freeze_message: __("Saving Equipment Usage..."),
+                    callback(r) {
+                        if (r.message) {
+                            frappe.msgprint({
+                                title: __("Equipment Usage Created"),
+                                message: __("Equipment Usage <a href='/app/equipment-usage/{0}'><b>{0}</b></a> has been saved.", [r.message.name]),
+                                indicator: "green"
+                            });
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        d.show();
+    });
+}
+
+
+// ── Task Progress inline dialog ──────────────────────────────────────────────
+function open_task_progress_dialog(task_name, project) {
+    let today = frappe.datetime.get_today();
+
+    async function get_ancestors(name) {
+        let ancestors = [];
+        let current = name;
+        while (current) {
+            let res = await frappe.db.get_value("Task", current,
+                ["name", "subject", "parent_task", "custom_total_quantity", "custom_total_achieved", "custom_uom"]);
+            if (!res.message) break;
+            // attach the full record so we can extract uom/qty later
+            ancestors.unshift(res.message);
+            current = res.message.parent_task;
+        }
+        return ancestors; // [stage, ...tasks, subtask_clicked]
+    }
+
+    Promise.all([
+        frappe.db.get_value("Employee", { user_id: frappe.session.user }, "name"),
+        frappe.db.get_value("Project", project || "", "custom_site"),
+        get_ancestors(task_name)
+    ]).then(([emp_r, proj_r, ancestors]) => {
+        let employee = emp_r.message && emp_r.message.name;
+        let site     = proj_r.message && proj_r.message.custom_site;
+
+        let first_row = {};
+        if (ancestors.length >= 1) first_row.parent_task = ancestors[0].name;
+        if (ancestors.length >= 2) first_row.task        = ancestors[1].name;
+        for (let i = 2; i < ancestors.length; i++) {
+            first_row[`task_level${i - 1}`] = ancestors[i].name;
+        }
+
+        // Extract deep task properties
+        let deepest_task_record = ancestors[ancestors.length - 1];
+        if (deepest_task_record) {
+            first_row.total_qty = deepest_task_record.custom_total_quantity || 0;
+            // Store previous total achieved so we can calculate accurately
+            first_row._previous_total_achieved = deepest_task_record.custom_total_achieved || 0;
+            first_row.total_achieved = first_row._previous_total_achieved;
+            
+            if (first_row.total_qty > 0) {
+                first_row.percent_completed = parseFloat(((first_row.total_achieved / first_row.total_qty) * 100).toFixed(2));
+            } else {
+                first_row.percent_completed = 0;
+            }
+        }
+
+        function calculate_row(row) {
+            if (!row) return;
+
+            let prev = row._previous_total_achieved || 0;
+            let achieved_today = row.achieved_today || 0;
+            
+            row.total_achieved = prev + achieved_today;
+            
+            let total_qty = row.total_qty || 0;
+            if (total_qty > 0) {
+                row.percent_completed = parseFloat(((row.total_achieved / total_qty) * 100).toFixed(2));
+            } else {
+                row.percent_completed = 0;
+            }
+
+            if (d && d.fields_dict && d.fields_dict.task_progress_details) {
+                d.fields_dict.task_progress_details.grid.refresh();
+            }
+        }
+
+        let d = new frappe.ui.Dialog({
+            title: __("New Task Progress"),
+            size: "extra-large",
+            fields: [
+                {
+                    label: __("Project"),     fieldname: "project",
+                    fieldtype: "Link",        options: "Project",
+                    default: project,         read_only: 1, reqd: 1
+                },
+                {
+                    label: __("Site"),        fieldname: "site",
+                    fieldtype: "Link",        options: "Site",
+                    default: site,            reqd: 1
+                },
+                { fieldtype: "Column Break" },
+                {
+                    label: __("Site Date"),   fieldname: "site_date",
+                    fieldtype: "Date",        default: today, reqd: 1
+                },
+                {
+                    label: __("Site Engineer"), fieldname: "site_engineer",
+                    fieldtype: "Link",          options: "Employee",
+                    default: employee
+                },
+                {
+                    label: __("Shift"),       fieldname: "shift",
+                    fieldtype: "Select",      options: "\nDay\nNight\nBoth",
+                    default: "Day"
+                },
+                { fieldtype: "Section Break", label: __("Task Progress Details") },
+                {
+                    label: __("Task Progress Details"),
+                    fieldname: "task_progress_details",
+                    fieldtype: "Table",
+                    options: "Task Progress Details",
+                    data: [first_row],
+                    on_add_row: function(idx) {
+                        let row = d.fields_dict.task_progress_details.df.data[idx - 1];
+                        for (let k in first_row) {
+                            if (k.includes("task") || k.includes("warehouse")) {
+                                row[k] = first_row[k];
+                            }
+                        }
+                        d.fields_dict.task_progress_details.grid.refresh();
+                    },
+                    fields: [
+                        { label: __("Stage"),    fieldname: "parent_task", fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("Task"),     fieldname: "task",        fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("SubTask"),  fieldname: "task_level1", fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        
+                        { label: __("Total Qty"), fieldname: "total_qty", fieldtype: "Float", in_list_view: 1, columns: 1, read_only: 1 },
+                        { label: __("Planned Today"), fieldname: "planned_today", fieldtype: "Float", in_list_view: 1, columns: 1 },
+                        { 
+                            label: __("Achieved Today"), fieldname: "achieved_today", fieldtype: "Float", in_list_view: 1, columns: 1, reqd: 1,
+                            onchange: function() { calculate_row(this.doc); }
+                        },
+                        { label: __("Total Achieved"), fieldname: "total_achieved", fieldtype: "Float", in_list_view: 1, columns: 1, read_only: 1 },
+                        { label: __("Percent Completed"), fieldname: "percent_completed", fieldtype: "Float", in_list_view: 1, columns: 1, read_only: 1 }
+                    ]
+                }
+            ],
+            primary_action_label: __("Save"),
+            primary_action(values) {
+                frappe.call({
+                    method: "frappe.client.insert",
+                    args: {
+                        doc: {
+                            doctype: "Task Progress",
+                            docstatus: 1,
+                            project:       values.project,
+                            site:          values.site,
+                            site_date:     values.site_date,
+                            site_engineer: values.site_engineer,
+                            shift:         values.shift,
+                            task_progress_details: (values.task_progress_details || []).map(row => ({
+                                doctype:           "Task Progress Details",
+                                parent_task:       row.parent_task,
+                                task:              row.task,
+                                task_level1: row.task_level1,
+                                task_level2: row.task_level2,
+                                task_level3: row.task_level3,
+                                task_level4: row.task_level4,
+                                task_level5: row.task_level5,
+                                task_level6: row.task_level6,
+                                task_level7: row.task_level7,
+                                task_level8: row.task_level8,
+                                task_level9: row.task_level9,
+                                task_level10: row.task_level10,
+                                total_qty:         row.total_qty,
+                                planned_today:     row.planned_today,
+                                achieved_today:    row.achieved_today,
+                                total_achieved:    row.total_achieved,
+                                percent_completed: row.percent_completed
+                            }))
+                        }
+                    },
+                    freeze: true,
+                    freeze_message: __("Saving Task Progress..."),
+                    callback(r) {
+                        if (r.message) {
+                            frappe.msgprint({
+                                title: __("Task Progress Created"),
+                                message: __("Task Progress <a href='/app/task-progress/{0}'><b>{0}</b></a> has been saved.", [r.message.name]),
+                                indicator: "green"
+                            });
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        d.show();
+    });
+}
+
+
+// ── Material Consumed (Stock Entry) inline dialog ───────────────────────────
+function open_material_consumed_dialog(task_name, project) {
+    let today = frappe.datetime.get_today();
+
+    async function get_ancestors(name) {
+        let ancestors = [];
+        let current = name;
+        while (current) {
+            let res = await frappe.db.get_value("Task", current,
+                ["name", "subject", "parent_task", "custom_is_stage", "custom_is_task", "custom_is_subtask"]);
+            if (!res.message) break;
+            ancestors.unshift(res.message);
+            current = res.message.parent_task;
+        }
+        return ancestors;
+    }
+
+    Promise.all([
+        frappe.db.get_value("Project", project || "", ["custom_site", "company"]),
+        get_ancestors(task_name),
+        frappe.db.get_list("Warehouse", { filters: { custom_project: project }, fields: ["name"] })
+    ]).then(([proj_r, ancestors, wh_list]) => {
+        let site    = proj_r.message && proj_r.message.custom_site;
+        let company = proj_r.message && proj_r.message.company;
+        
+        let default_warehouse = "";
+        if (wh_list && wh_list.length === 1) {
+            default_warehouse = wh_list[0].name;
+        }
+
+        let first_row = {};
+        if (ancestors.length >= 1) first_row.custom_task        = ancestors[0].name;
+        if (ancestors.length >= 2) first_row.custom_subtask     = ancestors[1].name;
+        for (let i = 2; i < ancestors.length; i++) {
+            first_row[`custom_task_level${i - 1}`] = ancestors[i].name;
+        }
+        first_row.s_warehouse = default_warehouse;
+
+        let d = new frappe.ui.Dialog({
+            title: __("Material Consumed (Material Issue)"),
+            size: "extra-large",
+            fields: [
+                {
+                    label: __("Project"),     fieldname: "project",
+                    fieldtype: "Link",        options: "Project",
+                    default: project,         read_only: 1, reqd: 1
+                },
+                {
+                    label: __("Site"),        fieldname: "site",
+                    fieldtype: "Link",        options: "Site",
+                    default: site,            reqd: 1
+                },
+                { fieldtype: "Column Break" },
+                {
+                    label: __("Posting Date"), fieldname: "posting_date",
+                    fieldtype: "Date",         default: today, reqd: 1
+                },
+                {
+                    label: __("Company"),      fieldname: "company",
+                    fieldtype: "Link",         options: "Company",
+                    default: company,          reqd: 1, read_only: 1
+                },
+                { fieldtype: "Section Break", label: __("Items") },
+                {
+                    label: __("Items"),
+                    fieldname: "items",
+                    fieldtype: "Table",
+                    options: "Stock Entry Detail",
+                    data: [first_row],
+                    on_add_row: function(idx) {
+                        let row = d.fields_dict.items.df.data[idx - 1];
+                        for (let k in first_row) {
+                            if (k.includes("task") || k.includes("warehouse")) {
+                                row[k] = first_row[k];
+                            }
+                        }
+                        d.fields_dict.items.grid.refresh();
+                    },
+                    fields: [
+                        { label: __("Stage"),    fieldname: "custom_task",        fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("Task"),     fieldname: "custom_subtask",     fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("SubTask"),  fieldname: "custom_task_level1", fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        
+                        { 
+                            label: __("Item Code"), fieldname: "item_code", fieldtype: "Link", options: "Item", in_list_view: 1, reqd: 1, columns: 2,
+                            onchange: function() {
+                                let row = this.doc;
+                                if (!row || !row.item_code) return;
+                                frappe.db.get_value("Item", row.item_code, ["stock_uom"]).then(r => {
+                                    if (r.message) {
+                                        row.uom = r.message.stock_uom || "";
+                                        row.stock_uom = r.message.stock_uom || "";
+                                        d.fields_dict.items.grid.refresh();
+                                    }
+                                });
+                            }
+                        },
+                        { 
+                            label: __("Source Warehouse"), fieldname: "s_warehouse", fieldtype: "Link", options: "Warehouse", in_list_view: 1, reqd: 1, columns: 2,
+                            get_query: function() {
+                                return {
+                                    filters: {
+                                        custom_project: project
+                                    }
+                                };
+                            }
+                        },
+                        { label: __("Qty"), fieldname: "qty", fieldtype: "Float", in_list_view: 1, reqd: 1, columns: 1 },
+                        { label: __("UOM"), fieldname: "uom", fieldtype: "Link", options: "UOM", in_list_view: 1, read_only: 1, columns: 1 }
+                    ]
+                }
+            ],
+            primary_action_label: __("Save"),
+            primary_action(values) {
+                frappe.call({
+                    method: "frappe.client.insert",
+                    args: {
+                        doc: {
+                            doctype: "Purchase Receipt",
+                            docstatus: 1,
+                            project:       values.project,
+                            supplier:      values.supplier,
+                            posting_date:  values.posting_date,
+                            company:       values.company,
+                            items: (values.items || []).map(row => ({
+                                doctype:            "Purchase Receipt Item",
+                                item_code:          row.item_code,
+                                warehouse:          row.t_warehouse,
+                                qty:                row.qty,
+                                uom:                row.uom,
+                                stock_uom:          row.uom,
+                                received_qty:       row.qty,
+                                project:            values.project
+                            }))
+                        }
+                    },
+                    freeze: true,
+                    freeze_message: __("Saving Material Issue..."),
+                    callback(r) {
+                        if (r.message) {
+                            frappe.msgprint({
+                                title: __("Stock Entry Created"),
+                                message: __("Material Issue <a href='/app/stock-entry/{0}'><b>{0}</b></a> has been saved.", [r.message.name]),
+                                indicator: "green"
+                            });
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        d.show();
+    });
+}
+
+
+// ── Material Received (Purchase Receipt) inline dialog ───────────────────────────
+function open_material_received_dialog(task_name, project) {
+    let today = frappe.datetime.get_today();
+
+    async function get_ancestors(name) {
+        let ancestors = [];
+        let current = name;
+        while (current) {
+            let res = await frappe.db.get_value("Task", current,
+                ["name", "subject", "parent_task", "custom_is_stage", "custom_is_task", "custom_is_subtask"]);
+            if (!res.message) break;
+            ancestors.unshift(res.message);
+            current = res.message.parent_task;
+        }
+        return ancestors;
+    }
+
+    Promise.all([
+        frappe.db.get_value("Project", project || "", ["custom_site", "company"]),
+        get_ancestors(task_name),
+        frappe.db.get_list("Warehouse", { filters: { custom_project: project }, fields: ["name"] })
+    ]).then(([proj_r, ancestors, wh_list]) => {
+        let site    = proj_r.message && proj_r.message.custom_site;
+        let company = proj_r.message && proj_r.message.company;
+        
+        let default_warehouse = "";
+        if (wh_list && wh_list.length === 1) {
+            default_warehouse = wh_list[0].name;
+        }
+
+        let first_row = {};
+        if (ancestors.length >= 1) first_row.custom_task        = ancestors[0].name;
+        if (ancestors.length >= 2) first_row.custom_subtask     = ancestors[1].name;
+        for (let i = 2; i < ancestors.length; i++) {
+            first_row[`custom_task_level${i - 1}`] = ancestors[i].name;
+        }
+        first_row.warehouse = default_warehouse;
+
+        let d = new frappe.ui.Dialog({
+            title: __("Material Received (Purchase Receipt)"),
+            size: "extra-large",
+            fields: [
+                {
+                    label: __("Project"),     fieldname: "project",
+                    fieldtype: "Link",        options: "Project",
+                    default: project,         read_only: 1, reqd: 1
+                },
+                {
+                    label: __("Site"),        fieldname: "site",
+                    fieldtype: "Link",        options: "Site",
+                    default: site,            reqd: 1
+                },
+                { fieldtype: "Column Break" },
+                {
+                    label: __("Supplier"),    fieldname: "supplier",
+                    fieldtype: "Link",        options: "Supplier",
+                    reqd: 1
+                },
+                {
+                    label: __("Posting Date"), fieldname: "posting_date",
+                    fieldtype: "Date",         default: today, reqd: 1
+                },
+                {
+                    label: __("Company"),      fieldname: "company",
+                    fieldtype: "Link",         options: "Company",
+                    default: company,          reqd: 1, read_only: 1
+                },
+                { fieldtype: "Section Break", label: __("Items") },
+                {
+                    label: __("Items"),
+                    fieldname: "items",
+                    fieldtype: "Table",
+                    options: "Purchase Receipt Item",
+                    data: [first_row],
+                    on_add_row: function(idx) {
+                        let row = d.fields_dict.items.df.data[idx - 1];
+                        for (let k in first_row) {
+                            if (k.includes("task") || k.includes("warehouse")) {
+                                row[k] = first_row[k];
+                            }
+                        }
+                        d.fields_dict.items.grid.refresh();
+                    },
+                    fields: [
+                        { label: __("Stage"),    fieldname: "custom_task",        fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: __("Task"),     fieldname: "custom_subtask",     fieldtype: "Link", options: "Task", in_list_view: 0 },
+                        { label: "Task Level 1", fieldname: "custom_task_level1", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level1" },
+                        { label: "Task Level 2", fieldname: "custom_task_level2", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level2" },
+                        { label: "Task Level 3", fieldname: "custom_task_level3", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level3" },
+                        { label: "Task Level 4", fieldname: "custom_task_level4", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level4" },
+                        { label: "Task Level 5", fieldname: "custom_task_level5", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level5" },
+                        { label: "Task Level 6", fieldname: "custom_task_level6", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level6" },
+                        { label: "Task Level 7", fieldname: "custom_task_level7", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level7" },
+                        { label: "Task Level 8", fieldname: "custom_task_level8", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level8" },
+                        { label: "Task Level 9", fieldname: "custom_task_level9", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level9" },
+                        { label: "Task Level 10", fieldname: "custom_task_level10", fieldtype: "Link", options: "Task", in_list_view: 0, depends_on: "eval:doc.custom_task_level10" },
+                        
+                        { 
+                            label: __("Item Code"), fieldname: "item_code", fieldtype: "Link", options: "Item", in_list_view: 1, reqd: 1, columns: 2,
+                            onchange: function() {
+                                let row = this.doc;
+                                if (!row || !row.item_code) return;
+                                frappe.db.get_value("Item", row.item_code, ["stock_uom"]).then(r => {
+                                    if (r.message) {
+                                        row.uom = r.message.stock_uom || "";
+                                        row.stock_uom = r.message.stock_uom || "";
+                                        d.fields_dict.items.grid.refresh();
+                                    }
+                                });
+                            }
+                        },
+                        { 
+                            label: __("Accepted Warehouse"), fieldname: "warehouse", fieldtype: "Link", options: "Warehouse", in_list_view: 1, reqd: 1, columns: 2,
+                            get_query: function() {
+                                return {
+                                    filters: {
+                                        custom_project: project
+                                    }
+                                };
+                            }
+                        },
+                        { label: __("Qty"), fieldname: "qty", fieldtype: "Float", in_list_view: 1, reqd: 1, columns: 1 },
+                        { label: __("UOM"), fieldname: "uom", fieldtype: "Link", options: "UOM", in_list_view: 1, read_only: 1, columns: 1 }
+                    ]
+                }
+            ],
+            primary_action_label: __("Save"),
+            primary_action(values) {
+                frappe.call({
+                    method: "frappe.client.insert",
+                    args: {
+                        doc: {
+                            doctype: "Purchase Receipt",
+                            docstatus: 1,
+                            project:       values.project,
+                            supplier:      values.supplier,
+                            posting_date:  values.posting_date,
+                            company:       values.company,
+                            items: (values.items || []).map(row => ({
+                                doctype:            "Purchase Receipt Item",
+                                item_code:          row.item_code,
+                                warehouse:          row.warehouse,
+                                qty:                row.qty,
+                                uom:                row.uom,
+                                stock_uom:          row.uom,
+                                received_qty:       row.qty,
+                                project:            values.project
+                            }))
+                        }
+                    },
+                    freeze: true,
+                    freeze_message: __("Saving Purchase Receipt..."),
+                    callback(r) {
+                        if (r.message) {
+                            frappe.msgprint({
+                                title: __("Purchase Receipt Created"),
+                                message: __("Material Receipt <a href='/app/purchase-receipt/{0}'><b>{0}</b></a> has been saved.", [r.message.name]),
+                                indicator: "green"
+                            });
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+
+        d.show();
+    });
 }
