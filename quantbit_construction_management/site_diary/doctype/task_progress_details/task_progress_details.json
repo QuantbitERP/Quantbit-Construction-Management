@@ -44,7 +44,9 @@
   "column_break_uhda",
   "total_achieved",
   "percent_completed",
-  "amount"
+  "amount",
+  "billed",
+  "paid"
  ],
  "fields": [
   {
@@ -304,13 +306,25 @@
    "fieldname": "amount",
    "fieldtype": "Float",
    "label": "Amount"
+  },
+  {
+   "default": "0",
+   "fieldname": "billed",
+   "fieldtype": "Check",
+   "label": "Billed"
+  },
+  {
+   "default": "0",
+   "fieldname": "paid",
+   "fieldtype": "Check",
+   "label": "Paid"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-22 14:01:29.841296",
+ "modified": "2026-06-24 10:17:24.620669",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Task Progress Details",

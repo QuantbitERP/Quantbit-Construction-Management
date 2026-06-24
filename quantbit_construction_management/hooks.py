@@ -81,12 +81,6 @@ fixtures = [
         ]
     },
     {
-        "doctype": "Workspace",
-        "filters": [
-            ["name", "=", "Construction Management System"]
-        ]
-    },
-    {
         "doctype": "Item Type"
     },
     {
