@@ -61,7 +61,7 @@ function getHierarchyPath(all_tasks, task_name) {
 frappe.ui.form.on("Bill of Quantities", {
     before_submit: async function (frm) {
 
-         let all_tasks = await frappe.db.get_list("Task", {
+        let all_tasks = await frappe.db.get_list("Task", {
             filters: {
                 custom_boq_name: frm.doc.name
             },
@@ -748,46 +748,108 @@ frappe.ui.form.on('Bill of Quantities', {
             );
         }
 
-        if (frm.doc.docstatus === 1 && !frm.doc.project) {
-            frm.add_custom_button(__("Create Project"), () => {
+        if (frm.doc.docstatus === 1) {
+            // Project option — only if no project linked yet
+            if (!frm.doc.project) {
+                frm.add_custom_button(__("Project"), () => {
+                    frappe.prompt([
+                        {
+                            label: __("Project Name"),
+                            fieldname: "project_name",
+                            fieldtype: "Data",
+                            reqd: 1
+                        },
+                        {
+                            label: __("Site Name"),
+                            fieldname: "site_name",
+                            fieldtype: "Link",
+                            options: "Site",
+                            reqd: 1
+                        }
+                    ], function (values) {
+                        frappe.call({
+                            method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_project_from_boq",
+                            args: {
+                                boq_name: frm.doc.name,
+                                project_name: values.project_name,
+                                site_name: values.site_name
+                            },
+                            freeze: true,
+                            freeze_message: __("Creating Project..."),
+                            callback: function (r) {
+                                if (r.message) {
+                                    frappe.msgprint({
+                                        title: __("Project Created"),
+                                        message: __("Project <a href='/app/project/{0}'><b>{0}</b></a> has been created and linked successfully.", [r.message]),
+                                        indicator: "green"
+                                    });
+                                    frm.set_value("project", r.message);
+                                    frm.reload_doc();
+                                }
+                            }
+                        });
+                    }, __("Create Project"), __("Create"));
+                }, __("Create"));
+            }
+
+            // Site option — opens a simple prompt popup to create a Site
+            frm.add_custom_button(__("Site"), () => {
                 frappe.prompt([
-                    {
-                        label: __("Project Name"),
-                        fieldname: "project_name",
-                        fieldtype: "Data",
-                        reqd: 1
-                    },
                     {
                         label: __("Site Name"),
                         fieldname: "site_name",
-                        fieldtype: "Link",
-                        options: "Site",
+                        fieldtype: "Data",
                         reqd: 1
                     }
-                ], function(values) {
+                ], function (values) {
                     frappe.call({
-                        method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.create_project_from_boq",
+                        method: "frappe.client.insert",
                         args: {
-                            boq_name: frm.doc.name,
-                            project_name: values.project_name,  
-                            site_name: values.site_name
+                            doc: {
+                                doctype: "Site",
+                                site_name: values.site_name
+                            }
                         },
                         freeze: true,
-                        freeze_message: __("Creating Project..."),
-                        callback: function(r) {
+                        freeze_message: __("Creating Site..."),
+                        callback: function (r) {
                             if (r.message) {
                                 frappe.msgprint({
-                                    title: __("Project Created"),
-                                    message: __("Project <a href='/app/project/{0}'><b>{0}</b></a> has been created and linked successfully.", [r.message]),
+                                    title: __("Site Created"),
+                                    message: __("Site <a href='/app/site/{0}'><b>{0}</b></a> has been created successfully.", [r.message.name]),
                                     indicator: "green"
                                 });
-                                frm.set_value("project", r.message);
-                                frm.reload_doc();
                             }
                         }
                     });
-                }, __("Create Project"), __("Create"));
-            }).addClass("btn-primary");
+                }, __("Create New Site"), __("Create"));
+            }, __("Create"));
+
+            // Duplicate BOQ option
+            frm.add_custom_button(__("Duplicate BOQ"), () => {
+                frappe.confirm(
+                    __("This will duplicate the BOQ along with all its tasks. Continue?"),
+                    function () {
+                        frappe.call({
+                            method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.duplicate_boq",
+                            args: {
+                                boq_name: frm.doc.name
+                            },
+                            freeze: true,
+                            freeze_message: __("Duplicating BOQ..."),
+                            callback: function (r) {
+                                if (r.message) {
+                                    frappe.msgprint({
+                                        title: __("BOQ Duplicated"),
+                                        message: __("BOQ <a href='/app/bill-of-quantities/{0}'><b>{0}</b></a> has been created successfully.", [r.message]),
+                                        indicator: "green"
+                                    });
+                                }
+                            }
+                        });
+                    }
+                );
+            }, __("Create"));
         }
     }
 });
@@ -1177,8 +1239,8 @@ function render_row(item, type, is_expanded, depth = 0) {
     }
     let progress = flt(item.progress || 0);
     let descendant_count = get_descendant_count(
-    window.current_hierarchy_tasks || [],
-    item.name
+        window.current_hierarchy_tasks || [],
+        item.name
     );
     let descendant_btn = "";
     if (
@@ -1226,7 +1288,7 @@ function render_row(item, type, is_expanded, depth = 0) {
                 data-name="${item.name}"
                 title="Open Form View"
                 ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
-                Redirect
+                Show Details
             </button>
 
             <button class="btn ${btnClass} btn-xs edit-item"
@@ -1374,12 +1436,11 @@ function attach_events(frm, all_tasks) {
                                 ["custom_is_stage", "=", 1],
                                 ["is_group", "=", 1],
                                 ["is_template", "=", 1],
-                                ["subject", "like", "%" + txt + "%"]
+                                // ["subject", "like", "%" + txt + "%"]
                             ],
                             fields: ["name", "subject"],
-                            limit: 20
+                            // limit: 20
                         }).then(records => {
-
                             return records.map(row => ({
                                 value: row.name,
                                 label: row.subject
