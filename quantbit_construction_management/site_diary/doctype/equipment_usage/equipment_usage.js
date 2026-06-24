@@ -258,8 +258,9 @@ function apply_visibility(frm, rowname, visible_level) {
     if (!grid_row) return;
 
     grid_row.toggle_display("subtask", visible_level >= 1);
+    grid_row.toggle_display("task_level1", true);
 
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 2; i <= 11; i++) {
         grid_row.toggle_display(`task_level${i}`, visible_level >= (i + 1));
     }
 }
