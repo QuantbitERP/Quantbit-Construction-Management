@@ -9,12 +9,13 @@
   "item_code",
   "quantity",
   "rate",
+  "transaction_type",
+  "transaction",
   "column_break_keyg",
   "amount",
   "warehouse",
   "uom",
-  "transaction",
-  "transaction_type"
+  "reference_row_name"
  ],
  "fields": [
   {
@@ -77,13 +78,18 @@
    "fieldtype": "Dynamic Link",
    "label": "Transaction",
    "options": "transaction"
+  },
+  {
+   "fieldname": "reference_row_name",
+   "fieldtype": "Data",
+   "label": "Reference Row Name"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-23 14:56:59.847148",
+ "modified": "2026-06-24 16:09:43.753399",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Material Received",

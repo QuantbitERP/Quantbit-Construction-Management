@@ -827,16 +827,21 @@ def get_task_bom_details(task):
 	}
 
 @frappe.whitelist()
-def get_site_diary_details(project, site_date):
-
+def get_site_diary_details(project, site_date,shift=None,site_engineer=None):
+	
     manpower_data = frappe.db.sql("""
         SELECT
             mud.task,
+			mu.name as doc_name,
+			mud.name as reference_row_name,
+			'Manpower Usage' as doctype,
 			mud.stage_subject,
             mud.subtask,
 			mud.task_subject,
             mud.equipment_item,
             mud.contractor,
+			mu.shift,
+			mu.site_engineer,
             mud.uom,
             mud.quantity,
             mud.rate,
@@ -869,10 +874,17 @@ def get_site_diary_details(project, site_date):
         WHERE mu.project = %s
         AND mu.site_date = %s
         AND mu.docstatus = 1
-    """, (project, site_date), as_dict=True)
+		AND mu.site_engineer = %s
+		And mu.shift = %s
+    """, (project, site_date, site_engineer, shift), as_dict=True)
 
     equipment_data = frappe.db.sql("""
         SELECT
+			eu.name as doc_name,
+			eud.name as reference_row_name,
+			'Equipment Usage' as doctype,
+			eu.shift,
+			eu.site_engineer,
             eud.task,
 			eud.stage_subject,
             eud.subtask,
@@ -910,11 +922,15 @@ def get_site_diary_details(project, site_date):
         WHERE eu.project = %s
         AND eu.site_date = %s
         AND eu.docstatus = 1
-    """, (project, site_date), as_dict=True)
+		AND eu.shift = %s
+		AND eu.site_engineer = %s
+    """, (project, site_date, shift, site_engineer), as_dict=True)
 
 
     visitors_data = frappe.db.sql("""
         SELECT
+			pv.name as doc_name,
+			'Project Visitor' as doctype,
             pv.project,
             pv.site_date,
             pv.visitor_name,
@@ -1001,7 +1017,9 @@ def get_material_deliveries(project, site_date):
 
     data = frappe.db.sql("""
         SELECT
-            se.name as stock_entry,
+			sei.name as reference_row_name,
+			'Stock Entry' as doctype,
+            se.name as doc_name,
             sei.item_code,
             sei.qty,
             sei.uom,
@@ -1092,6 +1110,7 @@ def get_material_received(project, site_date):
                 'Purchase Receipt' as reference_type,
                 pri.item_code,
                 pri.item_name,
+				pri.name as reference_row_name,
                 pri.qty,
                 pri.uom,
                 pr.set_warehouse as warehouse,
@@ -1127,6 +1146,7 @@ def get_material_received(project, site_date):
                 sed.s_warehouse as warehouse,
                 sed.t_warehouse as target_warehouse,
                 sed.project,
+				sed.name as reference_row_name,
                 sed.basic_rate as rate,
                 sed.amount
             FROM `tabStock Entry Detail` sed
@@ -1166,6 +1186,9 @@ def get_latest_task_progress(project, site_date):
 
     data = frappe.db.sql("""
         SELECT
+			name as reference_row_name,
+			'Task Progress' as doctype,
+            parent as doc_name,
             parent_task,
 			parent_task_subject,
             task,

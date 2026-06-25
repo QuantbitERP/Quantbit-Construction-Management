@@ -14,7 +14,7 @@
    "fieldname": "task",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Task",
+   "label": "Stage",
    "options": "Task",
    "reqd": 1
   },
@@ -24,14 +24,14 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Task Subject"
+   "label": "Stage Subject"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-26 15:26:43.371653",
+ "modified": "2026-06-24 12:07:52.682831",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "Task Summary",
