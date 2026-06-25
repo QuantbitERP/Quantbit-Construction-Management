@@ -157,7 +157,6 @@ frappe.ui.form.on("Site Diary", {
                 args: args,
                 callback: function (r) {
                     if (r.message) {
-
                         (r.message.manpower || []).forEach(function (d) {
 
                             if (d.task) {
@@ -451,13 +450,21 @@ frappe.ui.form.on("Site Diary", {
 
         // MATERIAL RECEIVED
         let receivedPromise = new Promise(resolve => {
+            let args = {
+                project: frm.doc.project,
+                site_date: frm.doc.site_date
+            };
 
+            if (frm.doc.shift) {
+                args.shift = frm.doc.shift;
+            }
+
+            if (frm.doc.site_engineer) {
+                args.site_engineer = frm.doc.site_engineer;
+            }
             frappe.call({
                 method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_material_received",
-                args: {
-                    project: frm.doc.project,
-                    site_date: frm.doc.site_date
-                },
+                args: args,
                 freeze: true,
                 freeze_message: "Fetching Material Received...",
                 callback: function (r) {
@@ -466,7 +473,6 @@ frappe.ui.form.on("Site Diary", {
                     let data = r.message || [];
 
                     data.forEach(function (d) {
-                        //console.log("Material Received Data:", d);
                         let row = frm.add_child("material_received");
 
                         row.item_code = d.item_code;
@@ -499,13 +505,21 @@ frappe.ui.form.on("Site Diary", {
         });
         // MATERIAL DELIVERIES
         let materialDeliveryPromise = new Promise(resolve => {
+            let args = {
+                project: frm.doc.project,
+                site_date: frm.doc.site_date
+            };
 
+            if (frm.doc.shift) {
+                args.shift = frm.doc.shift;
+            }
+
+            if (frm.doc.site_engineer) {
+                args.site_engineer = frm.doc.site_engineer;
+            }
             frappe.call({
                 method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_material_deliveries",
-                args: {
-                    project: frm.doc.project,
-                    site_date: frm.doc.site_date
-                },
+                args: args,
                 freeze: true,
                 freeze_message: "Fetching Material Deliveries...",
                 callback: function (r) {
@@ -620,13 +634,21 @@ frappe.ui.form.on("Site Diary", {
         });
         // TASK PROGRESS
         let taskProgressPromise = new Promise(resolve => {
+            let args = {
+                project: frm.doc.project,
+                site_date: frm.doc.site_date
+            };
 
+            if (frm.doc.shift) {
+                args.shift = frm.doc.shift;
+            }
+
+            if (frm.doc.site_engineer) {
+                args.site_engineer = frm.doc.site_engineer;
+            }
             frappe.call({
                 method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
-                args: {
-                    project: frm.doc.project,
-                    site_date: frm.doc.site_date
-                },
+                args: args,
                 freeze: true,
                 freeze_message: "Fetching Task Progress...",
                 callback(r) {
@@ -751,13 +773,21 @@ function sync_activity_progress(frm) {
     }
     let existing_keys = new Set();
     frm.clear_table("activity_progress");
+    let args = {
+        project: frm.doc.project,
+        site_date: frm.doc.site_date
+    };
 
+    if (frm.doc.shift) {
+        args.shift = frm.doc.shift;
+    }
+
+    if (frm.doc.site_engineer) {
+        args.site_engineer = frm.doc.site_engineer;
+    }
     frappe.call({
         method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
-        args: {
-            project: frm.doc.project,
-            site_date: frm.doc.site_date
-        },
+        args: args,
         freeze: true,
         freeze_message: "Fetching Task Progress...",
         callback(r) {
@@ -824,12 +854,12 @@ function sync_activity_progress(frm) {
             let new_data =
                 r.message.activity_progress || [];
 
-            // merge_child_table(
-            //     frm,
-            //     "activity_progress",
-            //     new_data,
-            //     ["parent_task", "task"]
-            // );
+            merge_child_table(
+                frm,
+                "activity_progress",
+                new_data,
+                ["parent_task", "task"]
+            );
 
             new_data.forEach(d => {
 
