@@ -827,58 +827,84 @@ def get_task_bom_details(task):
 	}
 
 @frappe.whitelist()
-def get_site_diary_details(project, site_date,shift=None,site_engineer=None):
-	
-    manpower_data = frappe.db.sql("""
+def get_site_diary_details(project, site_date, shift=None, site_engineer=None):
+
+    conditions = [
+        "mu.project = %s",
+        "mu.site_date = %s",
+        "mu.docstatus = 1"
+    ]
+
+    values = [project, site_date]
+
+    if shift:
+        conditions.append("mu.shift = %s")
+        values.append(shift)
+
+    if site_engineer:
+        conditions.append("mu.site_engineer = %s")
+        values.append(site_engineer)
+
+    manpower_data = frappe.db.sql(f"""
         SELECT
             mud.task,
-			mu.name as doc_name,
-			mud.name as reference_row_name,
-			'Manpower Usage' as doctype,
-			mud.stage_subject,
+            mu.name as doc_name,
+            mud.name as reference_row_name,
+            'Manpower Usage' as doctype,
+            mud.stage_subject,
             mud.subtask,
-			mud.task_subject,
+            mud.task_subject,
             mud.equipment_item,
             mud.contractor,
-			mu.shift,
-			mu.site_engineer,
+            mu.shift,
+            mu.site_engineer,
             mud.uom,
             mud.quantity,
             mud.rate,
             mud.amount,
             mud.skill_type,
-			mud.task_level1,
-			mud.task_level2,
-			mud.task_level3,
-			mud.task_level4,
-			mud.task_level5,
-			mud.task_level6,
-			mud.task_level7,
-			mud.task_level8,
-			mud.task_level9,
-			mud.task_level10,
-			mud.level1_subject,
-			mud.level2_subject,
-			mud.level3_subject,
-			mud.level4_subject,
-			mud.level5_subject,
-			mud.level6_subject,
-			mud.level7_subject,
-			mud.level8_subject,
-			mud.level9_subject,
-			mud.level10_subject
-
+            mud.task_level1,
+            mud.task_level2,
+            mud.task_level3,
+            mud.task_level4,
+            mud.task_level5,
+            mud.task_level6,
+            mud.task_level7,
+            mud.task_level8,
+            mud.task_level9,
+            mud.task_level10,
+            mud.level1_subject,
+            mud.level2_subject,
+            mud.level3_subject,
+            mud.level4_subject,
+            mud.level5_subject,
+            mud.level6_subject,
+            mud.level7_subject,
+            mud.level8_subject,
+            mud.level9_subject,
+            mud.level10_subject
         FROM `tabManpower Usage Details` mud
         INNER JOIN `tabManpower Usage` mu
             ON mu.name = mud.parent
-        WHERE mu.project = %s
-        AND mu.site_date = %s
-        AND mu.docstatus = 1
-		AND mu.site_engineer = %s
-		And mu.shift = %s
-    """, (project, site_date, site_engineer, shift), as_dict=True)
+        WHERE {' AND '.join(conditions)}
+    """, values, as_dict=True)
+    conditions = [
+        "eu.project = %s",
+        "eu.site_date = %s",
+        "eu.docstatus = 1"
+    ]
 
-    equipment_data = frappe.db.sql("""
+    values = [project, site_date]
+
+    if shift:
+        conditions.append("eu.shift = %s")
+        values.append(shift)
+
+    if site_engineer:
+        conditions.append("eu.site_engineer = %s")
+        values.append(site_engineer)
+
+    equipment_data = frappe.db.sql(f"""
         SELECT
 			eu.name as doc_name,
 			eud.name as reference_row_name,
@@ -919,15 +945,25 @@ def get_site_diary_details(project, site_date,shift=None,site_engineer=None):
         FROM `tabEquipment Usage Details` eud
         INNER JOIN `tabEquipment Usage` eu
             ON eu.name = eud.parent
-        WHERE eu.project = %s
-        AND eu.site_date = %s
-        AND eu.docstatus = 1
-		AND eu.shift = %s
-		AND eu.site_engineer = %s
-    """, (project, site_date, shift, site_engineer), as_dict=True)
+        WHERE {' AND '.join(conditions)}
+    """, values, as_dict=True)
 
+    conditions = [
+        "pv.project = %s",
+        "pv.site_date = %s",
+        "pv.docstatus = 1"
+    ]
 
-    visitors_data = frappe.db.sql("""
+    values = [project, site_date]
+
+    if shift:
+        conditions.append("pv.shift = %s")
+        values.append(shift)
+
+    if site_engineer:
+        conditions.append("pv.site_engineer = %s")
+        values.append(site_engineer)
+    visitors_data = frappe.db.sql(f"""
         SELECT
 			pv.name as doc_name,
 			'Project Visitor' as doctype,
@@ -942,10 +978,8 @@ def get_site_diary_details(project, site_date,shift=None,site_engineer=None):
             pv.company,
 			pv.notes
         FROM `tabProject Visitor` pv
-        WHERE pv.project = %s
-        AND pv.site_date = %s
-        AND pv.docstatus = 1
-    """, (project, site_date), as_dict=True)
+        WHERE {' AND '.join(conditions)}
+    """, values, as_dict=True)
 
     equipment_usage_disel_data = frappe.db.sql("""
         SELECT
@@ -1001,14 +1035,28 @@ def get_site_diary_details(project, site_date,shift=None,site_engineer=None):
     }
 
 @frappe.whitelist()
-def get_material_deliveries(project, site_date):
+def get_material_deliveries(project, site_date,shift=None, site_engineer=None):
+    conditions = [
+		"stock_entry_type = 'Material Issue'",
+		"posting_date = %s",
+		"docstatus = 1"
+    ]
 
-    stock_entries = frappe.db.sql("""
+    values = [site_date]
+
+    if shift:
+        conditions.append("custom_shift = %s")
+        values.append(shift)
+
+    if site_engineer:
+        conditions.append("custom_site_engineer = %s")
+        values.append(site_engineer)
+
+    stock_entries = frappe.db.sql(f"""
         SELECT name
         FROM `tabStock Entry`
-        WHERE stock_entry_type = 'Material Issue'
-        AND posting_date = %s
-    """, (site_date,), as_dict=True)
+        WHERE {' AND '.join(conditions)}
+""", values, as_dict=True)
     
     if not stock_entries:
         return []
@@ -1087,9 +1135,10 @@ def get_material_deliveries(project, site_date):
     return data
 
 @frappe.whitelist()
-def get_material_received(project, site_date):
+def get_material_received(project, site_date, shift=None, site_engineer=None):
 
     final_data = []
+
     # PROJECT WAREHOUSES
     project_doc = frappe.get_doc("Project", project)
 
@@ -1102,15 +1151,29 @@ def get_material_received(project, site_date):
 
     warehouses = list(set(warehouses))
 
-    # PURCHASE RECEIPTS 
+    # PURCHASE RECEIPTS
     if warehouses:
-        purchase_receipts = frappe.db.sql("""
+
+        purchase_conditions = [
+            "pr.posting_date = %(site_date)s",
+            "pri.project = %(project)s",
+            "pri.warehouse IN %(warehouses)s",
+            "pr.docstatus = 1"
+        ]
+
+        if shift:
+            purchase_conditions.append("pr.custom_shift = %(shift)s")
+
+        if site_engineer:
+            purchase_conditions.append("pr.custom_site_engineer = %(site_engineer)s")
+
+        purchase_receipts = frappe.db.sql(f"""
             SELECT
                 pr.name as reference_name,
                 'Purchase Receipt' as reference_type,
                 pri.item_code,
                 pri.item_name,
-				pri.name as reference_row_name,
+                pri.name as reference_row_name,
                 pri.qty,
                 pri.uom,
                 pr.set_warehouse as warehouse,
@@ -1120,14 +1183,13 @@ def get_material_received(project, site_date):
             FROM `tabPurchase Receipt Item` pri
             INNER JOIN `tabPurchase Receipt` pr
                 ON pr.name = pri.parent
-            WHERE pr.posting_date = %(site_date)s
-            AND pri.project = %(project)s
-            AND pri.warehouse IN %(warehouses)s
-            AND pr.docstatus = 1
+            WHERE {' AND '.join(purchase_conditions)}
         """, {
             "site_date": site_date,
             "project": project,
-            "warehouses": tuple(warehouses)
+            "warehouses": tuple(warehouses),
+            "shift": shift,
+            "site_engineer": site_engineer
         }, as_dict=True)
 
         final_data.extend(purchase_receipts)
@@ -1135,10 +1197,25 @@ def get_material_received(project, site_date):
     # STOCK ENTRIES (FIXED LOGIC)
     if warehouses:
 
-        stock_entries = frappe.db.sql("""
+        stock_conditions = [
+            "se.posting_date = %(site_date)s",
+            "se.stock_entry_type = 'Material Transfer'",
+            "sed.project = %(project)s",
+            "sed.t_warehouse IN %(warehouses)s",
+            "COALESCE(sed.s_warehouse, '') NOT IN %(warehouses)s",
+            "se.docstatus = 1"
+        ]
+
+        if shift:
+            stock_conditions.append("se.custom_shift = %(shift)s")
+
+        if site_engineer:
+            stock_conditions.append("se.custom_site_engineer = %(site_engineer)s")
+
+        stock_entries = frappe.db.sql(f"""
             SELECT
-                se.name as reference_name, 
-				se.stock_entry_type as reference_type,
+                se.name as reference_name,
+                se.stock_entry_type as reference_type,
                 sed.item_code,
                 sed.item_name,
                 sed.qty,
@@ -1146,22 +1223,19 @@ def get_material_received(project, site_date):
                 sed.s_warehouse as warehouse,
                 sed.t_warehouse as target_warehouse,
                 sed.project,
-				sed.name as reference_row_name,
+                sed.name as reference_row_name,
                 sed.basic_rate as rate,
                 sed.amount
             FROM `tabStock Entry Detail` sed
             INNER JOIN `tabStock Entry` se
                 ON se.name = sed.parent
-            WHERE se.posting_date = %(site_date)s
-            AND se.stock_entry_type = 'Material Transfer'
-            AND sed.project = %(project)s
-            AND sed.t_warehouse IN %(warehouses)s
-            AND COALESCE(sed.s_warehouse, '') NOT IN %(warehouses)s
-			AND se.docstatus = 1
+            WHERE {' AND '.join(stock_conditions)}
         """, {
             "site_date": site_date,
             "project": project,
-            "warehouses": tuple(warehouses)
+            "warehouses": tuple(warehouses),
+            "shift": shift,
+            "site_engineer": site_engineer
         }, as_dict=True)
 
         final_data.extend(stock_entries)
@@ -1169,18 +1243,25 @@ def get_material_received(project, site_date):
     return final_data
 
 @frappe.whitelist()
-def get_latest_task_progress(project, site_date):
+def get_latest_task_progress(project, site_date, shift=None, site_engineer=None):
+
+    filters = {
+        "project": project,
+        "site_date": site_date,
+        "docstatus": 1
+    }
+
+    if shift:
+        filters["shift"] = shift
+
+    if site_engineer:
+        filters["site_engineer"] = site_engineer
 
     task_progress_names = frappe.db.get_all(
         "Task Progress",
-        filters={
-            "project": project,
-            "site_date": site_date,
-            "docstatus": 1
-        },
-        pluck="name",
+        filters=filters,
+        pluck="name"
     )
-
     if not task_progress_names:
         return []
 
@@ -1225,5 +1306,6 @@ def get_latest_task_progress(project, site_date):
     """, {
         "parents": tuple(task_progress_names)
     }, as_dict=True)
+    frappe.log_error(data, "Task Progress Data")
 
     return data
