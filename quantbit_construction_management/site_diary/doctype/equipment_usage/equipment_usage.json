@@ -15,6 +15,8 @@
   "column_break_rfhk",
   "site_date",
   "site",
+  "column_break_qutk",
+  "shift",
   "section_break_fkcm",
   "equipment_usage_details"
  ],
@@ -88,13 +90,23 @@
    "label": "Site",
    "options": "Site",
    "reqd": 1
+  },
+  {
+   "fieldname": "column_break_qutk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "label": "Shift",
+   "options": "\nDay\nNight\nBoth"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-06-15 17:19:20.195575",
+ "modified": "2026-06-24 15:14:58.445477",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Equipment Usage",

@@ -33,15 +33,18 @@
   "task_level10",
   "task10_subject",
   "column_break_wnrx",
-  "item_type",
-  "subcontractor",
-  "tradecategory",
   "contratcor",
-  "work_area",
-  "column_break_ypqg",
-  "gang_no",
-  "overtime_hours",
+  "subcontractor",
+  "item_type",
+  "tradecategory",
   "hours_worked",
+  "overtime_hours",
+  "work_area",
+  "gang_no",
+  "column_break_ypqg",
+  "id",
+  "doc_name",
+  "reference_row_name",
   "activity",
   "section_break_flwn",
   "skilled",
@@ -174,6 +177,7 @@
   {
    "fieldname": "parent_task",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Stage",
    "options": "Task",
    "reqd": 1
@@ -181,6 +185,7 @@
   {
    "fieldname": "task",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Task",
    "options": "Task"
   },
@@ -188,6 +193,7 @@
    "fetch_from": "task.subject",
    "fieldname": "task_subject",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Task Subject",
    "read_only": 1
   },
@@ -219,6 +225,7 @@
   {
    "fieldname": "task_level1",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Task",
    "options": "Task"
   },
@@ -230,7 +237,8 @@
    "fetch_from": "task_level1.subject",
    "fieldname": "task1_subject",
    "fieldtype": "Data",
-   "label": "Task1 Subject",
+   "in_list_view": 1,
+   "label": "Subject",
    "read_only": 1
   },
   {
@@ -349,13 +357,30 @@
    "fieldtype": "Data",
    "label": "Task10 Subject",
    "read_only": 1
+  },
+  {
+   "fieldname": "doc_name",
+   "fieldtype": "Link",
+   "label": "Doc Name",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "reference_row_name",
+   "fieldtype": "Data",
+   "label": "Reference Row Name"
+  },
+  {
+   "fieldname": "id",
+   "fieldtype": "Dynamic Link",
+   "label": "Id",
+   "options": "doc_name"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-12 18:05:49.897325",
+ "modified": "2026-06-24 15:40:07.807156",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Manpower Log",

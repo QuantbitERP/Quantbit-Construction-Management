@@ -1,3 +1,47 @@
+function update_level_visibility(frm, table_field, data) {
+
+    let grid = frm.fields_dict[table_field]?.grid;
+
+    if (!grid) return;
+
+    for (let i = 2; i <= 10; i++) {
+
+        const showLevel = data.some(
+            row => row[`task_level${i}`]
+        );
+
+        let levelField = grid.docfields.find(
+            df => df.fieldname === `task_level${i}`
+        );
+
+        if (levelField) {
+            grid.update_docfield_property(
+                `task_level${i}`,
+                "hidden",
+                !showLevel
+            );
+        }
+
+        let subjectField =
+            table_field === "equipment_usage_disel_details"
+                ? `level${i}_subject`
+                : `task${i}_subject`;
+
+        let subjectDocfield = grid.docfields.find(
+            df => df.fieldname === subjectField
+        );
+
+        if (subjectDocfield) {
+            grid.update_docfield_property(
+                subjectField,
+                "hidden",
+                !showLevel
+            );
+        }
+    }
+
+    frm.refresh_field(table_field);
+}
 frappe.ui.form.on("Site Diary", {
 
     refresh(frm) {
@@ -96,13 +140,21 @@ frappe.ui.form.on("Site Diary", {
 
         // MANPOWER / EQUIPMENT / VISITOR
         let manpowerPromise = new Promise(resolve => {
+            let args = {
+                project: frm.doc.project,
+                site_date: frm.doc.site_date
+            };
 
+            if (frm.doc.shift) {
+                args.shift = frm.doc.shift;
+            }
+
+            if (frm.doc.site_engineer) {
+                args.site_engineer = frm.doc.site_engineer;
+            }
             frappe.call({
                 method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_site_diary_details",
-                args: {
-                    project: frm.doc.project,
-                    site_date: frm.doc.site_date
-                },
+                args: args,
                 callback: function (r) {
                     if (r.message) {
 
@@ -124,7 +176,10 @@ frappe.ui.form.on("Site Diary", {
                             row.daily_wages = d.rate;
                             row.total_wage = d.amount;
                             row.item_type = "Man";
-
+                            //comment
+                            row.id = d.doc_name;
+                            row.doc_name = d.doctype;
+                            row.reference_row_name = d.reference_row_name;
                             row.task_level1 = d.task_level1;
                             row.task_level2 = d.task_level2;
                             row.task_level3 = d.task_level3;
@@ -222,7 +277,10 @@ frappe.ui.form.on("Site Diary", {
                             row.quantity = d.quantity;
                             row.contractor = d.contractor;
                             row.working_hours = d.working_hrs;
-
+                            //comment
+                            row.id = d.doc_name;
+                            row.doc_name = d.doctype;
+                            row.reference_row_name = d.reference_row_name;
                             row.task_level1 = d.task_level1;
                             row.task_level2 = d.task_level2;
                             row.task_level3 = d.task_level3;
@@ -301,6 +359,9 @@ frappe.ui.form.on("Site Diary", {
                             let row = frm.add_child("visitors");
 
                             row.visitor_name = d.visitor_name;
+                            //comment
+                            row.id = d.doc_name;
+                            row.doc_name = d.doctype;
                             row.purpose = d.purpose;
                             row.time_in = d.time_in;
                             row.time_out = d.time_out;
@@ -358,6 +419,23 @@ frappe.ui.form.on("Site Diary", {
                             row.paid = d.paid;
 
                         });
+                        update_level_visibility(
+                            frm,
+                            "manpower_log",
+                            r.message.manpower || []
+                        );
+
+                        update_level_visibility(
+                            frm,
+                            "equipment_log",
+                            r.message.equipment || []
+                        );
+
+                        update_level_visibility(
+                            frm,
+                            "equipment_usage_disel_details",
+                            r.message.equipment_usage_disel_details || []
+                        );
 
                         frm.refresh_field("manpower_log");
                         frm.refresh_field("equipment_log");
@@ -383,20 +461,24 @@ frappe.ui.form.on("Site Diary", {
                 freeze: true,
                 freeze_message: "Fetching Material Received...",
                 callback: function (r) {
-                    console.log(r);
                     frm.clear_table("material_received");
 
                     let data = r.message || [];
 
                     data.forEach(function (d) {
-
+                        //console.log("Material Received Data:", d);
                         let row = frm.add_child("material_received");
 
                         row.item_code = d.item_code;
                         row.quantity = d.qty;
                         row.uom = d.uom;
-                        row.transaction = d.reference_type;
                         row.transaction_type = d.rereference_name;
+                        row.reference_row_name = d.reference_row_name;
+                        if (d.reference_type == "Material Transfer") {
+                            row.transaction = 'Stock Entry';
+                        } else {
+                            row.transaction = 'Purchase Receipt';
+                        }
                         if (d.reference_type == "Purchase Receipt") {
                             row.warehouse = d.warehouse;
                         } else {
@@ -445,7 +527,9 @@ frappe.ui.form.on("Site Diary", {
 
                         row.parent_task = d.task;
                         row.task = d.subtask;
-
+                        row.id = d.doc_name;
+                        row.doc_name = d.doctype;
+                        row.reference_row_name = d.reference_row_name;
                         row.item = d.item_code;
                         row.quantity = d.qty;
                         row.unit = d.uom;
@@ -520,6 +604,11 @@ frappe.ui.form.on("Site Diary", {
                         });
 
                     });
+                    update_level_visibility(
+                        frm,
+                        "material_deliveries",
+                        data || []
+                    );
 
                     frm.refresh_field("material_deliveries");
 
@@ -553,6 +642,11 @@ frappe.ui.form.on("Site Diary", {
 
                             }
                         });
+                        update_level_visibility(
+                            frm,
+                            "activity_progress",
+                            data || []
+                        );
                         frm.refresh_field("activity_progress");
                     }
                     resolve();
@@ -668,11 +762,9 @@ function sync_activity_progress(frm) {
         freeze_message: "Fetching Task Progress...",
         callback(r) {
             if (r.message) {
-                //console.log(r);
                 let data = r.message || [];
 
                 data.forEach(function (d) {
-
                     let key = `${d.parent_task}|${d.task}`;
                     existing_keys.add(key);
                     let row = frm.add_child("activity_progress");
@@ -687,6 +779,10 @@ function sync_activity_progress(frm) {
                     row.percent_completed = d.percent_completed;
                     row.total_achieved = d.total_achieved;
                     row.planned_today = d.planned_today;
+                    //comment
+                    row.id = d.doc_name;
+                    row.doc_name = d.doctype;
+                    row.reference_row_name = d.reference_row_name;
 
                     row.task_level1 = d.task_level1;
                     row.task_level2 = d.task_level2;

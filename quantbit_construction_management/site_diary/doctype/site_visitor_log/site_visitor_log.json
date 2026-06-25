@@ -8,9 +8,11 @@
  "field_order": [
   "visitor_name",
   "purpose",
+  "id",
   "column_break_mkwd",
   "time_in",
   "time_out",
+  "doc_name",
   "column_break_uiph",
   "accompanied_by",
   "notes",
@@ -90,13 +92,25 @@
   {
    "fieldname": "column_break_rlxf",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "id",
+   "fieldtype": "Dynamic Link",
+   "label": "Id",
+   "options": "doc_name"
+  },
+  {
+   "fieldname": "doc_name",
+   "fieldtype": "Link",
+   "label": "Doc Name",
+   "options": "DocType"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-14 14:46:49.380345",
+ "modified": "2026-06-24 16:06:10.900226",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Site Visitor Log",

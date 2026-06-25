@@ -10,10 +10,12 @@
   "project",
   "visitor_name",
   "purpose",
+  "shift",
   "column_break_ubnn",
   "site_date",
   "accompanied_by",
   "company",
+  "site_engineer",
   "column_break_pejv",
   "time_in",
   "time_out",
@@ -109,13 +111,25 @@
    "fieldname": "notes",
    "fieldtype": "Small Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "label": "Shift",
+   "options": "\nDay\nNight\nBoth"
+  },
+  {
+   "fieldname": "site_engineer",
+   "fieldtype": "Link",
+   "label": "Site Engineer",
+   "options": "User"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-23 17:53:08.400333",
+ "modified": "2026-06-24 17:16:42.283472",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "Project Visitor",
