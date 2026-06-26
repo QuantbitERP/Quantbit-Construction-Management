@@ -149,131 +149,131 @@
    "fieldname": "task_level1",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Task",
+   "label": "Task Level1",
    "options": "Task"
   },
   {
    "columns": 2,
    "fieldname": "task_level2",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level2",
    "options": "Task"
   },
   {
    "fieldname": "task2_subject",
    "fieldtype": "Data",
-   "label": "Task2 Subject",
+   "label": "Task Level2 Subject",
    "read_only": 1
   },
   {
    "columns": 2,
    "fieldname": "task_level3",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level3",
    "options": "Task"
   },
   {
    "columns": 2,
    "fieldname": "task_level5",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level5",
    "options": "Task"
   },
   {
    "columns": 2,
    "fieldname": "task_level6",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level6",
    "options": "Task"
   },
   {
    "fieldname": "task3_suject",
    "fieldtype": "Data",
-   "label": "Task3 Subject",
+   "label": "Task Level3 Subject",
    "read_only": 1
   },
   {
    "columns": 2,
    "fieldname": "task_level4",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level3",
    "options": "Task"
   },
   {
    "fieldname": "task4_subject",
    "fieldtype": "Data",
-   "label": "Task4 Subject",
+   "label": "Task Level4 Subject",
    "read_only": 1
   },
   {
    "fieldname": "task5_subject",
    "fieldtype": "Data",
-   "label": "Task5 Subject",
+   "label": "Task Level5 Subject",
    "read_only": 1
   },
   {
    "columns": 2,
    "fieldname": "task_level7",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level7",
    "options": "Task"
   },
   {
    "fieldname": "task7_subject",
    "fieldtype": "Data",
-   "label": "Task7 Subject",
+   "label": "Task Level7 Subject",
    "read_only": 1
   },
   {
    "columns": 2,
    "fieldname": "task_level8",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level8",
    "options": "Task"
   },
   {
    "fieldname": "task8_subject",
    "fieldtype": "Data",
-   "label": "Task8 Subject",
+   "label": "Task Level8 Subject",
    "read_only": 1
   },
   {
    "columns": 2,
    "fieldname": "task_level9",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level9",
    "options": "Task"
   },
   {
    "fieldname": "task9_subject",
    "fieldtype": "Data",
-   "label": "Task9 Subject",
+   "label": "Task Level9 Subject",
    "read_only": 1
   },
   {
    "columns": 2,
    "fieldname": "task_level10",
    "fieldtype": "Link",
-   "label": "Task",
+   "label": "Task Level10",
    "options": "Task"
   },
   {
    "fieldname": "task10_subject",
    "fieldtype": "Data",
-   "label": "Task10 Subject",
+   "label": "Task Level10 Subject",
    "read_only": 1
   },
   {
    "fieldname": "task1_subject",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Subject",
+   "label": "Task Level1 Subject",
    "read_only": 1
   },
   {
    "fieldname": "task6_subject",
    "fieldtype": "Data",
-   "label": "Task6 Subject",
+   "label": "Task Level6 Subject",
    "read_only": 1
   },
   {
@@ -298,7 +298,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-24 16:08:47.420267",
+ "modified": "2026-06-26 16:06:11.202317",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "DPR Activity Progress",
