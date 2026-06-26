@@ -2,7 +2,6 @@
 # For license information, please see license.txt
 
 from email import message
-from numpy.core.defchararray import title
 import frappe
 import json
 from frappe.utils import flt, cstr
