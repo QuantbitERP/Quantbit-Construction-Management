@@ -890,3 +890,44 @@ def duplicate_boq(boq_name):
 
     frappe.db.commit()
     return new_boq_name
+
+@frappe.whitelist()
+def amend_subtask(task_name, boq, new_qty):
+
+    task = frappe.get_doc("Task", task_name)
+
+    old_qty = flt(task.custom_total_quantity)
+
+    task.custom_total_quantity = flt(new_qty)
+
+    task.save(ignore_permissions=True)
+
+    changes = {
+        "total_quantity": {
+            "old": old_qty,
+            "new": flt(new_qty)
+        }
+    }
+
+    frappe.get_doc({
+
+        "doctype":"BOQ Amendment Log",
+
+        "reference_doc" :"Bill Of Quantities",
+
+        "reference_doc_link":boq,
+
+        "value_changed":frappe.as_json(changes)
+
+    }).insert(ignore_permissions=True)
+
+    return True
+
+@frappe.whitelist()
+def get_task_qty(task_name):
+
+    return frappe.db.get_value(
+        "Task",
+        task_name,
+        "custom_total_quantity"
+    )
