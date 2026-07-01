@@ -722,7 +722,7 @@ function attach_events(frm, all_tasks) {
                     label: "Select Existing Stage", fieldname: "existing_stage", fieldtype: "Link", options: "Task",
                     get_query() { return { filters: { custom_is_stage: 1, is_group: 1 } }; }
                 },
-                { label: "Weight", fieldname: "existing_stage_weight", fieldtype: "Float", depends_on: "eval:doc.existing_stage" },
+                { label: "Weightage", fieldname: "existing_stage_weight", fieldtype: "Float", depends_on: "eval:doc.existing_stage" },
                 { label: "Include Tasks",    fieldname: "include_tasks",    fieldtype: "Check", default: 0, depends_on: "eval:doc.existing_stage" },
                 { label: "Include Subtasks", fieldname: "include_children", fieldtype: "Check", default: 0, depends_on: "eval:doc.existing_stage" },
                 { fieldtype: "Section Break" },
@@ -795,11 +795,11 @@ function attach_events(frm, all_tasks) {
                     label: "Select Existing Task", fieldname: "existing_task", fieldtype: "Link", options: "Task",
                     get_query() { return { filters: { custom_is_task: 1, is_group: 1 } }; }
                 },
-                { label: "Weight",           fieldname: "existing_task_weight", fieldtype: "Float", depends_on: "eval:doc.existing_task" },
+                { label: "Weightage",           fieldname: "existing_task_weight", fieldtype: "Float", depends_on: "eval:doc.existing_task" },
                 { label: "Include Subtasks", fieldname: "include_children",     fieldtype: "Check", default: 0, depends_on: "eval:doc.existing_task" },
                 { label: "OR Create New Task", fieldname: "section_break", fieldtype: "Section Break" },
                 { label: "Task Name",    fieldname: "subject",     fieldtype: "Data"  },
-                { label: "Weight",       fieldname: "task_weight", fieldtype: "Float" },
+                { label: "Weightage",       fieldname: "task_weight", fieldtype: "Float" },
                 { label: "Description",  fieldname: "description", fieldtype: "Data"  }
             ],
             primary_action_label: "Add",
@@ -888,12 +888,12 @@ function attach_events(frm, all_tasks) {
                     label: "Select Existing Task", fieldname: "existing_task", fieldtype: "Link", options: "Task",
                     get_query() { return { filters: { custom_is_task: 1, is_group: 1 } }; }
                 },
-                { label: "Weight",           fieldname: "existing_task_weight", fieldtype: "Float", depends_on: "eval:doc.existing_task" },
+                { label: "Weightage",           fieldname: "existing_task_weight", fieldtype: "Float", depends_on: "eval:doc.existing_task" },
                 { label: "Include Subtasks", fieldname: "include_children",     fieldtype: "Check", default: 0, depends_on: "eval:doc.existing_task" },
                 { fieldtype: "Section Break" },
                 { label: "OR Create New Child Task", fieldname: "section_label", fieldtype: "HTML", options: "<b>Create New Child Task</b>" },
                 { label: "Task Name",    fieldname: "subject",     fieldtype: "Data"       },
-                { label: "Weight",       fieldname: "task_weight", fieldtype: "Float"      },
+                { label: "Weightage",       fieldname: "task_weight", fieldtype: "Float"      },
                 { label: "Description",  fieldname: "description", fieldtype: "Small Text" }
             ],
             primary_action_label: "Add",
@@ -975,11 +975,11 @@ function attach_events(frm, all_tasks) {
                     label: "Select Existing Subtask", fieldname: "existing_subtask", fieldtype: "Link", options: "Task",
                     get_query() { return { filters: { custom_is_subtask: 1 } }; }
                 },
-                { label: "Weight", fieldname: "existing_subtask_weight", fieldtype: "Float", depends_on: "eval:doc.existing_subtask" },
+                { label: "Weightage", fieldname: "existing_subtask_weight", fieldtype: "Float", depends_on: "eval:doc.existing_subtask" },
                 { fieldtype: "Section Break" },
                 { label: "OR Create New Subtask", fieldname: "section_label", fieldtype: "HTML", options: "<b>Create New Subtask</b>" },
                 { label: "Subtask Name", fieldname: "subject",     fieldtype: "Data"       },
-                { label: "Weight",       fieldname: "task_weight", fieldtype: "Float"      },
+                { label: "Weightage",       fieldname: "task_weight", fieldtype: "Float"      },
                 { label: "Description",  fieldname: "description", fieldtype: "Small Text" }
             ],
             primary_action_label: "Add",
@@ -1048,7 +1048,7 @@ function attach_events(frm, all_tasks) {
                 { label: "Name",        fieldname: "subject",     fieldtype: "Data",       default: doc.subject,     reqd: 1 },
                 { label: "Status",      fieldname: "status",      fieldtype: "Select",     options: ["Open","Working","Completed","Cancelled"], default: doc.status },
                 { label: "Priority",    fieldname: "priority",    fieldtype: "Select",     options: ["Low","Medium","High","Urgent"], default: doc.priority },
-                { label: "Weight",      fieldname: "task_weight", fieldtype: "Float",      default: doc.task_weight },
+                { label: "Weightage",      fieldname: "task_weight", fieldtype: "Float",      default: doc.task_weight },
                 { label: "Description", fieldname: "description", fieldtype: "Small Text", default: doc.description }
             ], function (values) {
 
