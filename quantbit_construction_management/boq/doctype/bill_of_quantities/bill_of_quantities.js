@@ -1298,8 +1298,7 @@ function render_row(item, type, is_expanded, depth = 0) {
             </button>
 
             <button class="btn ${btnClass} btn-xs assign-item"
-                data-name="${item.name}"
-                ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                data-name="${item.name}">
                 👤 Assign
             </button>
 
@@ -1315,6 +1314,14 @@ function render_row(item, type, is_expanded, depth = 0) {
                     ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
                     📦 BOQ Item
                 </button>`
+            : ""}
+            ${type === "subtask" && cur_frm.doc.docstatus == 1
+            ? `
+            <button class="btn btn-light btn-xs amend-task"
+                data-name="${item.name}">
+                ✏ Amend
+            </button>
+            `
             : ""}
 
             ${type === "stage"
@@ -1333,8 +1340,7 @@ function render_row(item, type, is_expanded, depth = 0) {
                     + Child Task
                 </button>
                 <button class="btn btn-default btn-xs add-subtask"
-                    data-task="${item.name}"
-                    ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
+                    data-task="${item.name}">
                     + Subtask
                 </button>`
             : ""}
@@ -2981,4 +2987,88 @@ async function update_boq_items_for_subtask(frm, subtask_name) {
             }
         }
     });
+}
+$(document).on("click", ".amend-task", function () {
+
+    let task = $(this).data("name");
+
+    frappe.call({
+        method:
+        "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.get_task_qty",
+
+        args: {
+            task_name: task
+        },
+
+        callback(r){
+
+            show_amend_dialog(task, r.message);
+
+        }
+    });
+
+});
+
+function show_amend_dialog(task, qty){
+
+    let d = new frappe.ui.Dialog({
+
+        title: "BOQ Amendment",
+
+        fields: [
+
+            {
+                fieldname:"old_qty",
+                label:"Current Quantity",
+                fieldtype:"Float",
+                default:qty,
+                read_only:1
+            },
+
+            {
+                fieldname:"new_qty",
+                label:"New Quantity",
+                fieldtype:"Float",
+                reqd:1,
+                default:qty
+            }
+
+        ],
+
+        primary_action_label:"Update",
+
+        primary_action(values){
+
+            frappe.call({
+
+                method:
+                "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.amend_subtask",
+
+                args:{
+                    task_name:task,
+                    boq:cur_frm.doc.name,
+                    new_qty:values.new_qty
+                },
+
+                callback(){
+
+                    d.hide();
+                    frappe.show_alert({
+                        message: __("Task amended successfully."),
+                        indicator: "green"
+                    });
+
+
+                    load_hierarchy(cur_frm);
+
+                }
+
+            });
+
+        }
+
+    });
+
+    d.show();
+
 }
