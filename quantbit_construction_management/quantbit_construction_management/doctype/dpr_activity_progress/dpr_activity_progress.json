@@ -42,7 +42,8 @@
   "total_achieved",
   "percent_completed",
   "uom",
-  "construction_type"
+  "construction_type",
+  "images"
  ],
  "fields": [
   {
@@ -292,13 +293,18 @@
    "fieldtype": "Dynamic Link",
    "label": "Id",
    "options": "doc_name"
+  },
+  {
+   "fieldname": "images",
+   "fieldtype": "HTML",
+   "label": "Images"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-26 16:44:39.950099",
+ "modified": "2026-07-01 11:19:53.574399",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "DPR Activity Progress",
@@ -310,3 +316,5 @@
  "sort_order": "DESC",
  "states": []
 }
+
+

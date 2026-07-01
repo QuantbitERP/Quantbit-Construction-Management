@@ -207,21 +207,7 @@ frappe.ui.form.on("Site Diary", {
                                 row.unskilled = d.quantity;
                             }
 
-                            frappe.db.get_value(
-                                "Item",
-                                d.equipment_item,
-                                "item_name"
-                            ).then(res => {
-
-                                if (res.message) {
-
-                                    row.tradecategory =
-                                        res.message.item_name;
-
-                                    frm.refresh_field("manpower_log");
-                                }
-
-                            });
+                            row.tradecategory = d.equipment_item;
 
                             frappe.db.get_value(
                                 "Task",
@@ -765,127 +751,121 @@ function get_selected_parent_tasks(frm) {
 function sync_activity_progress(frm) {
 
     if (!frm.doc.task || !frm.doc.task.length) {
-
         frm.clear_table("activity_progress");
         frm.refresh_field("activity_progress");
-
         return;
     }
-    let existing_keys = new Set();
-    frm.clear_table("activity_progress");
+
     let args = {
         project: frm.doc.project,
         site_date: frm.doc.site_date
     };
 
-    if (frm.doc.shift) {
-        args.shift = frm.doc.shift;
-    }
+    if (frm.doc.shift) args.shift = frm.doc.shift;
+    if (frm.doc.site_engineer) args.site_engineer = frm.doc.site_engineer;
 
-    if (frm.doc.site_engineer) {
-        args.site_engineer = frm.doc.site_engineer;
-    }
-    frappe.call({
-        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
-        args: args,
-        freeze: true,
-        freeze_message: "Fetching Task Progress...",
-        callback(r) {
-            if (r.message) {
-                let data = r.message || [];
+    frappe.dom.freeze("Syncing Activity Progress...");
 
-                data.forEach(function (d) {
-                    let key = `${d.parent_task}|${d.task}`;
-                    existing_keys.add(key);
-                    let row = frm.add_child("activity_progress");
+    Promise.all([
+        new Promise(resolve => {
+            frappe.call({
+                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_latest_task_progress",
+                args: args,
+                callback(r) { resolve(r.message || []); }
+            });
+        }),
+        new Promise(resolve => {
+            frappe.call({
+                method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",
+                args: { doc: frm.doc },
+                callback(r) { resolve(r.message ? r.message.activity_progress || [] : []); }
+            });
+        })
+    ]).then(([task_progress_data, daily_activity_data]) => {
+        frappe.dom.unfreeze();
+        
+        let existing = frm.doc.activity_progress || [];
+        let old_rows_by_key = {};
+        existing.forEach(row => {
+            old_rows_by_key[`${row.parent_task}|${row.task}`] = row;
+        });
 
-                    row.parent_task = d.parent_task;
-                    row.parent_task_subject = d.parent_task_subject;
-                    row.task = d.task;
-                    row.task_subject = d.task_subject;
-                    row.achieved_today = d.achieved_today;
-                    row.total_qty = d.total_qty;
-                    row.uom = d.uom;
-                    row.percent_completed = d.percent_completed;
-                    row.total_achieved = d.total_achieved;
-                    row.planned_today = d.planned_today;
-                    //comment
-                    row.id = d.doc_name;
-                    row.doc_name = d.doctype;
-                    row.reference_row_name = d.reference_row_name;
+        frm.clear_table("activity_progress");
+        let added_keys = new Set();
 
-                    row.task_level1 = d.task_level1;
-                    row.task_level2 = d.task_level2;
-                    row.task_level3 = d.task_level3;
-                    row.task_level4 = d.task_level4;
-                    row.task_level5 = d.task_level5;
-                    row.task_level6 = d.task_level6;
-                    row.task_level7 = d.task_level7;
-                    row.task_level8 = d.task_level8;
-                    row.task_level9 = d.task_level9;
-                    row.task_level10 = d.task_level10;
+        // 1. Add rows from Task Progress
+        task_progress_data.forEach(d => {
+            let key = `${d.parent_task}|${d.task}`;
+            added_keys.add(key);
+            
+            let row = frm.add_child("activity_progress");
+            let old_row = old_rows_by_key[key] || {};
 
-                    row.task1_subject = d.level1_subject;
-                    row.task2_subject = d.level2_subject;
-                    row.task3_subject = d.level3_subject;
-                    row.task4_subject = d.level4_subject;
-                    row.task5_subject = d.level5_subject;
-                    row.task6_subject = d.level6_subject;
-                    row.task7_subject = d.level7_subject;
-                    row.task8_subject = d.level8_subject;
-                    row.task9_subject = d.level9_subject;
-                    row.task10_subject = d.level10_subject;
+            row.parent_task = d.parent_task;
+            row.parent_task_subject = d.parent_task_subject;
+            row.task = d.task;
+            row.task_subject = d.task_subject;
+            row.achieved_today = d.achieved_today;
+            row.total_qty = d.total_qty;
+            row.uom = d.uom;
+            row.percent_completed = d.percent_completed;
+            row.total_achieved = d.total_achieved;
+            row.planned_today = d.planned_today;
+            
+            row.id = d.doc_name;
+            row.doc_name = d.doctype;
+            row.reference_row_name = d.reference_row_name;
 
-                });
-                frm.refresh_field("activity_progress");
-            }
-        }
-    });
-
-    frappe.call({
-        method: "quantbit_construction_management.site_diary.doctype.site_diary.site_diary.update_daily_activity_progress_table",
-        args: {
-            doc: frm.doc
-        },
-        callback(r) {
-
-            if (!r.message) return;
-
-            let new_data =
-                r.message.activity_progress || [];
-
-            merge_child_table(
-                frm,
-                "activity_progress",
-                new_data,
-                ["parent_task", "task"]
-            );
-
-            new_data.forEach(d => {
-
-                let key = `${d.parent_task}|${d.task}`;
-                if (existing_keys.has(key)) return;
-
-                existing_keys.add(key);
-
-                let row = frm.add_child("activity_progress");
-
-                row.parent_task = d.parent_task;
-                row.parent_task_subject = d.parent_task_subject;
-                row.task = d.task;
-                row.task_subject = d.task_subject;
-                row.achieved_today = d.achieved_today;
-                row.total_qty = d.total_qty;
-                row.uom = d.uom;
-                row.percent_completed = d.percent_completed;
-                row.total_achieved = d.total_achieved;
-                row.planned_today = d.planned_today;
+            let levels = [
+                "task_level1", "task_level2", "task_level3", "task_level4", "task_level5", 
+                "task_level6", "task_level7", "task_level8", "task_level9", "task_level10",
+                "level1_subject", "level2_subject", "level3_subject", "level4_subject", "level5_subject",
+                "level6_subject", "level7_subject", "level8_subject", "level9_subject", "level10_subject",
+                "task1_subject", "task2_subject", "task3_subject", "task4_subject", "task5_subject",
+                "task6_subject", "task7_subject", "task8_subject", "task9_subject", "task10_subject"
+            ];
+            levels.forEach(f => {
+                if (d[f] !== undefined) row[f] = d[f];
             });
 
+            // Preserve user-modified fields
+            Object.keys(old_row).forEach(field => {
+                if (!["name", "idx", "doctype", "parent", "parenttype", "parentfield"].includes(field) && old_row[field] && !row[field]) {
+                    row[field] = old_row[field];
+                }
+            });
+        });
 
-            frm.refresh_field("activity_progress");
+        // 2. Add remaining rows from Manpower/Equipment (Daily Activity)
+        daily_activity_data.forEach(d => {
+            let key = `${d.parent_task}|${d.task}`;
+            if (added_keys.has(key)) return;
+            added_keys.add(key);
 
-        }
+            let row = frm.add_child("activity_progress");
+            let old_row = old_rows_by_key[key] || {};
+
+            row.parent_task = d.parent_task;
+            row.parent_task_subject = d.parent_task_subject;
+            row.task = d.task;
+            row.task_subject = d.task_subject;
+            row.total_qty = d.total_qty;
+            row.uom = d.uom;
+            row.percent_completed = d.percent_completed;
+            row.total_achieved = d.total_achieved;
+            row.previous_total_achieved = d.previous_total_achieved;
+
+            Object.keys(old_row).forEach(field => {
+                if (!["name", "idx", "doctype", "parent", "parenttype", "parentfield"].includes(field) && old_row[field] && !row[field]) {
+                    row[field] = old_row[field];
+                }
+            });
+        });
+
+        frm.refresh_field("activity_progress");
+    }).catch(err => {
+        frappe.dom.unfreeze();
+        console.error(err);
     });
 }
 
@@ -1056,3 +1036,63 @@ frappe.ui.form.on("DPR Activity Progress", {
     }
 
 });
+
+frappe.ui.form.on("DPR Activity Progress", {
+    form_render(frm, cdt, cdn) {
+        setTimeout(() => {
+            render_html_images(frm, cdt, cdn);
+        }, 100);
+    }
+});
+
+function render_html_images(frm, cdt, cdn) {
+    let row = locals[cdt][cdn];
+    let grid_row = frm.fields_dict.activity_progress.grid.grid_rows_by_docname[cdn];
+    if (!grid_row || !grid_row.grid_form) return;
+    
+    // Ensure images field exists in the layout (HTML field)
+    if (!grid_row.grid_form.fields_dict.images) return;
+    let wrapper = grid_row.grid_form.fields_dict.images.$wrapper;
+    wrapper.empty();
+
+    if (row.doc_name === "Task Progress" && row.id) {
+        frappe.call({
+            method: 'quantbit_construction_management.site_diary.doctype.site_diary.site_diary.get_task_progress_images',
+            args: {
+                task_progress_name: row.id,
+                parent_task: row.parent_task,
+                task: row.task
+            },
+            callback: function(r) {
+                let img_data = r.message || {};
+                let html = `<div class="image-uploader-wrapper">
+                    <div class="uploaded-images" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">`;
+                
+                let image_count = 0;
+                for (let i = 1; i <= 10; i++) {
+                    let img_url = img_data[`image_${i}`];
+                    if (img_url) {
+                        image_count++;
+                        html += `
+                            <div class="img-preview" style="position: relative; width: 100px; height: 100px; border: 1px solid #d1d8dd; border-radius: 4px; overflow: hidden;">
+                                <img src="${img_url}" style="width: 100%; height: 100%; object-fit: cover;">
+                                <a href="${img_url}" target="_blank" class="btn btn-xs btn-default" style="position: absolute; bottom: 2px; right: 2px; padding: 2px 6px;">
+                                    <i class="fa fa-external-link"></i>
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+                html += `</div></div>`;
+                
+                if (image_count === 0) {
+                    html = `<div class="text-muted">No images attached</div>`;
+                }
+                
+                wrapper.html(html);
+            }
+        });
+    } else {
+        wrapper.html(`<div class="text-muted">No images available for this activity</div>`);
+    }
+}

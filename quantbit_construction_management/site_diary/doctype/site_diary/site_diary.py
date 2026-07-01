@@ -838,11 +838,11 @@ def get_site_diary_details(project, site_date, shift=None, site_engineer=None):
     values = [project, site_date]
 
     if shift:
-        conditions.append("mu.shift = %s")
+        conditions.append("(mu.shift = %s OR IFNULL(mu.shift, '') = '')")
         values.append(shift)
 
     if site_engineer:
-        conditions.append("mu.site_engineer = %s")
+        conditions.append("(mu.site_engineer = %s OR IFNULL(mu.site_engineer, '') = '')")
         values.append(site_engineer)
 
     manpower_data = frappe.db.sql(f"""
@@ -897,11 +897,11 @@ def get_site_diary_details(project, site_date, shift=None, site_engineer=None):
     values = [project, site_date]
 
     if shift:
-        conditions.append("eu.shift = %s")
+        conditions.append("(eu.shift = %s OR IFNULL(eu.shift, '') = '')")
         values.append(shift)
 
     if site_engineer:
-        conditions.append("eu.site_engineer = %s")
+        conditions.append("(eu.site_engineer = %s OR IFNULL(eu.site_engineer, '') = '')")
         values.append(site_engineer)
 
     equipment_data = frappe.db.sql(f"""
@@ -957,11 +957,11 @@ def get_site_diary_details(project, site_date, shift=None, site_engineer=None):
     values = [project, site_date]
 
     if shift:
-        conditions.append("pv.shift = %s")
+        conditions.append("(pv.shift = %s OR IFNULL(pv.shift, '') = '')")
         values.append(shift)
 
     if site_engineer:
-        conditions.append("pv.site_engineer = %s")
+        conditions.append("(pv.site_engineer = %s OR IFNULL(pv.site_engineer, '') = '')")
         values.append(site_engineer)
     visitors_data = frappe.db.sql(f"""
         SELECT
@@ -1045,11 +1045,11 @@ def get_material_deliveries(project, site_date,shift=None, site_engineer=None):
     values = [site_date]
 
     if shift:
-        conditions.append("custom_shift = %s")
+        conditions.append("(custom_shift = %s OR IFNULL(custom_shift, '') = '')")
         values.append(shift)
 
     if site_engineer:
-        conditions.append("custom_site_engineer = %s")
+        conditions.append("(custom_site_engineer = %s OR IFNULL(custom_site_engineer, '') = '')")
         values.append(site_engineer)
 
     stock_entries = frappe.db.sql(f"""
@@ -1162,10 +1162,10 @@ def get_material_received(project, site_date, shift=None, site_engineer=None):
         ]
 
         if shift:
-            purchase_conditions.append("pr.custom_shift = %(shift)s")
+            purchase_conditions.append("(pr.custom_shift = %(shift)s OR IFNULL(pr.custom_shift, '') = '')")
 
         if site_engineer:
-            purchase_conditions.append("pr.custom_site_engineer = %(site_engineer)s")
+            purchase_conditions.append("(pr.custom_site_engineer = %(site_engineer)s OR IFNULL(pr.custom_site_engineer, '') = '')")
 
         purchase_receipts = frappe.db.sql(f"""
             SELECT
@@ -1207,10 +1207,10 @@ def get_material_received(project, site_date, shift=None, site_engineer=None):
         ]
 
         if shift:
-            stock_conditions.append("se.custom_shift = %(shift)s")
+            stock_conditions.append("(se.custom_shift = %(shift)s OR IFNULL(se.custom_shift, '') = '')")
 
         if site_engineer:
-            stock_conditions.append("se.custom_site_engineer = %(site_engineer)s")
+            stock_conditions.append("(se.custom_site_engineer = %(site_engineer)s OR IFNULL(se.custom_site_engineer, '') = '')")
 
         stock_entries = frappe.db.sql(f"""
             SELECT
@@ -1252,10 +1252,10 @@ def get_latest_task_progress(project, site_date, shift=None, site_engineer=None)
     }
 
     if shift:
-        filters["shift"] = shift
+        filters["shift"] = ["in", [shift, "", None]]
 
     if site_engineer:
-        filters["site_engineer"] = site_engineer
+        filters["site_engineer"] = ["in", [site_engineer, "", None]]
 
     task_progress_names = frappe.db.get_all(
         "Task Progress",
@@ -1299,7 +1299,17 @@ def get_latest_task_progress(project, site_date, shift=None, site_engineer=None)
 			level7_subject,
 			level8_subject,
 			level9_subject,
-			level10_subject
+			level10_subject,
+			image_1,
+			image_2,
+			image_3,
+			image_4,
+			image_5,
+			image_6,
+			image_7,
+			image_8,
+			image_9,
+			image_10
         FROM `tabTask Progress Details`
         WHERE parent IN %(parents)s
         ORDER BY parent, idx
@@ -1309,3 +1319,23 @@ def get_latest_task_progress(project, site_date, shift=None, site_engineer=None)
     frappe.log_error(data, "Task Progress Data")
 
     return data
+
+@frappe.whitelist()
+def get_task_progress_images(task_progress_name, parent_task, task):
+    if not task_progress_name or not task:
+        return {}
+        
+    fields = [f"image_{i}" for i in range(1, 11)]
+    
+    data = frappe.db.get_value(
+        "Task Progress Details",
+        {
+            "parent": task_progress_name,
+            "parent_task": parent_task,
+            "task": task
+        },
+        fields,
+        as_dict=True
+    )
+    
+    return data or {}
