@@ -20,6 +20,7 @@
   "site_engineer",
   "section_break_eoqo",
   "task_progress_details_column",
+  "custom_task_progress_html",
   "task_progress_details"
  ],
  "fields": [
@@ -87,10 +88,17 @@
    "options": "task pr"
   },
   {
+   "fieldname": "custom_task_progress_html",
+   "fieldtype": "HTML",
+   "label": "Custom Task Progress Entry",
+   "hidden": 1
+  },
+  {
    "fieldname": "task_progress_details",
    "fieldtype": "Table",
    "label": "Task Progress Details",
-   "options": "Task Progress Details"
+   "options": "Task Progress Details",
+   "hidden": 0
   },
   {
    "fieldname": "column_break_hmdz",

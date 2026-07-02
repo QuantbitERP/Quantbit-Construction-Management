@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-06-30 17:52:44.334349",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "image_1",
+  "image_2",
+  "image_3",
+  "image_4",
+  "image_5",
+  "image_6",
+  "image_7",
+  "image_8",
+  "image_9",
+  "image_10"
+ ],
+ "fields": [
+  {
+   "fieldname": "image_1",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 1"
+  },
+  {
+   "fieldname": "image_2",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 2",
+   "depends_on": "eval:doc.image_1"
+  },
+  {
+   "fieldname": "image_3",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 3",
+   "depends_on": "eval:doc.image_2"
+  },
+  {
+   "fieldname": "image_4",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 4",
+   "depends_on": "eval:doc.image_3"
+  },
+  {
+   "fieldname": "image_5",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 5",
+   "depends_on": "eval:doc.image_4"
+  },
+  {
+   "fieldname": "image_6",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 6",
+   "depends_on": "eval:doc.image_5"
+  },
+  {
+   "fieldname": "image_7",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 7",
+   "depends_on": "eval:doc.image_6"
+  },
+  {
+   "fieldname": "image_8",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 8",
+   "depends_on": "eval:doc.image_7"
+  },
+  {
+   "fieldname": "image_9",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 9",
+   "depends_on": "eval:doc.image_8"
+  },
+  {
+   "fieldname": "image_10",
+   "fieldtype": "Attach Image",
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Image 10",
+   "depends_on": "eval:doc.image_9"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-30 17:56:59.170988",
+ "modified_by": "Administrator",
+ "module": "Site Diary",
+ "name": "Task Progress Image",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
