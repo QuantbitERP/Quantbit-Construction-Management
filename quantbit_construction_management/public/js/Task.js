@@ -3,6 +3,13 @@ frappe.ui.form.on('Task', {
 
         calculate_task_bom_total(frm);
     },
+    custom_total_quantity: function(frm) {
+        calculate_progress(frm);
+    },
+
+    custom_total_achieved: function(frm) {
+        calculate_progress(frm);
+    },
     // custom_no1: function (frm) {
     //     calculate_total_qty(frm);
     // },
@@ -60,4 +67,19 @@ function calculate_row_amount(frm, cdt, cdn) {
 //     frm.set_value("custom_total_quantity", total_qty);
 // }
 
+function calculate_progress(frm) {
 
+    let qty = flt(frm.doc.custom_total_quantity);
+    let achieved = flt(frm.doc.custom_total_achieved);
+
+    let progress = 0;
+
+    if (qty > 0) {
+        progress = (achieved / qty) * 100;
+    }
+
+    progress = Math.min(progress, 100);
+
+    frm.set_value("progress", progress);
+    frm.set_value("custom_percent_completed", progress);
+}
