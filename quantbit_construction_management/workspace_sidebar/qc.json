@@ -1,0 +1,26 @@
+{
+ "app": "quantbit_construction_management",
+ "creation": "2026-07-03 17:28:22.933166",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "QC",
+   "link_to": "QC",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-07-04 12:38:44.111815",
+ "modified_by": "Administrator",
+ "name": "QC",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "QC"
+}

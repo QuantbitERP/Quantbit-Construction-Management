@@ -1,0 +1,49 @@
+{
+ "app": "quantbit_construction_management",
+ "charts": [],
+ "content": "[{\"id\":\"rIhDpCWfPb\",\"type\":\"card\",\"data\":{\"card_name\":\"BOQ\",\"col\":4}}]",
+ "creation": "2026-07-03 17:57:18.523017",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Bill Of Quantity",
+ "link_type": "DocType",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "BOQ",
+   "link_count": 1,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bill of Quantities",
+   "link_count": 0,
+   "link_to": "Bill of Quantities",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-07-04 12:44:48.388772",
+ "modified_by": "Administrator",
+ "module": "Quantbit Construction Management",
+ "name": "Bill Of Quantity",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 0.0,
+ "shortcuts": [],
+ "title": "Bill Of Quantity",
+ "type": "Workspace"
+}
