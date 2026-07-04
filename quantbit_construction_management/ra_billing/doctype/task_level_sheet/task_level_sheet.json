@@ -1,0 +1,291 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-03 11:23:08.657314",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series_section",
+  "naming_series",
+  "section_break_n3ve",
+  "project",
+  "stage",
+  "task_subject",
+  "task_level2",
+  "task_level3_subject",
+  "task_level5",
+  "task_level6_subject",
+  "task_level8",
+  "task_level9_subject_copy",
+  "column_break_ospr",
+  "site",
+  "stage_subject",
+  "task_level1",
+  "task_level2_subject",
+  "task_level4",
+  "task_level5_subject",
+  "task_level7",
+  "task_level8_subject",
+  "task_level10",
+  "column_break_beot",
+  "date",
+  "task",
+  "task_level1_subject",
+  "task_level3",
+  "task_level4_subject",
+  "task_level6",
+  "task_level7_subject",
+  "task_level9",
+  "task_level10_subject",
+  "section_break_yret",
+  "level_sheet_details",
+  "average",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_n3ve",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Task Level Sheet",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_ospr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "project.custom_site",
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "Site"
+  },
+  {
+   "fieldname": "column_break_beot",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "stage",
+   "fieldtype": "Link",
+   "label": "Stage",
+   "link_filters": "[[\"Task\",\"custom_is_stage\",\"=\",1]]",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "stage.subject",
+   "fieldname": "stage_subject",
+   "fieldtype": "Data",
+   "label": "Stage Subject"
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task.subject",
+   "fieldname": "task_subject",
+   "fieldtype": "Data",
+   "label": "Task Subject"
+  },
+  {
+   "fieldname": "section_break_yret",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "task_level1",
+   "fieldtype": "Link",
+   "label": "Task Level1",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level1.subject",
+   "fieldname": "task_level1_subject",
+   "fieldtype": "Data",
+   "label": "Task Level1 Subject"
+  },
+  {
+   "fieldname": "task_level2",
+   "fieldtype": "Link",
+   "label": "Task Level2",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level2.subject",
+   "fieldname": "task_level2_subject",
+   "fieldtype": "Data",
+   "label": "Task Level2 Subject"
+  },
+  {
+   "fieldname": "task_level3",
+   "fieldtype": "Link",
+   "label": "Task Level3",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level3.subject",
+   "fieldname": "task_level3_subject",
+   "fieldtype": "Data",
+   "label": "Task Level3 Subject"
+  },
+  {
+   "fieldname": "task_level4",
+   "fieldtype": "Link",
+   "label": "Task Level4",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level4.subject",
+   "fieldname": "task_level4_subject",
+   "fieldtype": "Data",
+   "label": "Task Level4 Subject"
+  },
+  {
+   "fieldname": "task_level5",
+   "fieldtype": "Link",
+   "label": "Task Level5",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level5.subject",
+   "fieldname": "task_level5_subject",
+   "fieldtype": "Data",
+   "label": "Task Level5 Subject"
+  },
+  {
+   "fieldname": "task_level6",
+   "fieldtype": "Link",
+   "label": "Task Level6",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level6.subject",
+   "fieldname": "task_level6_subject",
+   "fieldtype": "Data",
+   "label": "Task Level6 Subject"
+  },
+  {
+   "fieldname": "task_level7",
+   "fieldtype": "Link",
+   "label": "Task Level7",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level7.subject",
+   "fieldname": "task_level7_subject",
+   "fieldtype": "Data",
+   "label": "Task Level7 Subject"
+  },
+  {
+   "fieldname": "task_level8",
+   "fieldtype": "Link",
+   "label": "Task Level8",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level8.subject",
+   "fieldname": "task_level8_subject",
+   "fieldtype": "Data",
+   "label": "Task Level8 Subject"
+  },
+  {
+   "fieldname": "task_level9",
+   "fieldtype": "Link",
+   "label": "Task Level9",
+   "options": "Task"
+  },
+  {
+   "fieldname": "task_level10",
+   "fieldtype": "Link",
+   "label": "Task Level10",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level10.subject",
+   "fieldname": "task_level10_subject",
+   "fieldtype": "Data",
+   "label": "Task Level10 Subject"
+  },
+  {
+   "fetch_from": "task_level9.subject",
+   "fieldname": "task_level9_subject_copy",
+   "fieldtype": "Data",
+   "label": "Task Level9 Subject"
+  },
+  {
+   "fieldname": "level_sheet_details",
+   "fieldtype": "Table",
+   "label": "Level Sheet Details",
+   "options": "Task Level Sheet Details"
+  },
+  {
+   "fieldname": "average",
+   "fieldtype": "Float",
+   "label": "Average"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "naming_series_section",
+   "fieldtype": "Section Break",
+   "label": "Naming Series"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "\nTLS-"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-03 16:06:17.642343",
+ "modified_by": "Administrator",
+ "module": "RA Billing",
+ "name": "Task Level Sheet",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
