@@ -29,7 +29,16 @@
   "steel_tab",
   "get_details_",
   "section_break_bwox",
-  "ra_steel_details"
+  "ra_steel_details",
+  "level_tab",
+  "get_levels",
+  "level_details",
+  "level_data_tab",
+  "add_column",
+  "column_break_iqtx",
+  "calculate",
+  "section_break_wfcw",
+  "levelsheet_details"
  ],
  "fields": [
   {
@@ -170,6 +179,50 @@
    "label": "Site",
    "options": "Site",
    "reqd": 1
+  },
+  {
+   "fieldname": "level_tab",
+   "fieldtype": "Tab Break",
+   "label": "Level"
+  },
+  {
+   "fieldname": "level_details",
+   "fieldtype": "Table",
+   "label": "Level Details",
+   "options": "RA Bill Level Sheet Details"
+  },
+  {
+   "fieldname": "get_levels",
+   "fieldtype": "Button",
+   "label": "Get Levels"
+  },
+  {
+   "fieldname": "level_data_tab",
+   "fieldtype": "Tab Break",
+   "label": "Level Data"
+  },
+  {
+   "fieldname": "add_column",
+   "fieldtype": "Button",
+   "label": "Add Column"
+  },
+  {
+   "fieldname": "levelsheet_details",
+   "fieldtype": "HTML",
+   "label": "Levelsheet Details"
+  },
+  {
+   "fieldname": "column_break_iqtx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_wfcw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "calculate",
+   "fieldtype": "Button",
+   "label": "Calculate"
   }
  ],
  "grid_page_length": 50,
@@ -181,7 +234,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-06-15 17:31:36.504356",
+ "modified": "2026-07-04 19:51:04.609206",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",

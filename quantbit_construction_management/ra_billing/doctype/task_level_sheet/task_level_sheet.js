@@ -207,3 +207,86 @@ function recalculate_average(frm) {
 
     frm.set_value("average", avg);
 }
+function refresh_task_levels(frm) {
+
+    frm.set_df_property("level_sheet_details", "hidden", 1);
+
+    let visible_level = 3;
+
+    for (let i = 0; i < LEVEL_CHAIN.length; i++) {
+        if (frm.doc[LEVEL_CHAIN[i]]) {
+            visible_level = i + 1;
+        } else {
+            break;
+        }
+    }
+
+    if (visible_level < 3) {
+        visible_level = 3;
+    }
+
+    let deepest_field = LEVEL_CHAIN[visible_level - 1];
+    let deepest_task = frm.doc[deepest_field];
+
+    if (!deepest_task) {
+        apply_visibility(frm, visible_level);
+        frm.refresh_field("level_sheet_details");
+        return;
+    }
+
+    frappe.call({
+        method: "quantbit_construction_management.ra_billing.doctype.task_level_sheet.task_level_sheet.has_dependencies",
+        args: {
+            task: deepest_task
+        },
+        callback: function (r) {
+
+            if (r.message) {
+
+                apply_visibility(
+                    frm,
+                    Math.min(visible_level + 1, LEVEL_CHAIN.length)
+                );
+
+                frm.set_df_property("level_sheet_details", "hidden", 1);
+                frm.refresh_field("level_sheet_details");
+                return;
+            }
+
+            apply_visibility(frm, visible_level);
+
+            frappe.db.get_value(
+                "Task",
+                deepest_task,
+                ["subject", "custom_is_level_task"]
+            ).then(res => {
+
+                let task = res.message || {};
+
+                if (cint(task.custom_is_level_task)) {
+
+                    frm.set_df_property("level_sheet_details", "hidden", 0);
+
+                } else {
+
+                    frappe.msgprint({
+                        title: __("Invalid Task"),
+                        indicator: "orange",
+                        message: __("{0} is not a Level Task.", [task.subject])
+                    });
+
+                    frm.set_value(deepest_field, "");
+                    frm.set_value(SUBJECT_MAP[deepest_field], "");
+
+                    frm.set_df_property("level_sheet_details", "hidden", 1);
+
+                    refresh_task_levels(frm);
+
+                    return;
+                }
+
+                frm.refresh_field("level_sheet_details");
+            });
+        }
+    });
+}
