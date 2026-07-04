@@ -1,0 +1,26 @@
+{
+ "app": "quantbit_construction_management",
+ "creation": "2026-07-03 17:56:24.639080",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Safety",
+   "link_to": "Safety",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-07-04 12:39:05.968140",
+ "modified_by": "Administrator",
+ "name": "Safety",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "Safety"
+}
