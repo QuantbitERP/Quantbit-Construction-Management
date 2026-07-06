@@ -202,8 +202,142 @@ frappe.ui.form.on("RA Billing", {
 
             }, __("Create"));
         }
+    },
+
+    get_levels(frm) {
+
+        if (!frm.doc.project) {
+            frappe.msgprint(__("Please select Project."));
+            return;
+        }
+
+        frappe.call({
+            method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.get_level_sheet_details",
+            args: {
+                project: frm.doc.project
+            },
+            freeze: true,
+            freeze_message: __("Fetching Level Sheet..."),
+
+            callback: function(r) {
+
+                if (!r.message || !r.message.length) {
+                    frappe.msgprint(__("No Level Sheet found."));
+                    return;
+                }
+
+                frm.clear_table("level_details");
+
+                r.message.forEach(row => {
+
+                    let child = frm.add_child("level_details");
+
+                    if (row.is_header) {
+
+                        child.task = row.task;
+                        child.task_subject = row.task_subject;
+
+                    } else if (row.is_average) {
+
+                        child.average_rl = row.average_rl;
+                        child.remark = row.remark;
+
+                    } else {
+
+                        child.design = row.design;
+                        child.bs = row.bs;
+                        child.is = row.is;
+                        child.fs = row.fs;
+                        child.hi = row.hi;
+                        child.rl = row.rl;
+                        child.remark = row.remark;
+                    }
+
+                });
+
+                frm.refresh_field("level_details");
+
+                frappe.show_alert({
+                    message: __("Level Sheet fetched successfully."),
+                    indicator: "green"
+                });
+
+            }
+        });
+
+    },
+    add_column(frm) {
+
+    if (!frm.doc.project) {
+        frappe.msgprint("Select Project");
+        return;
     }
+
+    frappe.call({
+
+        method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.get_level_matrix",
+
+        args: {
+            project: frm.doc.project
+        },
+
+        callback(r) {
+
+            if (!r.message)
+                return;
+
+            render_level_matrix(frm, r.message);
+
+        }
+
+    });
+
+}
+
 });
+function render_level_matrix(frm, data) {
+
+    let html = `
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>Sr.</th>
+                    <th>Particular</th>`;
+
+    data.columns.forEach(col => {
+        html += `<th>${col}</th>`;
+    });
+
+    html += `
+                </tr>
+            </thead>
+            <tbody>`;
+
+    data.rows.forEach((row, i) => {
+
+        html += `
+            <tr>
+                <td>${i + 1}</td>
+                <td><b>${row.particular}</b></td>`;
+
+        data.columns.forEach(col => {
+
+            html += `
+                <td>${row.values[col] ?? ""}</td>`;
+        });
+
+        html += `</tr>`;
+
+    });
+
+    html += `
+            </tbody>
+        </table>`;
+
+    frm.get_field("levelsheet_details").$wrapper.html(html);
+
+}
+
 frappe.ui.form.on("RA Billing Details", {
     no1(frm, cdt, cdn) {
         calculate_quantity(frm, cdt, cdn);

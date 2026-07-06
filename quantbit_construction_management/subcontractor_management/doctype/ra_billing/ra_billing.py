@@ -960,3 +960,137 @@ def get_steel_details(project, from_date, to_date):
     
     data = frappe.db.sql(query, (project, project, from_date, to_date), as_dict=1)
     return data
+
+@frappe.whitelist()
+def get_level_sheet_details(project):
+    if not project:
+        return []
+
+    result = []
+
+    sheets = frappe.get_all(
+        "Task Level Sheet",
+        filters={
+            "project": project,
+            "docstatus": 1
+        },
+        fields=[
+            "name",
+            "average"
+        ],
+        order_by="creation asc"
+    )
+
+    hierarchy_fields = [
+        "task_level10",
+        "task_level9",
+        "task_level8",
+        "task_level7",
+        "task_level6",
+        "task_level5",
+        "task_level4",
+        "task_level3",
+        "task_level2",
+        "task_level1",
+        "task"
+    ]
+
+    for sheet in sheets:
+
+        sheet_doc = frappe.get_doc("Task Level Sheet", sheet.name)
+
+        rows = sheet_doc.get("level_sheet_details") or []
+
+        last_task = None
+
+        for field in hierarchy_fields:
+            if sheet_doc.get(field):
+                last_task = sheet_doc.get(field)
+                break
+
+        last_task_subject = ""
+
+        if last_task:
+            last_task_subject = (
+                frappe.db.get_value("Task", last_task, "subject") or ""
+            )
+
+        result.append({
+            "is_header": 1,
+            "task": last_task,
+            "task_subject": last_task_subject
+        })
+
+        for d in rows:
+            result.append({
+                "design": d.get("design"),
+                "bs": d.get("bs"),
+                "is": d.get("is"),
+                "fs": d.get("fs"),
+                "hi": d.get("hi"),
+                "rl": d.get("rl"),
+                "remark": d.get("remark")
+            })
+
+        result.append({
+            "is_average": 1,
+            "average_rl": sheet.average,
+            "remark": f"{last_task_subject} Average"
+        })
+
+    return result
+
+@frappe.whitelist()
+def get_level_matrix(project):
+
+    if not project:
+        return {}
+
+    project_doc = frappe.get_doc("Project", project)
+
+    columns = []
+
+    for d in project_doc.custom_data_sheet_column:
+        if d.parameter:
+            columns.append(d.parameter)
+
+    tasks = frappe.get_all(
+        "Task",
+        filters={
+            "project": project,
+            "custom_is_level_task": 1
+        },
+        fields=[
+            "name",
+            "subject",
+            "parent_task",
+            "custom_average_level"
+        ]
+    )
+
+    rows = {}
+
+    for task in tasks:
+
+        parent_subject = frappe.db.get_value(
+            "Task",
+            task.parent_task,
+            "subject"
+        ) or ""
+
+        if parent_subject not in rows:
+
+            rows[parent_subject] = {
+                "particular": parent_subject,
+                "values": {}
+            }
+
+            for col in columns:
+                rows[parent_subject]["values"][col] = ""
+
+        rows[parent_subject]["values"][task.subject] = task.custom_average_level
+
+    return {
+        "columns": columns,
+        "rows": list(rows.values())
+    }

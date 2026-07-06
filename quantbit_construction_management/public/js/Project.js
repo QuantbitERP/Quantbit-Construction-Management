@@ -12,6 +12,36 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                 load_hierarchy(frm);
             }
         },
+        custom_get_columns: function(frm) {
+
+            frappe.call({
+                method: "quantbit_construction_management.tendering.custom_project.project.get_columns",
+                args: {
+                    project: frm.doc.name
+                },
+                freeze: true,
+                callback: function(r) {
+
+                    if (!r.message) return;
+
+                    frm.clear_table("custom_data_sheet_column");
+
+                    r.message.forEach(task => {
+                        let row = frm.add_child("custom_data_sheet_column");
+                        row.parameter = task.subject;
+                        row.level_task = task.level_task
+                    });
+
+                    frm.refresh_field("custom_data_sheet_column");
+
+                    frappe.show_alert({
+                        message: __("Columns fetched successfully."),
+                        indicator: "green"
+                    });
+                }
+            });
+
+        },
         custom_report_name_: function (frm) {
             if (frm.doc.custom_report_name_) {
                 render_report_view(frm);

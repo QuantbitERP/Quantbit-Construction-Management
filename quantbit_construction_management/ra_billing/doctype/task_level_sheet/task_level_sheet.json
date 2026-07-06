@@ -262,7 +262,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-07-03 16:06:17.642343",
+ "modified": "2026-07-04 11:19:58.317904",
  "modified_by": "Administrator",
  "module": "RA Billing",
  "name": "Task Level Sheet",
@@ -270,6 +270,7 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
