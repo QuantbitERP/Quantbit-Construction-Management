@@ -292,52 +292,286 @@ frappe.ui.form.on("RA Billing", {
 
     });
 
-}
+    },
+    calculate(frm) {
+ 
+        if (!frm.doc.project) {
+            frappe.msgprint(__("Please select a Project first."));
+            return;
+        }
+ 
+        let wrapper = frm.fields_dict.levelsheet_details && frm.fields_dict.levelsheet_details.$wrapper;
+ 
+        if (!wrapper || !wrapper.find(".level-grid").length) {
+            frappe.msgprint(__("Please generate the Level Matrix first using 'Add Column'."));
+            return;
+        }
+ 
+        let matrix = gather_level_matrix(frm);
+ 
+        frappe.call({
+            method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.calculate_level_matrix",
+            args: {
+                project: frm.doc.project,
+                matrix: matrix
+            },
+            freeze: true,
+            freeze_message: __("Calculating..."),
+            callback(r) {
+ 
+                if (!r.message)
+                    return;
+ 
+                render_level_matrix(frm, r.message);
+ 
+                frappe.show_alert({
+                    message: __("Level Matrix calculated successfully."),
+                    indicator: "green"
+                });
+            }
+        });
+    }
+
 
 });
-function render_level_matrix(frm, data) {
 
-    let html = `
-        <table class="table table-bordered table-sm">
-            <thead>
-                <tr>
-                    <th>Sr.</th>
-                    <th>Particular</th>`;
-
-    data.columns.forEach(col => {
-        html += `<th>${col}</th>`;
+function gather_level_matrix(frm) {
+ 
+    const wrapper = frm.fields_dict.levelsheet_details.$wrapper;
+ 
+    let columns = [];
+    wrapper.find(".level-grid thead th").each(function (i) {
+        // Skip the first two header cells: "Sr." and "Particular"
+        if (i < 2) return;
+        columns.push($(this).text().trim());
     });
-
+ 
+    let rows = [];
+    wrapper.find(".level-grid tbody tr").each(function () {
+        const $tr = $(this);
+        const particular = $tr.find("td").eq(1).text().trim();
+        let values = {};
+ 
+        $tr.find(".level-input").each(function () {
+            const column = $(this).data("column");
+            const val = $(this).val();
+            values[column] = val;
+        });
+ 
+        rows.push({ particular: particular, values: values });
+    });
+ 
+    return { columns: columns, rows: rows };
+}
+ 
+function render_level_matrix(frm, data) {
+ 
+    let html = `
+    <style>
+ 
+        .level-grid-container{
+            width:100%;
+            overflow-x:auto;
+            overflow-y:auto;
+            border:1px solid #d1d8dd;
+        }
+ 
+        .level-grid{
+            border-collapse:collapse;
+            table-layout:auto;
+            width:max-content;
+            min-width:100%;
+        }
+ 
+        .level-grid th,
+        .level-grid td{
+            border:1px solid #d1d8dd;
+            white-space:nowrap;
+        }
+ 
+        .level-grid th{
+            background:#f7f7f7;
+            text-align:center;
+            font-weight:600;
+            padding:8px 12px;
+        }
+ 
+        .level-grid td{
+            padding:0;
+        }
+ 
+        /* Sr */
+        .level-grid th:first-child,
+        .level-grid td:first-child{
+            width:60px;
+            min-width:60px;
+            text-align:center;
+            background:#fafafa;
+            font-weight:600;
+            padding:8px;
+        }
+ 
+        /* Particular */
+        .level-grid th:nth-child(2),
+        .level-grid td:nth-child(2){
+            width:220px;
+            min-width:220px;
+            background:#fafafa;
+            font-weight:600;
+            padding:8px;
+        }
+ 
+        .dynamic-col{
+            width:auto;
+        }
+ 
+        .level-input{
+ 
+            display:inline-block;
+ 
+            border:none;
+            outline:none;
+            background:transparent;
+            box-shadow:none;
+            appearance:none;
+            -webkit-appearance:none;
+            -moz-appearance:none;
+ 
+            font:inherit;
+            color:inherit;
+ 
+            text-align:center;
+ 
+            padding:8px 12px;
+            margin:0;
+ 
+            width:auto;
+            min-width:20px;
+ 
+            overflow:visible;
+            white-space:nowrap;
+ 
+        }
+ 
+        .level-input:focus{
+ 
+            background:#fffbe6;
+            box-shadow:none;
+            border:none;
+            outline:none;
+ 
+        }
+ 
+    </style>
+ 
+    <div class="level-grid-container">
+ 
+    <table class="level-grid">
+ 
+        <thead>
+ 
+            <tr>
+ 
+                <th>Sr.</th>
+ 
+                <th>Particular</th>
+    `;
+ 
+    data.columns.forEach((col) => {
+ 
+        html += `<th class="dynamic-col">${col}</th>`;
+ 
+    });
+ 
     html += `
-                </tr>
-            </thead>
-            <tbody>`;
-
-    data.rows.forEach((row, i) => {
-
+            </tr>
+        </thead>
+ 
+        <tbody>
+    `;
+ 
+    data.rows.forEach((row, index) => {
+ 
         html += `
             <tr>
-                <td>${i + 1}</td>
-                <td><b>${row.particular}</b></td>`;
-
-        data.columns.forEach(col => {
-
+ 
+                <td>${index + 1}</td>
+ 
+                <td>${row.particular}</td>
+        `;
+ 
+        data.columns.forEach((col) => {
+ 
+            let value = row.values ? row.values[col] : "";
+ 
+            if (value == null)
+                value = "";
+ 
             html += `
-                <td>${row.values[col] ?? ""}</td>`;
+                <td>
+ 
+                    <input
+                        type="text"
+                        class="level-input"
+                        value="${value}"
+                        size="${Math.max(String(value).length, col.length, 4)}"
+                        data-parent="${row.particular}"
+                        data-column="${col}"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+ 
+                </td>
+            `;
+ 
         });
-
+ 
         html += `</tr>`;
-
+ 
     });
-
+ 
     html += `
-            </tbody>
-        </table>`;
-
-    frm.get_field("levelsheet_details").$wrapper.html(html);
-
+        </tbody>
+ 
+    </table>
+ 
+    </div>
+    `;
+ 
+    frm.fields_dict.levelsheet_details.$wrapper.html(html);
+ 
+    const wrapper = frm.fields_dict.levelsheet_details.$wrapper;
+ 
+    wrapper.find(".level-input").on("input", function () {
+ 
+        this.size = Math.max(
+            this.value.length + 1,
+            $(this).data("column").length,
+            4
+        );
+ 
+    });
+ 
+    wrapper.find(".level-input").on("blur", function () {
+ 
+        const value = $(this).val().trim();
+ 
+        if (!value)
+            return;
+ 
+        if (isNaN(Number(value))) {
+ 
+            frappe.show_alert({
+                message: __("Please enter a valid number."),
+                indicator: "red"
+            });
+ 
+            $(this).val("").focus();
+        }
+ 
+    });
+ 
 }
-
 frappe.ui.form.on("RA Billing Details", {
     no1(frm, cdt, cdn) {
         calculate_quantity(frm, cdt, cdn);

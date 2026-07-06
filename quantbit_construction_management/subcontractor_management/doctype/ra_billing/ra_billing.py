@@ -10,6 +10,7 @@ from openpyxl.styles import Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from io import BytesIO
 from collections import defaultdict
+import re
 class RABilling(Document):
 
     def before_save(self):
@@ -1094,3 +1095,98 @@ def get_level_matrix(project):
         "columns": columns,
         "rows": list(rows.values())
     }
+
+@frappe.whitelist()
+def calculate_level_matrix(project, matrix):
+    """
+    Recalculate the Level Matrix grid using the Project's
+    custom_data_sheet_column (Parameter -> Abbr) and
+    custom_data_sheet_formulas (Parameter -> Formula) child tables.
+
+    `matrix` is the same {columns, rows: [{particular, values: {parameter: value}}]}
+    shape produced by get_level_matrix / rendered by render_level_matrix in JS,
+    with whatever the user has manually typed into the grid.
+    """
+
+    if not project:
+        frappe.throw(_("Project is required"))
+
+    matrix = frappe.parse_json(matrix)
+    project_doc = frappe.get_doc("Project", project)
+
+    column_map = {}
+    abbr_map = {}
+
+    for d in project_doc.custom_data_sheet_column:
+        if not d.parameter:
+            continue
+        column_map[d.parameter] = d.abbr
+        if d.abbr:
+            abbr_map[d.abbr] = d.parameter
+
+    formula_map = {}
+    for d in project_doc.custom_data_sheet_formulas:
+        if d.parameter and d.formula:
+            formula_map[d.parameter] = d.formula.strip()
+
+    sorted_abbrs = sorted(abbr_map.keys(), key=len, reverse=True)
+
+    for row in matrix.get("rows", []):
+        values = row.get("values") or {}
+
+        context = {}
+        for parameter, value in values.items():
+            if parameter in formula_map:
+                continue
+            abbr = column_map.get(parameter)
+            if not abbr:
+                continue
+            if value in (None, ""):
+                continue
+            try:
+                context[abbr] = flt(value)
+            except Exception:
+                pass
+
+        pending = dict(formula_map)
+
+        while pending:
+            resolved_this_pass = []
+
+            for parameter, formula in pending.items():
+                expr = formula
+                unresolved = False
+
+                for abbr in sorted_abbrs:
+                    pattern = r"\b{}\b".format(re.escape(abbr))
+                    if re.search(pattern, expr):
+                        if abbr in context:
+                            expr = re.sub(pattern, "({})".format(context[abbr]), expr)
+                        else:
+                            unresolved = True
+
+                if unresolved:
+                    continue
+
+                try:
+                    result = flt(eval(expr, {"__builtins__": {}}, {}))
+                except Exception:
+                    result = 0
+
+                values[parameter] = round(result, 3)
+
+                abbr = column_map.get(parameter)
+                if abbr:
+                    context[abbr] = result
+
+                resolved_this_pass.append(parameter)
+
+            for parameter in resolved_this_pass:
+                pending.pop(parameter, None)
+\
+            if not resolved_this_pass:
+                break
+
+        row["values"] = values
+
+    return matrix
