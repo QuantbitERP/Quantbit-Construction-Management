@@ -1426,6 +1426,74 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                 d.set_value("average", flt(avg.toFixed(3)));
             }
 
+            function calculate_hi() {
+
+                let rows = d.fields_dict.level_sheet_details.grid.grid_rows;
+
+                rows.forEach((grid_row, idx) => {
+
+                    let row = grid_row.doc;
+
+                    // First row -> HI = Design + BS
+                    if (idx === 0) {
+
+                        if (row.design !== undefined && row.design !== "" &&
+                            row.bs !== undefined && row.bs !== "") {
+
+                            row.hi = flt(row.design) + flt(row.bs);
+                        }
+
+                    }
+
+                    // Other rows -> copy previous HI only if empty
+                    else {
+
+                        if (!row.hi) {
+                            row.hi = rows[idx - 1].doc.hi;
+                        }
+
+                    }
+
+                    grid_row.refresh();
+                });
+
+                calculate_rl();
+            }
+            function calculate_rl() {
+
+                let rows = d.fields_dict.level_sheet_details.grid.grid_rows;
+
+                rows.forEach((grid_row, idx) => {
+
+                    let row = grid_row.doc;
+
+                    // First row
+                    if (idx === 0) {
+
+                        if (row.hi !== undefined && row.hi !== "" &&
+                            row.is !== undefined && row.is !== "") {
+
+                            row.rl = flt(row.hi) - flt(row.is);
+                        }
+
+                    }
+
+                    // Remaining rows
+                    else {
+
+                        if (row.hi !== undefined && row.hi !== "" &&
+                            row.is !== undefined && row.is !== "") {
+
+                            row.rl = flt(row.hi) - flt(row.is);
+                        }
+
+                    }
+
+                    grid_row.refresh();
+                });
+
+                calculate_average();
+            }
             let dialog_fields = [
                 { label: __("Project"), fieldname: "project", fieldtype: "Link", options: "Project", default: project, read_only: 1, reqd: 1 },
                 { label: __("Site"),    fieldname: "site",    fieldtype: "Link", options: "Site",    default: site, reqd: 1 },
@@ -1526,6 +1594,14 @@ window.expanded_nodes = window.expanded_nodes || new Set();
 
             d.show();
             calculate_average();
+            d.fields_dict.level_sheet_details.grid.wrapper.on(
+                "change",
+                '[data-fieldname="design"], [data-fieldname="bs"], [data-fieldname="is"]',
+                function () {
+                    calculate_hi();
+                    calculate_rl();
+                }
+            );
         });
     }
 
