@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-09 14:52:41.488212",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_kwru",
+  "site",
+  "get_projects",
+  "project_details",
+  "get_ra_bills",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_kwru",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Bulk RA Billing",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "label": "Site",
+   "options": "Site"
+  },
+  {
+   "fieldname": "get_projects",
+   "fieldtype": "Button",
+   "label": "Get Projects"
+  },
+  {
+   "fieldname": "get_ra_bills",
+   "fieldtype": "Button",
+   "label": "Get RA Bills"
+  },
+  {
+   "fieldname": "project_details",
+   "fieldtype": "Table",
+   "label": "Project Details",
+   "options": "Bulk RA Billing Projects Details"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-09 15:04:05.536401",
+ "modified_by": "Administrator",
+ "module": "RA Billing",
+ "name": "Bulk RA Billing",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -28,6 +28,9 @@
   "grand_total",
   "steel_tab",
   "get_details_",
+  "download_template",
+  "import_file",
+  "import_data",
   "section_break_bwox",
   "ra_steel_details",
   "level_tab",
@@ -35,10 +38,10 @@
   "level_details",
   "level_data_tab",
   "add_column",
-  "column_break_iqtx",
   "calculate",
   "section_break_wfcw",
-  "levelsheet_details"
+  "levelsheet_details",
+  "level_data_json"
  ],
  "fields": [
   {
@@ -164,7 +167,7 @@
    "fieldname": "ra_steel_details",
    "fieldtype": "Table",
    "label": "RA Steel Details",
-   "options": "RA Steel Details"
+   "options": "RA Billing Steel Details"
   },
   {
    "fieldname": "grand_total",
@@ -212,10 +215,6 @@
    "label": "Levelsheet Details"
   },
   {
-   "fieldname": "column_break_iqtx",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "section_break_wfcw",
    "fieldtype": "Section Break"
   },
@@ -223,6 +222,26 @@
    "fieldname": "calculate",
    "fieldtype": "Button",
    "label": "Calculate"
+  },
+  {
+   "fieldname": "download_template",
+   "fieldtype": "Button",
+   "label": "Download Template"
+  },
+  {
+   "fieldname": "import_file",
+   "fieldtype": "Attach",
+   "label": "Import File"
+  },
+  {
+   "fieldname": "import_data",
+   "fieldtype": "Button",
+   "label": "Import Data"
+  },
+  {
+   "fieldname": "level_data_json",
+   "fieldtype": "Code",
+   "label": "Level Data Json"
   }
  ],
  "grid_page_length": 50,
@@ -234,7 +253,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-07-04 19:51:04.609206",
+ "modified": "2026-07-09 13:38:17.428485",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",

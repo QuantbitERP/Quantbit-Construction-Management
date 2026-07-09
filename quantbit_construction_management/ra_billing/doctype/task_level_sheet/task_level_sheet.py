@@ -99,3 +99,28 @@ def has_dependencies(task):
     doc = frappe.get_doc("Task", task)
 
     return len(doc.depends_on) > 0
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_stage_tasks(doctype, txt, searchfield, start, page_len, filters):
+    project = filters.get("project")
+
+    return frappe.db.sql("""
+        SELECT
+            name,
+            subject
+        FROM `tabTask`
+        WHERE
+            project = %(project)s
+            AND custom_is_stage = 1
+            AND is_group = 1
+            AND docstatus < 2
+            AND ({key} LIKE %(txt)s OR subject LIKE %(txt)s)
+        ORDER BY name
+        LIMIT %(start)s, %(page_len)s
+    """.format(key=searchfield), {
+        "project": project,
+        "txt": f"%{txt}%",
+        "start": start,
+        "page_len": page_len
+    })
