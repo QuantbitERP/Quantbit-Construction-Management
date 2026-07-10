@@ -1,9 +1,6 @@
 # Copyright (c) 2026, QTPL and contributors
 # For license information, please see license.txt
 
-# Copyright (c) 2026, QTPL and contributors
-# For license information, please see license.txt
-
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -825,11 +822,11 @@ def export_bulk_ra_excel(bulk_ra_billing):
     )
 
     if with_tax:
-        summary_headers = ["Sr. No", "Project", "RA Bill", "Tax Rate", "Amount (Rs.)"]
+        summary_headers = ["Sr. No", "Description", "RA Bill", "Tax Rate", "Amount"]
         amt_col = 5
         rate_col = 4
     else:
-        summary_headers = ["Sr. No", "Project", "RA Bill", "Amount (Rs.)"]
+        summary_headers = ["Sr. No", "Description", "RA Bill", "Amount"]
         amt_col = 4
         rate_col = None
 
@@ -837,7 +834,7 @@ def export_bulk_ra_excel(bulk_ra_billing):
     last_col = get_column_letter(total_cols)
 
     ws_summary.merge_cells(f'A1:{last_col}1')
-    ws_summary['A1'] = "Bulk RA Billing Summary"
+    ws_summary['A1'] = "Billing Summary"
     ws_summary['A1'].font = Font(bold=True, size=14)
     ws_summary['A1'].alignment = center_align
 
