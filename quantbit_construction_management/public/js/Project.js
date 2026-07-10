@@ -990,6 +990,8 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                     { label: "OR Create New Subtask", fieldname: "section_label", fieldtype: "HTML", options: "<b>Create New Subtask</b>" },
                     { label: "Subtask Name", fieldname: "subject",     fieldtype: "Data"       },
                     { label: "Weightage",       fieldname: "task_weight", fieldtype: "Float"      },
+                    { label: "Level Subtask",       fieldname: "custom_is_level_task", fieldtype: "Check"      },
+                    { label: "Steel Subtask",       fieldname: "custom_is_steel_subtask", fieldtype: "Check"      },
                     { label: "Description",  fieldname: "description", fieldtype: "Small Text" }
                 ],
                 primary_action_label: "Add",
@@ -1035,7 +1037,10 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                                 parent_task: parent_task,
                                 custom_is_subtask: 1,
                                 task_weight: values.task_weight,
-                                description: values.description
+                                description: values.description,
+                                custom_is_level_task: values.custom_is_level_task || 0,
+                                custom_is_steel_subtask: values.custom_is_steel_subtask || 0
+
                             }},
                             callback() { frappe.show_alert({ message: "Subtask Created", indicator: "green" }); d.hide(); load_hierarchy(frm); }
                         });

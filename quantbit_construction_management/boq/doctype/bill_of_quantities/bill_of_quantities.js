@@ -1488,7 +1488,7 @@ function attach_events(frm, all_tasks) {
                 },
 
                 {
-                    label: "Weight",
+                    label: "Weightage",
                     fieldname: "task_weight",
                     fieldtype: "Float"
                 },
@@ -1754,7 +1754,7 @@ function attach_events(frm, all_tasks) {
                 },
 
                 {
-                    label: "Weight",
+                    label: "Weightage",
                     fieldname: "task_weight",
                     fieldtype: "Float"
                 },
@@ -1987,7 +1987,7 @@ function attach_events(frm, all_tasks) {
                 },
 
                 {
-                    label: "Weight",
+                    label: "Weightage",
                     fieldname: "task_weight",
                     fieldtype: "Float"
                 },
@@ -2216,9 +2216,22 @@ function attach_events(frm, all_tasks) {
                 },
 
                 {
-                    label: "Weight",
+                    label: "Weightage",
                     fieldname: "task_weight",
                     fieldtype: "Float"
+                },
+                {
+                    label: "Is Steel Subtask",
+                    fieldname: "custom_is_steel_subtask",
+                    fieldtype: "Check",
+                    default: 0
+                },
+
+                {
+                    label: "Is Level Subtask",
+                    fieldname: "custom_is_level_task",
+                    fieldtype: "Check",
+                    default: 0
                 },
                 {
                     label: "Is Template",
@@ -2296,7 +2309,9 @@ function attach_events(frm, all_tasks) {
                             custom_is_subtask: 1,
                             task_weight: values.task_weight,
                             description: values.description,
-                            is_template: 0
+                            is_template: 0,
+                            custom_is_steel_subtask: values.custom_is_steel_subtask ? 1 : 0,
+                            custom_is_level_task: values.custom_is_level_task ? 1 : 0
                         };
 
                         frappe.call({
@@ -2317,7 +2332,9 @@ function attach_events(frm, all_tasks) {
                                         custom_is_subtask: 1,
                                         task_weight: values.task_weight,
                                         description: values.description,
-                                        is_template: 1
+                                        is_template: 1,
+                                        custom_is_steel_subtask: values.custom_is_steel_subtask ? 1 : 0,
+                                        custom_is_level_task: values.custom_is_level_task ? 1 : 0
                                     };
 
                                     frappe.call({
@@ -2415,7 +2432,7 @@ function attach_events(frm, all_tasks) {
                     default: doc.priority
                 },
                 {
-                    label: "Weight", fieldname: "task_weight", fieldtype: "Float",
+                    label: "Weightage", fieldname: "task_weight", fieldtype: "Float",
                     default: doc.task_weight
                 },
                 {
