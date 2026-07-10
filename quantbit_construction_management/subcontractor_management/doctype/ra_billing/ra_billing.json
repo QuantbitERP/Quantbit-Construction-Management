@@ -260,6 +260,7 @@
    "options": "RA Billing Tax Details"
   },
   {
+   "depends_on": "eval:doc.with_tax==1",
    "fieldname": "final_grand_total",
    "fieldtype": "Currency",
    "label": "Grand Total"
@@ -274,7 +275,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-07-10 13:18:47.390383",
+ "modified": "2026-07-10 19:14:08.418059",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",
