@@ -16,10 +16,37 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 import math
 import json
+
+STEEL_BAR_DIAMETERS = [8, 10, 12, 16, 20, 25, 28, 32]
+STEEL_BAR_WEIGHT_PER_METER = {d: round((d ** 2) / 162.0, 3) for d in STEEL_BAR_DIAMETERS}
+
+
+def _get_row_reinforcement_weight(row):
+    """Total weight (Kg) of one ra_steel_details row, summed across all populated diameter columns."""
+    total = 0.0
+    for d in STEEL_BAR_DIAMETERS:
+        val = flt(row.get(f"{d}_mm_reinforcement"))
+        if val:
+            total += val * STEEL_BAR_WEIGHT_PER_METER[d]
+    return total
+
+
+def _get_deepest_task_id(row):
+    """
+    Returns the deepest populated task/level id on a row — used to match
+    a ra_steel_details row to its corresponding ra_billing_details row.
+    """
+    level_fields = [f"task_level{i}" for i in range(1, 11)]
+    for fieldname in reversed(level_fields):
+        if row.get(fieldname):
+            return row.get(fieldname)
+    return row.get("task")
+
 class RABilling(Document):
 
     def before_save(self):
         self.sync_deleted_tasks()
+        self.sync_steel_quantities_to_billing()
         self.update_abstract_details()
         # steel_map = {}
         # for row in self.ra_steel_details:
@@ -30,7 +57,41 @@ class RABilling(Document):
         # for row in self.ra_billing_details:
         #     if row.subtask in steel_map:
         #         row.quantity = steel_map[row.subtask]
+    def sync_steel_quantities_to_billing(self):
+        """
+        For every subtask that has reinforcement entries in ra_steel_details,
+        compute its total weight (Kg), convert to Metric Tonne, and write
+        that value into the matching row's quantity in ra_billing_details
+        (matched by identical deepest task/level hierarchy).
+        """
+        steel_weight_kg_by_task = {}
 
+        for row in self.ra_steel_details:
+            deepest_id = _get_deepest_task_id(row)
+            if not deepest_id:
+                continue
+
+            weight = _get_row_reinforcement_weight(row)
+            if not weight:
+                continue
+
+            steel_weight_kg_by_task[deepest_id] = (
+                steel_weight_kg_by_task.get(deepest_id, 0) + weight
+            )
+
+        if not steel_weight_kg_by_task:
+            return
+
+        for row in self.ra_billing_details:
+            deepest_id = _get_deepest_task_id(row)
+
+            if deepest_id in steel_weight_kg_by_task:
+                weight_kg = steel_weight_kg_by_task[deepest_id]
+                weight_mt = weight_kg / 1000.0
+
+                row.quantity = weight_mt
+                row.uom = "Metric Tonne"
+                row.amount = flt(row.rate) * weight_mt
     def sync_deleted_tasks(self):
         if not self.is_new() and self.get_doc_before_save():
             old_tasks = set(d.task for d in self.get_doc_before_save().ra_abstract_details if d.task)
@@ -63,13 +124,22 @@ class RABilling(Document):
                         "description": "",
                     }
                     stage_order.append(key)
-
+                
                 stage_data[key]["billed_quantity"] += flt(row.quantity)
                 stage_data[key]["amount"] += flt(row.amount)
-                stage_data[key]["uom"] = row.uom
-                stage_data[key]["rate"] = flt(row.rate)
+                if row.uom:
+                    stage_data[key]["uom"] = row.uom
+                if flt(row.rate):
+                    stage_data[key]["rate"] = flt(row.rate)
                 if not stage_data[key]["description"]:
                     stage_data[key]["description"] = getattr(row, "description", "")
+
+                # stage_data[key]["billed_quantity"] += flt(row.quantity)
+                # stage_data[key]["amount"] += flt(row.amount)
+                # stage_data[key]["uom"] = row.uom
+                # stage_data[key]["rate"] = flt(row.rate)
+                # if not stage_data[key]["description"]:
+                #     stage_data[key]["description"] = getattr(row, "description", "")
 
             previous_totals = get_previous_stage_totals(self.project, self.name)
 
@@ -1408,6 +1478,7 @@ def export_ra_excel(ra_billing):
     # --- Build the nested tree (same shape/helper as the Steel sheet) ---
     tree_meas = {}
     node_order_meas = []
+    measurement_stage_kg_totals = {}
 
     for row in getattr(doc, "ra_billing_details", []):
         path = get_billing_row_hierarchy(row)
@@ -1464,6 +1535,12 @@ def export_ra_excel(ra_billing):
         if uom_val.lower() in ["kg", "kilogram"]:
             deepest_id = get_deepest_billing_task_id(r)
             display_qty = steel_subtask_weights.get((r.task, deepest_id), qty)
+
+            # ACCUMULATE per-stage sum from what's actually shown in this sheet
+            stage_key = r.stage_subject or "No Stage"
+            measurement_stage_kg_totals[stage_key] = (
+                measurement_stage_kg_totals.get(stage_key, 0) + display_qty
+            )
         else:
             display_qty = qty
 
@@ -1517,12 +1594,11 @@ def export_ra_excel(ra_billing):
 
     for stage_id in node_order_meas:
         stage_node = tree_meas[stage_id]
-
         write_meas_node(stage_node, 0)
 
         if stage_has_kg.get(stage_node["subject"]):
-            stage_kg_total = steel_stage_weights.get(stage_node["subject"], 0)
-            stage_mt_total = steel_stage_totals.get(stage_node["subject"], 0)
+            stage_kg_total = measurement_stage_kg_totals.get(stage_node["subject"], 0)  
+            stage_mt_total = stage_kg_total / 1000                                        
 
             cell_sr = ws_meas.cell(row=row_num, column=1, value="")
             cell_sr.border = thin_border
@@ -1554,7 +1630,9 @@ def export_ra_excel(ra_billing):
             mt_cell.alignment = center_align; mt_cell.number_format = "0.000"
             row_num += 1
 
-
+    measurement_stage_mt_totals = {
+        stage: kg / 1000 for stage, kg in measurement_stage_kg_totals.items()
+    }
     for col in ws_meas.columns:
         max_length = 0
         column = get_column_letter(col[0].column)
@@ -1612,8 +1690,9 @@ def export_ra_excel(ra_billing):
 
     for row in getattr(doc, "ra_abstract_details", []):
 
-        stage_steel_kg = steel_stage_weights.get(row.stage_subject, 0)
-        stage_steel_mt = steel_stage_totals.get(row.stage_subject, 0)
+        stage_steel_kg = measurement_stage_kg_totals.get(row.stage_subject, 0)
+        stage_steel_mt = measurement_stage_mt_totals.get(row.stage_subject, 0)
+      
         rate = flt(row.rate)
 
         if stage_steel_kg:
