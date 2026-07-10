@@ -734,7 +734,9 @@ def create_subtask(boq_name=None, selected_stages=None, values=None,task=None):
                 "subject": old_doc.subject,
                 "custom_is_subtask": 1,
                 "custom_boq_name":boq_name,
-                "parent_task":task
+                "parent_task":task,
+                "custom_is_steel_subtask": old_doc.custom_is_steel_subtask,
+                "custom_is_level_task": old_doc.custom_is_level_task,
             })
 
             new_doc.insert(ignore_permissions=True)
