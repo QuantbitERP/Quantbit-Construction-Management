@@ -1,9 +1,6 @@
 # Copyright (c) 2026, QTPL and contributors
 # For license information, please see license.txt
 
-# Copyright (c) 2026, QTPL and contributors
-# For license information, please see license.txt
-
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -807,8 +804,10 @@ def export_bulk_ra_excel(bulk_ra_billing):
     if not bulk_doc.get("project_details"):
         frappe.throw(_("No project rows found. Please fetch projects and select RA Bills first."))
 
+    with_tax = bool(bulk_doc.get("with_tax"))
+
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)  # remove default blank sheet; we'll add Summary explicitly
+    wb.remove(wb.active) 
 
     used_sheet_names = set()
 
@@ -822,13 +821,24 @@ def export_bulk_ra_excel(bulk_ra_billing):
         top=Side(style='thin'), bottom=Side(style='thin')
     )
 
-    ws_summary.merge_cells('A1:C1')
-    ws_summary['A1'] = "Bulk RA Billing Summary"
+    if with_tax:
+        summary_headers = ["Sr. No", "Description", "RA Bill", "Tax Rate", "Amount"]
+        amt_col = 5
+        rate_col = 4
+    else:
+        summary_headers = ["Sr. No", "Description", "RA Bill", "Amount"]
+        amt_col = 4
+        rate_col = None
+
+    total_cols = len(summary_headers)
+    last_col = get_column_letter(total_cols)
+
+    ws_summary.merge_cells(f'A1:{last_col}1')
+    ws_summary['A1'] = "Billing Summary"
     ws_summary['A1'].font = Font(bold=True, size=14)
     ws_summary['A1'].alignment = center_align
 
     ws_summary.append([])
-    summary_headers = ["Sr. No", "Project", "RA Bill", "Amount (Rs.)"]
     ws_summary.append(summary_headers)
     for cell in ws_summary[3]:
         cell.font = bold_font
@@ -848,23 +858,72 @@ def export_bulk_ra_excel(bulk_ra_billing):
         ws_summary.cell(row=summary_row, column=1, value=idx).border = thin_border
         ws_summary.cell(row=summary_row, column=2, value=result["project_name"]).border = thin_border
         ws_summary.cell(row=summary_row, column=3, value=result["ra_bill"]).border = thin_border
-        amt_cell = ws_summary.cell(row=summary_row, column=4, value=result["abstract_total"])
+
+        if with_tax:
+            ws_summary.cell(row=summary_row, column=rate_col, value="").border = thin_border
+
+        amt_cell = ws_summary.cell(row=summary_row, column=amt_col, value=result["abstract_total"])
         amt_cell.border = thin_border
         amt_cell.number_format = '0.00'
 
         grand_total += result["abstract_total"]
         summary_row += 1
 
-    # Grand total row at the bottom of the summary
-    cell_label = ws_summary.cell(row=summary_row, column=2, value="GRAND TOTAL")
+    # ---- Total row (sum of project amounts, before tax) ----
+    cell_label = ws_summary.cell(row=summary_row, column=2, value="Total")
     cell_label.font = bold_font
     cell_label.border = thin_border
     ws_summary.cell(row=summary_row, column=1, value="").border = thin_border
     ws_summary.cell(row=summary_row, column=3, value="").border = thin_border
-    gt_cell = ws_summary.cell(row=summary_row, column=4, value=grand_total)
+    if with_tax:
+        ws_summary.cell(row=summary_row, column=rate_col, value="").border = thin_border
+
+    total_cell = ws_summary.cell(row=summary_row, column=amt_col, value=grand_total)
+    total_cell.font = bold_font
+    total_cell.border = thin_border
+    total_cell.number_format = '0.00'
+    summary_row += 1
+
+    # ---- Tax rows (only if With Tax is checked) ----
+    tax_total = 0.0
+    if with_tax:
+        for tax_row in bulk_doc.get("tax_details", []):
+            ws_summary.cell(row=summary_row, column=1, value="").border = thin_border
+            ws_summary.cell(row=summary_row, column=2, value=tax_row.tax_category or "").border = thin_border
+            ws_summary.cell(row=summary_row, column=3, value="").border = thin_border
+
+            rate_cell = ws_summary.cell(row=summary_row, column=rate_col, value=flt(tax_row.tax_rate))
+            rate_cell.border = thin_border
+            rate_cell.alignment = center_align
+            rate_cell.number_format = '0.00"%"'
+
+            tax_amt_cell = ws_summary.cell(row=summary_row, column=amt_col, value=flt(tax_row.tax_amount))
+            tax_amt_cell.border = thin_border
+            tax_amt_cell.number_format = '0.00'
+
+            tax_total += flt(tax_row.tax_amount)
+            summary_row += 1
+
+    # ---- Grand Total row (Total + all tax amounts) ----
+    cell_label = ws_summary.cell(row=summary_row, column=2, value="Grand Total")
+    cell_label.font = bold_font
+    cell_label.border = thin_border
+    ws_summary.cell(row=summary_row, column=1, value="").border = thin_border
+    ws_summary.cell(row=summary_row, column=3, value="").border = thin_border
+    if with_tax:
+        ws_summary.cell(row=summary_row, column=rate_col, value="").border = thin_border
+
+    final_grand_total = flt(bulk_doc.get("grand_total")) or (grand_total + tax_total)
+    gt_cell = ws_summary.cell(row=summary_row, column=amt_col, value=final_grand_total)
     gt_cell.font = bold_font
     gt_cell.border = thin_border
     gt_cell.number_format = '0.00'
+
+    # highlight grand total row like the reference bill's blue banner
+    for c in range(1, total_cols + 1):
+        ws_summary.cell(row=summary_row, column=c).fill = openpyxl.styles.PatternFill(
+            start_color="D9E1F2", end_color="D9E1F2", fill_type="solid"
+        )
 
     for col in ws_summary.columns:
         max_length = 0

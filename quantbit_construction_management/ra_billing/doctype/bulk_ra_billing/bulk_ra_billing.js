@@ -12,6 +12,13 @@ frappe.ui.form.on("Bulk RA Billing", {
             };
         });
     },
+    onload(frm) {
+        calculate_total_amount(frm);
+    },
+    with_tax(frm) {
+        frm.toggle_reqd("tax_details", frm.doc.with_tax);
+        calculate_grand_total(frm);
+    },
     get_projects(frm) {
         if (!frm.doc.site) {
             frappe.msgprint(__("Please select a Site first."));
@@ -64,6 +71,18 @@ frappe.ui.form.on("Bulk RA Billing", {
             return;
         }
 
+        if (frm.doc.with_tax) {
+            if (!frm.doc.tax_details || !frm.doc.tax_details.length) {
+                frappe.msgprint(__("Please add at least one Tax row, or uncheck 'With Tax'."));
+                return;
+            }
+            let bad_tax = frm.doc.tax_details.filter(r => !r.tax_category || !flt(r.tax_rate));
+            if (bad_tax.length) {
+                frappe.msgprint(__("Please set Tax Category and a valid Tax Rate for every tax row."));
+                return;
+            }
+        }
+
         const form = document.createElement("form");
         form.method = "POST";
         form.action = "/api/method/quantbit_construction_management.ra_billing.doctype.bulk_ra_billing.bulk_ra_billing.export_bulk_ra_excel";
@@ -85,11 +104,105 @@ frappe.ui.form.on("Bulk RA Billing", {
         form.submit();
         document.body.removeChild(form);
     },
+    validate(frm) {
+        calculate_total_amount(frm);
+
+        if (frm.doc.with_tax) {
+            if (!frm.doc.tax_details || !frm.doc.tax_details.length) {
+                frappe.throw(__("Please add at least one Tax row, or uncheck 'With Tax'."));
+            }
+            frm.doc.tax_details.forEach(row => {
+                if (!row.tax_category) {
+                    frappe.throw(__("Row #{0}: Tax Category is mandatory.", [row.idx]));
+                }
+                if (!flt(row.tax_rate) || flt(row.tax_rate) < 0) {
+                    frappe.throw(__("Row #{0}: Tax Rate must be a positive value.", [row.idx]));
+                }
+            });
+        }
+    }
 });
 
 frappe.ui.form.on("Bulk RA Billing Projects Details", {
     project(frm, cdt, cdn) {
         let row = locals[cdt][cdn];
         frappe.model.set_value(cdt, cdn, "ra_bill", "");
+    },
+    amount(frm, cdt, cdn) {
+        calculate_total_amount(frm);
+    },
+    ra_bill(frm, cdt, cdn) {
+        calculate_total_amount(frm);
+    },
+    project_details_remove(frm) {
+        calculate_total_amount(frm);
     }
 });
+
+function calculate_total_amount(frm) {
+    let total = 0;
+    (frm.doc.project_details || []).forEach(row => {
+        total += flt(row.amount);
+    });
+    frm.set_value("total_amount", total);
+    frm.refresh_field("total_amount");
+}
+
+frappe.ui.form.on("Bulk RA Bill Tax Details", {
+    tax_rate(frm, cdt, cdn) {
+        calculate_row_tax(frm, cdt, cdn);
+    },
+    tax_category(frm, cdt, cdn) {
+        calculate_row_tax(frm, cdt, cdn);
+    },
+    tax_details_add(frm, cdt, cdn) {
+        calculate_row_tax(frm, cdt, cdn);
+    },
+    tax_details_remove(frm) {
+        calculate_grand_total(frm);
+    }
+});
+
+function calculate_total_amount(frm) {
+    let total = 0;
+    (frm.doc.project_details || []).forEach(row => {
+        total += flt(row.amount);
+    });
+    frm.set_value("total_amount", total);
+
+    recalculate_all_tax_rows(frm);
+}
+
+function recalculate_all_tax_rows(frm) {
+    (frm.doc.tax_details || []).forEach(row => {
+        row.tax_amount = flt(
+            (flt(frm.doc.total_amount) * flt(row.tax_rate)) / 100,
+            precision("tax_amount", row)
+        );
+    });
+    frm.refresh_field("tax_details");
+    calculate_grand_total(frm);
+}
+
+function calculate_row_tax(frm, cdt, cdn) {
+    let row = locals[cdt][cdn];
+    let tax_amount = flt(
+        (flt(frm.doc.total_amount) * flt(row.tax_rate)) / 100,
+        precision("tax_amount", row)
+    );
+    frappe.model.set_value(cdt, cdn, "tax_amount", tax_amount);
+    calculate_grand_total(frm);
+}
+
+function calculate_grand_total(frm) {
+    let tax_total = 0;
+
+    if (frm.doc.with_tax) {
+        (frm.doc.tax_details || []).forEach(row => {
+            tax_total += flt(row.tax_amount);
+        });
+    }
+
+    let grand_total = flt(frm.doc.total_amount) + tax_total;
+    frm.set_value("grand_total", grand_total);
+}

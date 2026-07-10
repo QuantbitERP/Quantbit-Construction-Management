@@ -10,7 +10,9 @@
   "column_break_egyc",
   "project_name",
   "column_break_yvyj",
-  "ra_bill"
+  "ra_bill",
+  "column_break_pfus",
+  "amount"
  ],
  "fields": [
   {
@@ -47,13 +49,25 @@
   {
    "fieldname": "column_break_yvyj",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_pfus",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "ra_bill.grand_total",
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Amount"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-09 15:24:55.140050",
+ "modified": "2026-07-10 10:34:33.196133",
  "modified_by": "Administrator",
  "module": "RA Billing",
  "name": "Bulk RA Billing Projects Details",
