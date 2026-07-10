@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class RASteelDetails(Document):
+class BulkRABillingProjectsDetails(Document):
 	pass

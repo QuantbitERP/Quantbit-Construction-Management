@@ -108,6 +108,40 @@ LEVEL_CHAIN.forEach((fieldname, idx) => {
 });
 
 frappe.ui.form.on("Task Level Sheet Details", {
+    design(frm, cdt, cdn) {
+        calculate_hi(cdt, cdn);
+        calculate_rl(cdt, cdn);
+        recalculate_average(frm);
+    },
+
+    bs(frm, cdt, cdn) {
+        calculate_hi(cdt, cdn);
+        calculate_rl(cdt, cdn);
+        recalculate_average(frm);x
+    },
+    hi(frm, cdt, cdn) {
+        calculate_rl(cdt, cdn);
+    },
+        level_sheet_details_add(frm, cdt, cdn) {
+
+        let rows = frm.doc.level_sheet_details || [];
+
+        if (rows.length < 2) return;
+
+        let current_row = rows[rows.length - 1];
+        let previous_row = rows[rows.length - 2];
+
+        frappe.model.set_value(
+            current_row.doctype,
+            current_row.name,
+            "hi",
+            flt(previous_row.hi)
+        );
+    },
+    is(frm, cdt, cdn) {
+        calculate_rl(cdt, cdn);
+        recalculate_average(frm);
+    },
     rl(frm) {
         recalculate_average(frm);
     },
@@ -206,6 +240,23 @@ function recalculate_average(frm) {
         : 0;
 
     frm.set_value("average", avg);
+}
+function calculate_hi(cdt, cdn) {
+    let row = locals[cdt][cdn];
+
+    let design = flt(row.design);
+    let bs = flt(row.bs);
+
+    frappe.model.set_value(cdt, cdn, "hi", design + bs);
+}
+
+function calculate_rl(cdt, cdn) {
+    let row = locals[cdt][cdn];
+
+    let hi = flt(row.hi);
+    let is_value = flt(row.is);
+
+    frappe.model.set_value(cdt, cdn, "rl", hi - is_value);
 }
 function refresh_task_levels(frm) {
 

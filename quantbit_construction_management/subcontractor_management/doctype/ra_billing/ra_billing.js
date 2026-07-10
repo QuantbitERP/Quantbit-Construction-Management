@@ -12,11 +12,11 @@ frappe.ui.form.on("RA Billing", {
             return { filters: filters };
         });
 
-        frm.set_query("subtask", "ra_billing_details", function () {
-            let filters = { "custom_is_subtask": 1 };
-            if (frm.doc.project) filters.project = frm.doc.project;
-            return { filters: filters };
-        });
+        // frm.set_query("subtask", "ra_billing_details", function () {
+        //     let filters = { "custom_is_subtask": 1 };
+        //     if (frm.doc.project) filters.project = frm.doc.project;
+        //     return { filters: filters };
+        // });
     },
     get_details(frm) {
         if (!frm.doc.project) {
@@ -33,77 +33,68 @@ frappe.ui.form.on("RA Billing", {
             freeze_message: __("Fetching project tasks..."),
             callback: function (r) {
                 console.log(r);
-                if (r.message && r.message.length) {
-                    frm.clear_table("ra_billing_details");
 
-                    r.message.forEach(row => {
-                        let child = frm.add_child("ra_billing_details");
-
-                        child.stage_subject = row.stage;
-                        child.stage = row.stage_id;
-                        child.task = row.task_id;
-                        child.task_subject = row.task;
-                        child.subtask = row.subtask_id;
-                        child.subtask_subject = row.subtask;
-                        child.total_quantity = row.total_quantity;
-                        child.total_achieved = row.total_achieved;
-                        child.rate = row.rate;
-                        child.billed_quantity = row.billed_quantity;
-                        child.billable_quantity = row.billable_quantity;
-                        child.amount = row.amount;
-                        child.uom = row.uom;
-                        for (let i = 1; i <= 10; i++) {
-
-                            if (row[`task_level${i}_id`]) {
-
-                                frappe.model.set_value(
-                                    child.doctype,
-                                    child.name,
-                                    `task_level${i}`,
-                                    row[`task_level${i}_id`]
-                                );
-                            }
-                        }
-                        let max_level = 0;
-
-                        (r.message || []).forEach(row => {
-                            for (let i = 1; i <= 10; i++) {
-                                if (row[`task_level${i}`]) {
-                                    max_level = i;
-                                }
-                            }
-                        });
-                        console.log("Max Level:", max_level);
-                        for (let i = 1; i <= 10; i++) {
-
-                            let show = i <= max_level;
-
-                            frm.fields_dict.ra_billing_details.grid.update_docfield_property(
-                                `task_level${i}`,
-                                "hidden",
-                                !show
-                            );
-
-                            frm.fields_dict.ra_billing_details.grid.update_docfield_property(
-                                `level${i}_subject`,
-                                "hidden",
-                                !show
-                            );
-                        }
-
-
-                    });
-
-                    frm.refresh_field("ra_billing_details");
-
-                    // Recalculate grand total
-                    let total = frm.doc.ra_billing_details.reduce(
-                        (sum, row) => sum + flt(row.amount), 0
-                    );
-                    frm.set_value("grand_total", total);
-                } else {
+                if (!r.message || !r.message.length) {
                     frappe.msgprint(__("No tasks found for the selected project."));
+                    return;
                 }
+
+                frm.clear_table("ra_billing_details");
+
+                let max_level = 0;
+
+                r.message.forEach(row => {
+                    let child = frm.add_child("ra_billing_details");
+
+                    child.stage_subject = row.stage;
+                    child.stage = row.stage_id;
+
+                    child.task = row.task_id;
+                    child.task_subject = row.task;
+
+                    child.total_quantity = row.total_quantity;
+                    child.total_achieved = row.total_achieved;
+                    child.rate = row.rate;
+                    child.billed_quantity = row.billed_quantity;
+                    child.billable_quantity = row.billable_quantity;
+                    child.amount = row.amount;
+                    child.uom = row.uom;
+
+                    // Set link + subject for ALL levels (1-10) consistently
+                    for (let i = 1; i <= 10; i++) {
+                        if (row[`task_level${i}_id`]) {
+                            child[`task_level${i}`] = row[`task_level${i}_id`];
+                            child[`level${i}_subject`] = row[`task_level${i}`];
+
+                            max_level = Math.max(max_level, i);
+                        }
+                    }
+                });
+
+                frm.refresh_field("ra_billing_details");
+
+                // Show/hide level columns based on the deepest level actually used
+                for (let i = 1; i <= 10; i++) {
+                    let show = i <= max_level;
+
+                    frm.fields_dict.ra_billing_details.grid.update_docfield_property(
+                        `task_level${i}`,
+                        "hidden",
+                        !show
+                    );
+
+                    frm.fields_dict.ra_billing_details.grid.update_docfield_property(
+                        `level${i}_subject`,
+                        "hidden",
+                        !show
+                    );
+                }
+
+                // Recalculate grand total
+                let total = frm.doc.ra_billing_details.reduce(
+                    (sum, row) => sum + flt(row.amount), 0
+                );
+                frm.set_value("grand_total", total);
 
                 frappe.show_alert({
                     message: __("Details fetched successfully."),
@@ -112,48 +103,157 @@ frappe.ui.form.on("RA Billing", {
             }
         });
     },
-
     get_details_(frm) {
-        if (!frm.doc.project || !frm.doc.from_date || !frm.doc.to_date) {
-            frappe.msgprint(__("Please select Project, From Date and To Date first."));
+    if (!frm.doc.project) {
+        frappe.msgprint(__("Please select a Project first."));
+        return;
+    }
+
+    frappe.call({
+        method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.get_project_steel_tasks",
+        args: {
+            project: frm.doc.project
+        },
+        freeze: true,
+        freeze_message: __("Fetching steel tasks..."),
+        callback: function (r) {
+
+            if (!r.message || !r.message.length) {
+                frappe.msgprint(__("No steel subtasks found for the selected project."));
+                return;
+            }
+
+            frm.clear_table("ra_steel_details");
+
+            let max_level = 0;
+
+            r.message.forEach(row => {
+
+                let child = frm.add_child("ra_steel_details");
+
+                child.stage = row.stage_id;
+                child.stage_subject = row.stage;
+
+                child.task = row.task_id;
+                child.task_subject = row.task;
+
+                child.task_level1 = row.task_level1_id;
+                child.task_level1_subject = row.task_level1;
+
+              
+                for (let i = 1; i <= 10; i++) {
+
+                    if (row[`task_level${i}_id`]) {
+
+                        child[`task_level${i}`] = row[`task_level${i}_id`];
+
+                        // IMPORTANT
+                        child[`level${i}_subject`] = row[`task_level${i}`];
+
+                        max_level = Math.max(max_level, i);
+                    }
+                }
+            });
+
+            for (let i = 1; i <= 10; i++) {
+
+                let show = i <= max_level;
+
+                frm.fields_dict.ra_steel_details.grid.update_docfield_property(
+                    `task_level${i}`,
+                    "hidden",
+                    !show
+                );
+
+                frm.fields_dict.ra_steel_details.grid.update_docfield_property(
+                    `level${i}_subject`,
+                    "hidden",
+                    !show
+                );
+            }
+
+            frm.refresh_field("ra_steel_details");
+
+            let total = frm.doc.ra_steel_details.reduce(
+                (sum, d) => sum + flt(d.amount),
+                0
+            );
+
+            frm.set_value("grand_total", total);
+
+            frappe.show_alert({
+                message: __("Steel task details fetched successfully."),
+                indicator: "green"
+            });
+        }
+                });
+    },
+    download_template(frm) {
+
+        if (!frm.doc.ra_steel_details || !frm.doc.ra_steel_details.length) {
+            frappe.msgprint(__("Please fetch steel details first."));
+            return;
+        }
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/api/method/quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.download_steel_template";
+
+        const rows = document.createElement("input");
+        rows.type = "hidden";
+        rows.name = "rows";
+        rows.value = JSON.stringify(frm.doc.ra_steel_details);
+
+        const csrf = document.createElement("input");
+        csrf.type = "hidden";
+        csrf.name = "csrf_token";
+        csrf.value = frappe.csrf_token;
+
+        form.appendChild(rows);
+        form.appendChild(csrf);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    },  
+    import_data(frm) {
+
+        if (!frm.doc.import_file) {
+            frappe.msgprint(__("Please attach the filled template file first."));
             return;
         }
 
         frappe.call({
-            method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.get_steel_details",
+            method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.import_steel_template",
             args: {
-                project: frm.doc.project,
-                from_date: frm.doc.from_date,
-                to_date: frm.doc.to_date
+                docname: frm.doc.name,
+                file_url: frm.doc.import_file
             },
             freeze: true,
-            freeze_message: __("Fetching steel details..."),
-            callback: function (steel_res) {
-                frm.clear_table("ra_steel_details");
-                if (steel_res.message && steel_res.message.length) {
-                    steel_res.message.forEach(row => {
+            freeze_message: __("Importing steel measurement data..."),
+            callback: function (r) {
+                if (!r.message) return;
 
-                        let child = frm.add_child("ra_steel_details");
-                        child.item = row.item;
-                        child.task = row.task;
-                        child.subtask = row.subtask;
-                        child.diamter_of_bar = row.diamter_of_bar;
-                        child.unit = row.unit;
-                        child.qty = row.qty;
-                        child.id = row.name;
-                        child.doc_name = "Stock Entry";
+                frappe.show_alert({
+                    message: __("Imported {0} row(s). {1} row(s) could not be matched.", [
+                        r.message.updated,
+                        r.message.unmatched
+                    ]),
+                    indicator: r.message.unmatched ? "orange" : "green"
+                });
+
+                if (r.message.unmatched_rows && r.message.unmatched_rows.length) {
+                    frappe.msgprint({
+                        title: __("Unmatched Rows"),
+                        message: r.message.unmatched_rows.join("<br>"),
+                        indicator: "orange"
                     });
-                    frm.refresh_field("ra_steel_details");
-                    frappe.show_alert({
-                        message: __("Steel Details fetched successfully."),
-                        indicator: "green"
-                    });
-                } else {
-                    frappe.msgprint(__("No steel details found."));
                 }
+
+                frm.reload_doc();
             }
         });
-    },
+    }, 
     refresh(frm) {
         frm.add_custom_button(__("Export RA"), function () {
 
@@ -350,6 +450,7 @@ function gather_level_matrix(frm) {
     wrapper.find(".level-grid tbody tr").each(function () {
         const $tr = $(this);
         const particular = $tr.find("td").eq(1).text().trim();
+        const task_id = $tr.data("task-id") || null;
         let values = {};
  
         $tr.find(".level-input").each(function () {
@@ -358,7 +459,7 @@ function gather_level_matrix(frm) {
             values[column] = val;
         });
  
-        rows.push({ particular: particular, values: values });
+        rows.push({ particular: particular, task_id: task_id, values: values });
     });
  
     return { columns: columns, rows: rows };
@@ -493,7 +594,7 @@ function render_level_matrix(frm, data) {
     data.rows.forEach((row, index) => {
  
         html += `
-            <tr>
+            <tr data-task-id="${row.task_id || ''}">>
  
                 <td>${index + 1}</td>
  
@@ -539,6 +640,8 @@ function render_level_matrix(frm, data) {
     `;
  
     frm.fields_dict.levelsheet_details.$wrapper.html(html);
+    frappe.model.set_value(frm.doctype, frm.docname, "level_data_json", JSON.stringify(data));
+    frm.dirty();
  
     const wrapper = frm.fields_dict.levelsheet_details.$wrapper;
  

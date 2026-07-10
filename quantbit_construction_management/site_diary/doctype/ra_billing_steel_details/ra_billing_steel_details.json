@@ -1,0 +1,365 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-08 12:17:02.480517",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "stage",
+  "stage_subject",
+  "task",
+  "task_subject",
+  "task_level1",
+  "level1_subject",
+  "task_level2",
+  "level2_subject",
+  "column_break_qzpp",
+  "task_level3",
+  "level3_subject",
+  "task_level4",
+  "level4_subject",
+  "task_level5",
+  "level5_subject",
+  "task_level6",
+  "level6_subject",
+  "column_break_ylml",
+  "task_level7",
+  "level7_subject",
+  "task_level8",
+  "level8_subject",
+  "task_level9",
+  "level9_subject",
+  "task_level10",
+  "level10_subject",
+  "column_break_tudt",
+  "location_of_the_bar",
+  "nos",
+  "length",
+  "width",
+  "depth",
+  "ftg_depth",
+  "dia_of_bar",
+  "spacing",
+  "bar_nos",
+  "bar_length",
+  "column_height",
+  "column_break_vgha",
+  "top_beam_depth",
+  "8_mm_reinforcement",
+  "10_mm_reinforcement",
+  "12_mm_reinforcement",
+  "16_mm_reinforcement",
+  "20_mm_reinforcement",
+  "25_mm_reinforcement",
+  "28_mm_reinforcement",
+  "32_mm_reinforcement",
+  "remark"
+ ],
+ "fields": [
+  {
+   "fetch_from": "stage.subject",
+   "fieldname": "stage_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Stage Subject",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "task.subject",
+   "fieldname": "task_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level1",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task Level1",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level1.subject",
+   "fieldname": "level1_subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task Level1 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level2",
+   "fieldtype": "Link",
+   "label": "Task Level2",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level2.subject",
+   "fieldname": "level2_subject",
+   "fieldtype": "Data",
+   "label": "Task Level2 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_qzpp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "task_level3",
+   "fieldtype": "Link",
+   "label": "Task Level3",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level3.subject",
+   "fieldname": "level3_subject",
+   "fieldtype": "Data",
+   "label": "Task Level3 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level4",
+   "fieldtype": "Link",
+   "label": "Task Level4",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level4.subject",
+   "fieldname": "level4_subject",
+   "fieldtype": "Data",
+   "label": "Task Level4 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level5",
+   "fieldtype": "Link",
+   "label": "Task Level5",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level5.subject",
+   "fieldname": "level5_subject",
+   "fieldtype": "Data",
+   "label": "Task Level5 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level6",
+   "fieldtype": "Link",
+   "label": "Task Level6",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level6.subject",
+   "fieldname": "level6_subject",
+   "fieldtype": "Data",
+   "label": "Task Level6 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ylml",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "task_level7",
+   "fieldtype": "Link",
+   "label": "Task Level7",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level7.subject",
+   "fieldname": "level7_subject",
+   "fieldtype": "Data",
+   "label": "Task Level7 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level8",
+   "fieldtype": "Link",
+   "label": "Task Level8",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level8.subject",
+   "fieldname": "level8_subject",
+   "fieldtype": "Data",
+   "label": "Task Level8 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level9",
+   "fieldtype": "Link",
+   "label": "Task Level9",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level9.subject",
+   "fieldname": "level9_subject",
+   "fieldtype": "Data",
+   "label": "Task Level9 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "task_level10",
+   "fieldtype": "Link",
+   "label": "Task Level10",
+   "options": "Task"
+  },
+  {
+   "fetch_from": "task_level10.subject",
+   "fieldname": "level10_subject",
+   "fieldtype": "Data",
+   "label": "Task Level10 Subject",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tudt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_vgha",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "location_of_the_bar",
+   "fieldtype": "Data",
+   "label": "Location Of The Bar"
+  },
+  {
+   "fieldname": "ftg_depth",
+   "fieldtype": "Float",
+   "label": "Ftg. Depth"
+  },
+  {
+   "fieldname": "length",
+   "fieldtype": "Float",
+   "label": "Length"
+  },
+  {
+   "fieldname": "width",
+   "fieldtype": "Float",
+   "label": "Width"
+  },
+  {
+   "fieldname": "depth",
+   "fieldtype": "Float",
+   "label": "Depth"
+  },
+  {
+   "fieldname": "nos",
+   "fieldtype": "Float",
+   "label": "Nos"
+  },
+  {
+   "fieldname": "dia_of_bar",
+   "fieldtype": "Float",
+   "label": "Dia Of Bar"
+  },
+  {
+   "fieldname": "spacing",
+   "fieldtype": "Float",
+   "label": "Spacing"
+  },
+  {
+   "fieldname": "bar_length",
+   "fieldtype": "Float",
+   "label": "Bar Length"
+  },
+  {
+   "fieldname": "column_height",
+   "fieldtype": "Float",
+   "label": "Column Height"
+  },
+  {
+   "fieldname": "top_beam_depth",
+   "fieldtype": "Float",
+   "label": "Top Beam Depth"
+  },
+  {
+   "fieldname": "8_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "8 MM Reinforcement"
+  },
+  {
+   "fieldname": "10_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "10 MM Reinforcement"
+  },
+  {
+   "fieldname": "12_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "12 MM Reinforcement"
+  },
+  {
+   "fieldname": "16_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "16 MM Reinforcement"
+  },
+  {
+   "fieldname": "20_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "20 MM Reinforcement"
+  },
+  {
+   "fieldname": "25_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "25 MM Reinforcement"
+  },
+  {
+   "fieldname": "28_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "28 MM Reinforcement"
+  },
+  {
+   "fieldname": "32_mm_reinforcement",
+   "fieldtype": "Float",
+   "label": "32 MM Reinforcement"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Data",
+   "label": "Remark"
+  },
+  {
+   "fieldname": "stage",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Stage",
+   "options": "Task",
+   "reqd": 1
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task",
+   "options": "Task"
+  },
+  {
+   "fieldname": "bar_nos",
+   "fieldtype": "Float",
+   "label": "Bar Nos"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-09 10:33:13.143402",
+ "modified_by": "Administrator",
+ "module": "Site Diary",
+ "name": "RA Billing Steel Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
