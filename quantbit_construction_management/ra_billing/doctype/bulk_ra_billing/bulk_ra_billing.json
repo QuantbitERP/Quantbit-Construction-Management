@@ -1,14 +1,23 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "naming_series:",
  "creation": "2026-07-09 14:52:41.488212",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "naming_series_section",
+  "naming_series",
   "section_break_kwru",
+  "tax_details_column",
   "site",
   "get_projects",
   "project_details",
+  "total_amount",
+  "section_break_fjgi",
+  "with_tax",
+  "tax_details",
+  "grand_total",
   "get_ra_bills",
   "amended_from"
  ],
@@ -30,8 +39,10 @@
   {
    "fieldname": "site",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Site",
-   "options": "Site"
+   "options": "Site",
+   "reqd": 1
   },
   {
    "fieldname": "get_projects",
@@ -48,16 +59,61 @@
    "fieldtype": "Table",
    "label": "Project Details",
    "options": "Bulk RA Billing Projects Details"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount"
+  },
+  {
+   "default": "0",
+   "fieldname": "with_tax",
+   "fieldtype": "Check",
+   "label": "With Tax"
+  },
+  {
+   "fieldname": "tax_details_column",
+   "fieldtype": "Column Break",
+   "label": "Tax Details"
+  },
+  {
+   "depends_on": "eval:doc.with_tax==1",
+   "fieldname": "tax_details",
+   "fieldtype": "Table",
+   "label": "Tax Details",
+   "options": "Bulk RA Bill Tax Details"
+  },
+  {
+   "fieldname": "section_break_fjgi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "naming_series_section",
+   "fieldtype": "Section Break",
+   "label": "Naming Series"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "\nBRB-"
+  },
+  {
+   "fieldname": "grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-07-09 15:04:05.536401",
+ "modified": "2026-07-10 11:01:50.504162",
  "modified_by": "Administrator",
  "module": "RA Billing",
  "name": "Bulk RA Billing",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
