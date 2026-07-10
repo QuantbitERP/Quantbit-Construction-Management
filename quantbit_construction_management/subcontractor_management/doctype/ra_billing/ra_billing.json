@@ -26,6 +26,9 @@
   "abstract_tab",
   "ra_abstract_details",
   "grand_total",
+  "with_tax",
+  "tax_details",
+  "final_grand_total",
   "steel_tab",
   "get_details_",
   "download_template",
@@ -172,7 +175,7 @@
   {
    "fieldname": "grand_total",
    "fieldtype": "Currency",
-   "label": "Grand Total",
+   "label": "Total Amount",
    "read_only": 1
   },
   {
@@ -242,6 +245,24 @@
    "fieldname": "level_data_json",
    "fieldtype": "Code",
    "label": "Level Data Json"
+  },
+  {
+   "default": "0",
+   "fieldname": "with_tax",
+   "fieldtype": "Check",
+   "label": "With Tax"
+  },
+  {
+   "depends_on": "eval:doc.with_tax==1",
+   "fieldname": "tax_details",
+   "fieldtype": "Table",
+   "label": "Tax Details",
+   "options": "RA Billing Tax Details"
+  },
+  {
+   "fieldname": "final_grand_total",
+   "fieldtype": "Currency",
+   "label": "Grand Total"
   }
  ],
  "grid_page_length": 50,
@@ -253,7 +274,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-07-09 13:38:17.428485",
+ "modified": "2026-07-10 13:18:47.390383",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",

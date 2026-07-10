@@ -445,14 +445,16 @@ def export_ra_excel(ra_billing):
     company_name = project_doc.company
 
     wb = openpyxl.Workbook()
-    
+    wb.remove(wb.active)                     
+    used_sheet_names = set()
+
+    summary_ws = build_summary_sheet(wb, doc, used_sheet_names)
+
     # Sheet 1: Abstract
-    ws_abstract = wb.active
-    ws_abstract.title = "Abstract"
-    
+    ws_abstract = wb.create_sheet(_safe_sheet_name("Abstract", used_sheet_names))   
+
     # Sheet 2: Measurement
-    ws_meas = wb.create_sheet("Measurement")
-    
+    ws_meas = wb.create_sheet(_safe_sheet_name("Measurement", used_sheet_names))
     bold_font = Font(bold=True)
     center_align = Alignment(horizontal="center", vertical="center")
     left_align = Alignment(horizontal="left", vertical="center")
@@ -1939,6 +1941,8 @@ def export_ra_excel(ra_billing):
                     pass
             ws_leveldata.column_dimensions[column].width = (max_length + 2)
 
+    wb.move_sheet(summary_ws.title, offset=-len(wb.sheetnames))
+
     file_data = BytesIO()
     wb.save(file_data)
 
@@ -2469,3 +2473,160 @@ def get_previous_stage_totals(project, current_name):
         }
 
     return totals
+
+def _safe_sheet_name(name, used_names):
+    """Excel sheet names: max 31 chars, no : \\ / ? * [ ], must be unique in workbook."""
+    for ch in ['\\', '/', '?', '*', '[', ']', ':']:
+        name = name.replace(ch, '-')
+    name = name[:31]
+
+    base = name
+    counter = 1
+    while name in used_names:
+        suffix = f"_{counter}"
+        name = base[: 31 - len(suffix)] + suffix
+        counter += 1
+
+    used_names.add(name)
+    return name
+
+def build_summary_sheet(wb, doc, used_sheet_names):
+    """
+    Builds the 'Summary' sheet for a single RA Billing document:
+    one row showing the Project name and total amount, followed by a
+    Total row, then (if with_tax) Tax Category rows with their rate,
+    and finally the Grand Total row.
+    """
+    bold_font = Font(bold=True)
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+
+    with_tax = bool(doc.get("with_tax"))
+
+    ws = wb.create_sheet(_safe_sheet_name("Summary", used_sheet_names))
+
+    if with_tax:
+        headers = ["Sr. No", "Description", "Tax Rate", "Amount Rs."]
+        rate_col = 3
+        amt_col = 4
+    else:
+        headers = ["Sr. No", "Description", "Amount Rs."]
+        rate_col = None
+        amt_col = 3
+
+    total_cols = len(headers)
+    last_col = get_column_letter(total_cols)
+
+    ws.merge_cells(f'A1:{last_col}1')
+    ws['A1'] = f"R.A. Bill No-{doc.name}"
+    ws['A1'].font = Font(bold=True, size=13)
+    ws['A1'].alignment = center_align
+
+    ws.merge_cells(f'A2:{last_col}2')
+    ws['A2'] = "Total Summary"
+    ws['A2'].font = Font(bold=True, size=12)
+    ws['A2'].alignment = center_align
+
+    ws.append([])
+    ws.append(headers)
+
+    for col_num in range(1, total_cols + 1):
+        cell = ws.cell(row=4, column=col_num)
+        cell.font = bold_font
+        cell.alignment = center_align if col_num != 2 else left_align
+        cell.border = thin_border
+
+    row_num = 5
+
+    # ---- Single row: Description = Project name, Amount = grand_total ----
+    project_doc = frappe.get_doc("Project", doc.project)
+    project_display_name = project_doc.project_name or project_doc.name
+
+    grand_total = flt(doc.get("grand_total"))
+
+    cell_sr = ws.cell(row=row_num, column=1, value=1)
+    cell_sr.border = thin_border
+    cell_sr.alignment = left_align
+
+    cell_desc = ws.cell(row=row_num, column=2, value=project_display_name)
+    cell_desc.border = thin_border
+    cell_desc.alignment = left_align
+
+    if rate_col:
+        ws.cell(row=row_num, column=rate_col, value="").border = thin_border
+
+    amt_cell = ws.cell(row=row_num, column=amt_col, value=grand_total)
+    amt_cell.border = thin_border
+    amt_cell.alignment = center_align
+    amt_cell.number_format = '0.00'
+
+    row_num += 1
+
+    # ---- Total row ----
+    cell_label = ws.cell(row=row_num, column=2, value="Total")
+    cell_label.font = bold_font
+    cell_label.border = thin_border
+    ws.cell(row=row_num, column=1, value="").border = thin_border
+    if rate_col:
+        ws.cell(row=row_num, column=rate_col, value="").border = thin_border
+
+    total_cell = ws.cell(row=row_num, column=amt_col, value=grand_total)
+    total_cell.font = bold_font
+    total_cell.border = thin_border
+    total_cell.number_format = '0.00'
+    row_num += 1
+
+    # ---- Tax rows (only if With Tax) ----
+    tax_total = 0.0
+    if with_tax:
+        for tax_row in doc.get("tax_details", []):
+            ws.cell(row=row_num, column=1, value="").border = thin_border
+            ws.cell(row=row_num, column=2, value=tax_row.tax_category or "").border = thin_border
+
+            rate_cell = ws.cell(row=row_num, column=rate_col, value=flt(tax_row.tax_rate))
+            rate_cell.border = thin_border
+            rate_cell.alignment = center_align
+            rate_cell.number_format = '0.00"%"'
+
+            tax_amt_cell = ws.cell(row=row_num, column=amt_col, value=flt(tax_row.tax_amount))
+            tax_amt_cell.border = thin_border
+            tax_amt_cell.number_format = '0.00'
+
+            tax_total += flt(tax_row.tax_amount)
+            row_num += 1
+
+    # ---- Grand Total row ----
+    cell_label = ws.cell(row=row_num, column=2, value="Grand Total")
+    cell_label.font = bold_font
+    cell_label.border = thin_border
+    ws.cell(row=row_num, column=1, value="").border = thin_border
+    if rate_col:
+        ws.cell(row=row_num, column=rate_col, value="").border = thin_border
+
+    final_total = flt(doc.get("final_grand_total")) or (grand_total + tax_total)
+    gt_cell = ws.cell(row=row_num, column=amt_col, value=final_total)
+    gt_cell.font = bold_font
+    gt_cell.border = thin_border
+    gt_cell.number_format = '0.00'
+
+    for c in range(1, total_cols + 1):
+        ws.cell(row=row_num, column=c).fill = openpyxl.styles.PatternFill(
+            start_color="D9E1F2", end_color="D9E1F2", fill_type="solid"
+        )
+
+    for col in ws.columns:
+        max_length = 0
+        column = get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                if cell.value and len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except Exception:
+                pass
+        ws.column_dimensions[column].width = (max_length + 2)
+
+    return ws

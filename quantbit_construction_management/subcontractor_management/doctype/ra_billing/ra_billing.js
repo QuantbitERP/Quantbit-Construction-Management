@@ -18,6 +18,22 @@ frappe.ui.form.on("RA Billing", {
         //     return { filters: filters };
         // });
     },
+    with_tax(frm) {
+        frm.toggle_reqd("tax_details", frm.doc.with_tax);
+
+        if (!frm.doc.with_tax) {
+            // clear stale tax amounts so nothing lingers if re-checked later inconsistently
+            (frm.doc.tax_details || []).forEach(row => {
+                row.tax_amount = 0;
+            });
+            frm.refresh_field("tax_details");
+        } else {
+            // re-checked: recompute every row fresh against current grand_total
+            recalculate_all_tax_rows(frm);
+        }
+
+        calculate_final_grand_total(frm);
+    },
     get_details(frm) {
         if (!frm.doc.project) {
             frappe.msgprint(__("Please select a Project first."));
@@ -775,3 +791,64 @@ function calculate_steel_weight(frm, cdt, cdn) {
     let total_weight = flt(row.total_length) * flt(row.weight_of_bar);
     frappe.model.set_value(cdt, cdn, 'total_weight', total_weight);
 }
+function calculate_grand_total(frm) {
+    let total = (frm.doc.ra_billing_details || []).reduce(
+        (sum, r) => sum + flt(r.amount), 0
+    );
+    frm.set_value("grand_total", total);
+
+    // grand_total changed -> every tax row (based on grand_total) is stale, recalc all
+    recalculate_all_tax_rows(frm);
+}
+
+function recalculate_all_tax_rows(frm) {
+    (frm.doc.tax_details || []).forEach(row => {
+        row.tax_amount = flt(
+            (flt(frm.doc.grand_total) * flt(row.tax_rate)) / 100,
+            precision("tax_amount", row)
+        );
+    });
+    frm.refresh_field("tax_details");
+    calculate_final_grand_total(frm);
+}
+
+function calculate_row_tax(frm, cdt, cdn) {
+    let row = locals[cdt][cdn];
+    let tax_amount = flt(
+        (flt(frm.doc.grand_total) * flt(row.tax_rate)) / 100,
+        precision("tax_amount", row)
+    );
+    frappe.model.set_value(cdt, cdn, "tax_amount", tax_amount);
+    calculate_final_grand_total(frm);
+}
+
+function calculate_final_grand_total(frm) {
+    let tax_total = 0;
+
+    if (frm.doc.with_tax) {
+        (frm.doc.tax_details || []).forEach(row => {
+            tax_total += flt(row.tax_amount);
+        });
+    }
+
+    let final_grand_total = flt(frm.doc.grand_total) + tax_total;
+    frm.set_value("final_grand_total", final_grand_total);
+    frm.refresh_field("final_grand_total");
+}
+
+frappe.ui.form.on("RA Billing Tax Details", {
+    tax_rate(frm, cdt, cdn) {
+        calculate_row_tax(frm, cdt, cdn);
+    },
+    tax_category(frm, cdt, cdn) {
+        calculate_row_tax(frm, cdt, cdn);
+    },
+    tax_details_add(frm, cdt, cdn) {
+        calculate_row_tax(frm, cdt, cdn);
+    },
+    tax_details_remove(frm) {
+        calculate_final_grand_total(frm);
+    }
+
+});
+
