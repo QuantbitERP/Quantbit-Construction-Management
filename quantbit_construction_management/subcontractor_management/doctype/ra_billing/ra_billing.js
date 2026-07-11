@@ -318,6 +318,16 @@ frappe.ui.form.on("RA Billing", {
 
             }, __("Create"));
         }
+        if (frm.doc.level_data_json) {
+            try {
+                let data = JSON.parse(frm.doc.level_data_json);
+                if (data && data.columns && data.columns.length) {
+                    render_level_matrix(frm, data, true); 
+                }
+            } catch (e) {
+                console.error("Failed to parse level_data_json", e);
+            }
+    }
     },
 
     get_levels(frm) {
@@ -481,7 +491,7 @@ function gather_level_matrix(frm) {
     return { columns: columns, rows: rows };
 }
  
-function render_level_matrix(frm, data) {
+function render_level_matrix(frm, data, from_load=false) {
  
     let html = `
     <style>
@@ -656,38 +666,33 @@ function render_level_matrix(frm, data) {
     `;
  
     frm.fields_dict.levelsheet_details.$wrapper.html(html);
-    frappe.model.set_value(frm.doctype, frm.docname, "level_data_json", JSON.stringify(data));
-    frm.dirty();
- 
+
+    if (!from_load) {
+        frappe.model.set_value(frm.doctype, frm.docname, "level_data_json", JSON.stringify(data));
+        frm.dirty();
+    }
+
     const wrapper = frm.fields_dict.levelsheet_details.$wrapper;
- 
+
     wrapper.find(".level-input").on("input", function () {
- 
         this.size = Math.max(
             this.value.length + 1,
             $(this).data("column").length,
             4
         );
- 
     });
- 
+
     wrapper.find(".level-input").on("blur", function () {
- 
         const value = $(this).val().trim();
- 
-        if (!value)
-            return;
- 
+        if (!value) return;
+
         if (isNaN(Number(value))) {
- 
             frappe.show_alert({
                 message: __("Please enter a valid number."),
                 indicator: "red"
             });
- 
             $(this).val("").focus();
         }
- 
     });
  
 }

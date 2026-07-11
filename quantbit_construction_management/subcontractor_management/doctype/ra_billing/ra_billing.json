@@ -244,6 +244,7 @@
   {
    "fieldname": "level_data_json",
    "fieldtype": "Code",
+   "hidden": 1,
    "label": "Level Data Json"
   },
   {
@@ -275,7 +276,7 @@
    "link_fieldname": "custom_doc_link"
   }
  ],
- "modified": "2026-07-10 19:14:08.418059",
+ "modified": "2026-07-11 12:38:03.121275",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing",

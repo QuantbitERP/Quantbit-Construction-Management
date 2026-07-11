@@ -851,8 +851,9 @@ def export_bulk_ra_excel(bulk_ra_billing):
     for idx, row in enumerate(bulk_doc.project_details, start=1):
         if not row.ra_bill:
             continue
-
-        sheet_prefix = f"{idx}-{row.project}"
+        
+        project_display_name = frappe.db.get_value("Project", row.project, "project_name") or row.project
+        sheet_prefix = f"{idx}-{project_display_name}"
         result = build_ra_sheets_into_workbook(wb, row.ra_bill, sheet_prefix, used_sheet_names)
 
         ws_summary.cell(row=summary_row, column=1, value=idx).border = thin_border
