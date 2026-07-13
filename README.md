@@ -2,6 +2,11 @@
 
 construction management system
 
+### Documentation
+
+- [Functional Application Process Document](docs/functional-application-process.md)
+- [Technical Application Process Document](docs/technical-application-process.md)
+
 ### Installation
 
 You can install this app using the [bench](https://github.com/frappe/bench) CLI:
