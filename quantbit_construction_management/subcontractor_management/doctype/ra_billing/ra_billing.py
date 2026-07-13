@@ -618,7 +618,7 @@ def export_ra_excel(ra_billing):
     ws_steel.append([])
 
     steel_headers = (
-        ["Sr.", "Description of Item","Location Of The Bar", "Nos", "Length", "Width", "Depth",
+        ["Sr.No", "Description of Item","Location Of The Bar", "Nos", "Length", "Width", "Depth",
         "Ftg. Depth", "Dia Of Bar", "Spacing", "Bar Nos", "Bar Length","Column Height", "Top Beam Depth"]
         + [f"{d} MM" for d in BAR_DIAMETERS]
         + [ "Remark"]
@@ -869,7 +869,8 @@ def export_ra_excel(ra_billing):
                     max_length = len(str(cell.value))
             except Exception:
                 pass
-        ws_steel.column_dimensions[column].width = (max_length + 2) 
+        ws_steel.column_dimensions[column].width = (max_length + 2)
+    ws_steel.column_dimensions['A'].width = 8
     # # --- Steel Sheet ---
     # ws_steel = wb.create_sheet("Steel") 
     # ws_steel.merge_cells('A1:L1')
@@ -1642,6 +1643,7 @@ def export_ra_excel(ra_billing):
                     max_length = len(str(cell.value))
             except: pass
         ws_meas.column_dimensions[column].width = (max_length + 2)
+    ws_meas.column_dimensions['A'].width = 8 
   
 # --- Abstract Sheet ---
     abs_headers = [
@@ -1813,6 +1815,7 @@ def export_ra_excel(ra_billing):
             except Exception:
                 pass
         ws_abstract.column_dimensions[column].width = (max_length + 2)
+    ws_abstract.column_dimensions['A'].width = 8
 
     # --- Level Details Sheet ---
     ws_level = wb.create_sheet("Level Details")
@@ -1945,13 +1948,9 @@ def export_ra_excel(ra_billing):
             except Exception:
                 pass
         ws_level.column_dimensions[column].width = (max_length + 2)
+    ws_level.column_dimensions['A'].width = 8 
 
-    # --- Level Sheet (dynamic matrix) ---
-    # ... KEEP everything else exactly as you already have it:
-    # task_desc_cache/get_task_desc, Steel sheet, Measurement sheet,
-    # Abstract sheet, and (if you added it) the Level Details sheet.
-    # Only the block below is new/changed.
-
+  
     # --- Level Data Sheet: EXACT copy of the on-screen grid ---
     matrix_json = doc.get("level_data_json")
     matrix = None
@@ -1960,28 +1959,50 @@ def export_ra_excel(ra_billing):
             matrix = json.loads(matrix_json)
         except Exception:
             matrix = None
-
     if matrix and matrix.get("columns"):
         ws_leveldata = wb.create_sheet("Level Data")
 
         columns = matrix["columns"]
         rows = matrix.get("rows", [])
 
-        total_cols = 2 + len(columns)  # Sr. + Particular + dynamic columns
+        total_cols = 2 + len(columns)  
+        last_leveldata_col = get_column_letter(total_cols)
+
+        ws_leveldata.merge_cells(f'A1:{last_leveldata_col}1')
+        ws_leveldata['A1'] = company_name
+        ws_leveldata['A1'].font = Font(bold=True, size=14)
+        ws_leveldata['A1'].alignment = center_align
+
+        ws_leveldata.merge_cells(f'A2:{last_leveldata_col}2')
+        ws_leveldata['A2'] = project_doc.project_name or project_doc.name
+        ws_leveldata['A2'].font = Font(bold=True, size=12)
+        ws_leveldata['A2'].alignment = center_align
+
+        ws_leveldata.merge_cells(f'A3:{last_leveldata_col}3')
+        ws_leveldata['A3'] = f"RA Bill Number: {doc.name}"
+        ws_leveldata['A3'].font = Font(bold=True, size=12)
+        ws_leveldata['A3'].alignment = center_align
+
+        ws_leveldata.merge_cells(f'A4:{last_leveldata_col}4')
+        ws_leveldata['A4'] = "LEVEL DATA"
+        ws_leveldata['A4'].font = Font(bold=True, size=12)
+        ws_leveldata['A4'].alignment = center_align
+
+        ws_leveldata.append([])   # blank row -> row 5
 
         # Header row — exactly "Sr.", "Particular", then each grid column, in order
-        headers = ["Sr.", "Particular"] + columns
-        ws_leveldata.append(headers)
+        headers = ["Sr.No", "Particular"] + columns
+        ws_leveldata.append(headers)   # -> row 6
 
         for col_num in range(1, total_cols + 1):
-            cell = ws_leveldata.cell(row=1, column=col_num)
+            cell = ws_leveldata.cell(row=6, column=col_num)
             cell.font = bold_font
             cell.alignment = center_align if col_num != 2 else left_align
             cell.border = thin_border
 
         # Data rows — exactly as they appear in the grid, no grouping/merging
         for idx, row in enumerate(rows, start=1):
-            r = idx + 1  # row 2 onward
+            r = idx + 6  # row 7 onward
 
             cell_sr = ws_leveldata.cell(row=r, column=1, value=idx)
             cell_sr.border = thin_border
@@ -2019,6 +2040,7 @@ def export_ra_excel(ra_billing):
                 except Exception:
                     pass
             ws_leveldata.column_dimensions[column].width = (max_length + 2)
+        ws_leveldata.column_dimensions['A'].width = 8
 
     wb.move_sheet(summary_ws.title, offset=-len(wb.sheetnames))
 
@@ -2392,6 +2414,7 @@ def download_steel_template(rows):
             except Exception:
                 pass
         ws.column_dimensions[column].width = max_length + 2
+    ws.column_dimensions['A'].width =8
     output = BytesIO()
     wb.save(output)
     output.seek(0)
@@ -2600,31 +2623,43 @@ def build_summary_sheet(wb, doc, used_sheet_names):
     total_cols = len(headers)
     last_col = get_column_letter(total_cols)
 
+    project_doc = frappe.get_doc("Project", doc.project)
+    company_name = project_doc.company
+
+    # ---- 4-row header block (back to original) ----
     ws.merge_cells(f'A1:{last_col}1')
-    ws['A1'] = f"R.A. Bill No-{doc.name}"
-    ws['A1'].font = Font(bold=True, size=13)
+    ws['A1'] = company_name
+    ws['A1'].font = Font(bold=True, size=14)
     ws['A1'].alignment = center_align
 
     ws.merge_cells(f'A2:{last_col}2')
-    ws['A2'] = "Total Summary"
+    ws['A2'] = project_doc.project_name or project_doc.name
     ws['A2'].font = Font(bold=True, size=12)
     ws['A2'].alignment = center_align
 
-    ws.append([])
-    ws.append(headers)
+    ws.merge_cells(f'A3:{last_col}3')
+    ws['A3'] = f"R.A. Bill No-{doc.name}"
+    ws['A3'].font = Font(bold=True, size=13)
+    ws['A3'].alignment = center_align
+
+    ws.merge_cells(f'A4:{last_col}4')
+    ws['A4'] = "Total Summary"
+    ws['A4'].font = Font(bold=True, size=12)
+    ws['A4'].alignment = center_align
+
+    ws.append([])          # blank row -> row 5
+    ws.append(headers)     # header row -> row 6
 
     for col_num in range(1, total_cols + 1):
-        cell = ws.cell(row=4, column=col_num)
+        cell = ws.cell(row=6, column=col_num)
         cell.font = bold_font
         cell.alignment = center_align if col_num != 2 else left_align
         cell.border = thin_border
 
-    row_num = 5
+    row_num = 7
 
     # ---- Single row: Description = Project name, Amount = grand_total ----
-    project_doc = frappe.get_doc("Project", doc.project)
     project_display_name = project_doc.project_name or project_doc.name
-
     grand_total = flt(doc.get("grand_total"))
 
     cell_sr = ws.cell(row=row_num, column=1, value=1)
@@ -2697,6 +2732,16 @@ def build_summary_sheet(wb, doc, used_sheet_names):
             start_color="D9E1F2", end_color="D9E1F2", fill_type="solid"
         )
 
+    row_num += 1
+
+    row_num += 2
+    generated_on = frappe.utils.format_datetime(
+        frappe.utils.now_datetime(), "dd-MM-yyyy HH:mm:ss"
+    )
+    gen_cell = ws.cell(row=row_num, column=2, value=f"Generated On: {generated_on}")
+    gen_cell.font = Font(italic=True, size=10)
+    gen_cell.alignment = left_align
+
     for col in ws.columns:
         max_length = 0
         column = get_column_letter(col[0].column)
@@ -2707,5 +2752,6 @@ def build_summary_sheet(wb, doc, used_sheet_names):
             except Exception:
                 pass
         ws.column_dimensions[column].width = (max_length + 2)
+    ws.column_dimensions['A'].width = 8
 
     return ws

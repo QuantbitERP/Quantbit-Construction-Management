@@ -41,13 +41,14 @@
   "height",
   "quantity",
   "uom",
-  "billed_quantity",
   "rate",
   "amount",
+  "billed_quantity",
   "description"
  ],
  "fields": [
   {
+   "columns": 4,
    "fetch_from": "stage.subject",
    "fieldname": "stage_subject",
    "fieldtype": "Data",
@@ -55,6 +56,7 @@
    "label": "Stage Subject"
   },
   {
+   "columns": 4,
    "fetch_from": "task.subject",
    "fieldname": "task_subject",
    "fieldtype": "Data",
@@ -69,7 +71,7 @@
    "fieldname": "total_quantity",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Total Quantity"
+   "label": "BOQ Quantity"
   },
   {
    "fieldname": "billed_quantity",
@@ -104,26 +106,31 @@
   {
    "fieldname": "no1",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "No.1"
   },
   {
    "fieldname": "no2",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "No.2"
   },
   {
    "fieldname": "length",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Length"
   },
   {
    "fieldname": "width",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Width"
   },
   {
    "fieldname": "height",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Height"
   },
   {
@@ -139,6 +146,7 @@
   {
    "fieldname": "quantity",
    "fieldtype": "Float",
+   "in_list_view": 1,
    "label": "Actual Quantity(By Measurement)"
   },
   {
@@ -153,6 +161,7 @@
    "options": "Task"
   },
   {
+   "columns": 4,
    "fetch_from": "task_level1.subject",
    "fieldname": "level1_subject",
    "fieldtype": "Data",
@@ -286,7 +295,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-08 18:03:04.073572",
+ "modified": "2026-07-11 15:13:32.843430",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "RA Billing Details",

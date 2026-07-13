@@ -147,8 +147,8 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
     ws_abstract['A4'].font = Font(bold=True, size=12)
     ws_abstract['A4'].alignment = center_align
 
-    ws_abstract.append([])            # blank row -> row 5
-    ws_abstract.append(abs_headers)   # header row -> row 6
+    ws_abstract.append([])            
+    ws_abstract.append(abs_headers)
 
     for col_num in range(1, abs_total_cols + 1):
         cell = ws_abstract.cell(row=6, column=col_num)
@@ -274,6 +274,7 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
             except Exception:
                 pass
         ws_abstract.column_dimensions[column].width = (max_length + 2)
+    ws_abstract.column_dimensions['A'].width = 8
     # ============ MEASUREMENT SHEET ============
     ws_meas = wb.create_sheet(_safe_sheet_name(f"{sheet_prefix} Measurement", used_sheet_names))
 
@@ -483,12 +484,13 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
             except Exception:
                 pass
         ws_meas.column_dimensions[column].width = (max_length + 2)
+    ws_meas.column_dimensions['A'].width = 8
 
  # ============ STEEL SHEET ============
     ws_steel = wb.create_sheet(_safe_sheet_name(f"{sheet_prefix} Steel", used_sheet_names))
 
     steel_headers = (
-        ["Sr.", "Description of Item", "Location Of The Bar", "Nos", "Length", "Width", "Depth",
+        ["Sr.No", "Description of Item", "Location Of The Bar", "Nos", "Length", "Width", "Depth",
          "Ftg. Depth", "Dia Of Bar", "Spacing", "Bar Nos", "Bar Length", "Column Height", "Top Beam Depth"]
         + [f"{d} MM" for d in BAR_DIAMETERS]
         + ["Remark"]
@@ -689,6 +691,7 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
             except Exception:
                 pass
         ws_steel.column_dimensions[column].width = (max_length + 2)
+    ws_steel.column_dimensions['A'].width = 8
     # ============ LEVEL DETAILS SHEET ============
     ws_level = wb.create_sheet(_safe_sheet_name(f"{sheet_prefix} Level Details", used_sheet_names))
 
@@ -696,12 +699,39 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
         "Sr. No", "Task", "Task Subject", "Design", "B.S.", "I.S.", "F.S.", "H.I.", "R.L.",
         "Average R.L.", "Remark"
     ]
-    ws_level.append(level_headers)
-    for cell in ws_level[1]:
+    level_total_cols = len(level_headers)
+    level_last_col = get_column_letter(level_total_cols)
+
+    ws_level.merge_cells(f'A1:{level_last_col}1')
+    ws_level['A1'] = company_name
+    ws_level['A1'].font = Font(bold=True, size=14)
+    ws_level['A1'].alignment = center_align
+
+    ws_level.merge_cells(f'A2:{level_last_col}2')
+    ws_level['A2'] = display_project_name
+    ws_level['A2'].font = Font(bold=True, size=12)
+    ws_level['A2'].alignment = center_align
+
+    ws_level.merge_cells(f'A3:{level_last_col}3')
+    ws_level['A3'] = f"RA Bill Number: {doc.name}"
+    ws_level['A3'].font = Font(bold=True, size=12)
+    ws_level['A3'].alignment = center_align
+
+    ws_level.merge_cells(f'A4:{level_last_col}4')
+    ws_level['A4'] = "LEVEL DETAILS"
+    ws_level['A4'].font = Font(bold=True, size=12)
+    ws_level['A4'].alignment = center_align
+
+    ws_level.append([])              # blank row -> row 5
+    ws_level.append(level_headers)   # header row -> row 6
+
+    for col_num in range(1, level_total_cols + 1):
+        cell = ws_level.cell(row=6, column=col_num)
         cell.font = bold_font
         cell.border = thin_border
+        cell.alignment = center_align if col_num not in (2, 3, 11) else left_align
 
-    row_num = 2
+    row_num = 7
     for row in getattr(doc, "level_details", []):
         if row.task:
             row_type = "header"
@@ -740,6 +770,7 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
             except Exception:
                 pass
         ws_level.column_dimensions[column].width = (max_length + 2)
+    ws_level.column_dimensions['A'].width = 8 
 
     # ============ LEVEL DATA SHEET (matrix) ============
     matrix_json = doc.get("level_data_json")
@@ -756,13 +787,40 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
         rows = matrix.get("rows", [])
 
         headers = ["Sr.", "Particular"] + columns
-        ws_leveldata.append(headers)
-        for cell in ws_leveldata[1]:
+        leveldata_total_cols = len(headers)
+        leveldata_last_col = get_column_letter(leveldata_total_cols)
+
+        ws_leveldata.merge_cells(f'A1:{leveldata_last_col}1')
+        ws_leveldata['A1'] = company_name
+        ws_leveldata['A1'].font = Font(bold=True, size=14)
+        ws_leveldata['A1'].alignment = center_align
+
+        ws_leveldata.merge_cells(f'A2:{leveldata_last_col}2')
+        ws_leveldata['A2'] = display_project_name
+        ws_leveldata['A2'].font = Font(bold=True, size=12)
+        ws_leveldata['A2'].alignment = center_align
+
+        ws_leveldata.merge_cells(f'A3:{leveldata_last_col}3')
+        ws_leveldata['A3'] = f"RA Bill Number: {doc.name}"
+        ws_leveldata['A3'].font = Font(bold=True, size=12)
+        ws_leveldata['A3'].alignment = center_align
+
+        ws_leveldata.merge_cells(f'A4:{leveldata_last_col}4')
+        ws_leveldata['A4'] = "LEVEL DATA"
+        ws_leveldata['A4'].font = Font(bold=True, size=12)
+        ws_leveldata['A4'].alignment = center_align
+
+        ws_leveldata.append([])       # blank row -> row 5
+        ws_leveldata.append(headers)  # header row -> row 6
+
+        for col_num in range(1, leveldata_total_cols + 1):
+            cell = ws_leveldata.cell(row=6, column=col_num)
             cell.font = bold_font
             cell.border = thin_border
+            cell.alignment = center_align if col_num != 2 else left_align
 
         for idx, row in enumerate(rows, start=1):
-            r = idx + 1
+            r = idx + 6
             ws_leveldata.cell(row=r, column=1, value=idx).border = thin_border
             pcell = ws_leveldata.cell(row=r, column=2, value=row.get("particular", ""))
             pcell.font = bold_font
@@ -790,6 +848,7 @@ def build_ra_sheets_into_workbook(wb, ra_billing_name, sheet_prefix, used_sheet_
                 except Exception:
                     pass
             ws_leveldata.column_dimensions[column].width = (max_length + 2)
+        ws_leveldata.column_dimensions['A'].width = 8
 
     return {
         "project_name": display_project_name,
@@ -833,19 +892,33 @@ def export_bulk_ra_excel(bulk_ra_billing):
     total_cols = len(summary_headers)
     last_col = get_column_letter(total_cols)
 
+    first_company = ""
+    if bulk_doc.project_details and bulk_doc.project_details[0].project:
+        first_company = frappe.db.get_value("Project", bulk_doc.project_details[0].project, "company") or ""
+
     ws_summary.merge_cells(f'A1:{last_col}1')
-    ws_summary['A1'] = "Billing Summary"
+    ws_summary['A1'] = first_company
     ws_summary['A1'].font = Font(bold=True, size=14)
     ws_summary['A1'].alignment = center_align
 
-    ws_summary.append([])
-    ws_summary.append(summary_headers)
-    for cell in ws_summary[3]:
+    ws_summary.merge_cells(f'A2:{last_col}2')
+    ws_summary['A2'] = "BULK RA BILLING"
+    ws_summary['A2'].font = Font(bold=True, size=12)
+    ws_summary['A2'].alignment = center_align
+
+    ws_summary.merge_cells(f'A3:{last_col}3')
+    ws_summary['A3'] = "SUMMARY SHEET"
+    ws_summary['A3'].font = Font(bold=True, size=12)
+    ws_summary['A3'].alignment = center_align
+
+    ws_summary.append([])           # blank row -> row 4
+    ws_summary.append(summary_headers)  # header row -> row 5
+    for cell in ws_summary[5]:
         cell.font = bold_font
         cell.border = thin_border
         cell.alignment = center_align if cell.column != 2 else left_align
 
-    summary_row = 4
+    summary_row = 6
     grand_total = 0.0
 
     for idx, row in enumerate(bulk_doc.project_details, start=1):
@@ -925,6 +998,15 @@ def export_bulk_ra_excel(bulk_ra_billing):
         ws_summary.cell(row=summary_row, column=c).fill = openpyxl.styles.PatternFill(
             start_color="D9E1F2", end_color="D9E1F2", fill_type="solid"
         )
+    summary_row += 1    
+
+    summary_row += 2
+    generated_on = frappe.utils.format_datetime(
+        frappe.utils.now_datetime(), "dd-MM-yyyy HH:mm:ss"
+    )
+    gen_cell = ws_summary.cell(row=summary_row, column=2, value=f"Generated On: {generated_on}")
+    gen_cell.font = Font(italic=True, size=10)
+    gen_cell.alignment = left_align
 
     for col in ws_summary.columns:
         max_length = 0
@@ -936,6 +1018,7 @@ def export_bulk_ra_excel(bulk_ra_billing):
             except Exception:
                 pass
         ws_summary.column_dimensions[column].width = (max_length + 2)
+    ws_summary.column_dimensions['A'].width = 8
 
     # Move Summary sheet to the very front
     wb.move_sheet(ws_summary.title, offset=-len(wb.sheetnames))
