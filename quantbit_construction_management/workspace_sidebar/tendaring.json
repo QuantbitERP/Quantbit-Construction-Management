@@ -1,6 +1,6 @@
 {
  "app": "quantbit_construction_management",
- "creation": "2026-07-03 17:26:05.814506",
+ "creation": "2026-07-17 12:51:39.752604",
  "docstatus": 0,
  "doctype": "Workspace Sidebar",
  "idx": 0,
@@ -11,16 +11,16 @@
    "indent": 0,
    "keep_closed": 0,
    "label": "Tendaring",
-   "link_to": "Tendering",
+   "link_to": "Tendaring",
    "link_type": "Workspace",
    "show_arrow": 0,
    "type": "Link"
   }
  ],
- "modified": "2026-07-04 12:38:30.482174",
+ "modified": "2026-07-17 13:07:02.942047",
  "modified_by": "Administrator",
- "name": "Tendering",
+ "name": "Tendaring",
  "owner": "Administrator",
  "standard": 1,
- "title": "Tendering"
+ "title": "Tendaring"
 }
