@@ -1,0 +1,89 @@
+{
+    "app": "quantbit_construction_management",
+    "charts": [],
+    "content": "[{\"id\":\"rIhDpCWfPb\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+    "creation": "2026-07-16 16:00:00.000000",
+    "custom_blocks": [],
+    "docstatus": 0,
+    "doctype": "Workspace",
+    "hide_custom": 0,
+    "idx": 0,
+    "indicator_color": "green",
+    "is_hidden": 0,
+    "label": "Reports",
+    "link_type": "DocType",
+    "links": [
+        {
+            "hidden": 0,
+            "is_query_report": 0,
+            "label": "Reports",
+            "link_count": 5,
+            "link_type": "DocType",
+            "onboard": 0,
+            "type": "Card Break"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 1,
+            "label": "Cost By Category",
+            "link_count": 0,
+            "link_to": "Cost By Category",
+            "link_type": "Report",
+            "onboard": 0,
+            "type": "Link"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 1,
+            "label": "Equipment Cost Per Project",
+            "link_count": 0,
+            "link_to": "Equipment Cost Per Project",
+            "link_type": "Report",
+            "onboard": 0,
+            "type": "Link"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 1,
+            "label": "Labour Cost Per Project",
+            "link_count": 0,
+            "link_to": "Labour Cost Per Project",
+            "link_type": "Report",
+            "onboard": 0,
+            "type": "Link"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 1,
+            "label": "Material Counsumed Per Project",
+            "link_count": 0,
+            "link_to": "Material Counsumed Per Project",
+            "link_type": "Report",
+            "onboard": 0,
+            "type": "Link"
+        },
+        {
+            "hidden": 0,
+            "is_query_report": 1,
+            "label": "Monthly Project Expenditure",
+            "link_count": 0,
+            "link_to": "Monthly Project Expenditure",
+            "link_type": "Report",
+            "onboard": 0,
+            "type": "Link"
+        }
+    ],
+    "modified": "2026-07-16 16:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Quantbit Construction Management",
+    "name": "Reports",
+    "number_cards": [],
+    "owner": "Administrator",
+    "public": 1,
+    "quick_lists": [],
+    "roles": [],
+    "sequence_id": 0.0,
+    "shortcuts": [],
+    "title": "Reports",
+    "type": "Workspace"
+}
