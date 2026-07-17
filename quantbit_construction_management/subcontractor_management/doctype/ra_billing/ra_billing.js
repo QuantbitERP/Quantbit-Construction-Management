@@ -18,6 +18,36 @@ frappe.ui.form.on("RA Billing", {
         //     return { filters: filters };
         // });
     },
+    sales_taxes_and_charges_template(frm){
+        if(!frm.doc.sales_taxes_and_charges_template){
+            frm.clear_table("tax_details");
+            frm.refresh_field("tax_details");
+            return
+        }
+        frm.call({
+            doc:frm.doc,
+            method:"get_template_details",
+            callback:function(r){
+                if(!r.message || !r.message.length){
+                    return;
+                }
+                frm.clear_table("tax_details")
+
+                r.message.forEach(function(row){
+                let child=frm.add_child("tax_details");
+                
+                    child.type=row.charge_type;
+                    child.account_head= row.account_head;
+                    child.description= row.description;
+                    child.on_amount= frm.doc.grand_total;
+                });
+                frm.refresh_field("tax_details");
+                
+            
+            }
+        })
+
+    },
     with_tax(frm) {
         frm.toggle_reqd("tax_details", frm.doc.with_tax);
 

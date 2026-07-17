@@ -1503,31 +1503,6 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                 { label: __("Project"), fieldname: "project", fieldtype: "Link", options: "Project", default: project, read_only: 1, reqd: 1 },
                 { label: __("Site"),    fieldname: "site",    fieldtype: "Link", options: "Site",    default: site, reqd: 1 },
                 { label: __("Date"),    fieldname: "date",    fieldtype: "Date", default: today, reqd: 1 },
-                { fieldtype: "Section Break", label: __("Task Hierarchy") },
-
-                { label: __("Stage"),         fieldname: "stage",         fieldtype: "Link", options: "Task", default: hierarchy_values.stage,         read_only: 1 },
-                { label: __("Stage Subject"), fieldname: "stage_subject", fieldtype: "Data", default: hierarchy_values.stage_subject, read_only: 1 },
-                { fieldtype: "Column Break" },
-                { label: __("Task"),          fieldname: "task",          fieldtype: "Link", options: "Task", default: hierarchy_values.task,          read_only: 1 },
-                { label: __("Task Subject"),  fieldname: "task_subject",  fieldtype: "Data", default: hierarchy_values.task_subject,  read_only: 1 }
-            ];
-
-            for (let i = 1; i <= 10; i++) {
-                let level_fn   = `task_level${i}`;
-                let subject_fn = (i === 9) ? "task_level9_subject_copy" : `task_level${i}_subject`;
-                if (i % 2 === 1) dialog_fields.push({ fieldtype: "Section Break" });
-                else dialog_fields.push({ fieldtype: "Column Break" });
-                dialog_fields.push(
-                    { label: __(`Task Level${i}`), fieldname: level_fn, fieldtype: "Link", options: "Task",
-                        default: hierarchy_values[level_fn], read_only: 1, depends_on: `eval:doc.${level_fn}` },
-                );
-                dialog_fields.push(
-                    { label: __(`Task Level${i} Subject`), fieldname: subject_fn, fieldtype: "Data",
-                        default: hierarchy_values[subject_fn], read_only: 1, depends_on: `eval:doc.${level_fn}` }
-                );
-            }
-
-            dialog_fields.push(
                 { fieldtype: "Section Break", label: __("Level Sheet Details") },
                 {
                     label: __("Level Sheet Details"), fieldname: "level_sheet_details", fieldtype: "Table",
@@ -1544,7 +1519,7 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                     ]
                 },
                 { label: __("Average"), fieldname: "average", fieldtype: "Float", read_only: 1, default: 0 }
-            );
+            ];
 
             var d = new frappe.ui.Dialog({
                 title: __("New Task Level Sheet"), size: "extra-large",
@@ -1566,18 +1541,18 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                         args: { doc: {
                             doctype: "Task Level Sheet", docstatus: 1,
                             project: values.project, site: values.site, date: values.date,
-                            stage: values.stage, stage_subject: values.stage_subject,
-                            task: values.task, task_subject: values.task_subject,
-                            task_level1: values.task_level1, task_level1_subject: values.task_level1_subject,
-                            task_level2: values.task_level2, task_level2_subject: values.task_level2_subject,
-                            task_level3: values.task_level3, task_level3_subject: values.task_level3_subject,
-                            task_level4: values.task_level4, task_level4_subject: values.task_level4_subject,
-                            task_level5: values.task_level5, task_level5_subject: values.task_level5_subject,
-                            task_level6: values.task_level6, task_level6_subject: values.task_level6_subject,
-                            task_level7: values.task_level7, task_level7_subject: values.task_level7_subject,
-                            task_level8: values.task_level8, task_level8_subject: values.task_level8_subject,
-                            task_level9: values.task_level9, task_level9_subject_copy: values.task_level9_subject_copy,
-                            task_level10: values.task_level10, task_level10_subject: values.task_level10_subject,
+                            stage: hierarchy_values.stage, stage_subject: hierarchy_values.stage_subject,
+                            task: hierarchy_values.task, task_subject: hierarchy_values.task_subject,
+                            task_level1: hierarchy_values.task_level1, task_level1_subject: hierarchy_values.task_level1_subject,
+                            task_level2: hierarchy_values.task_level2, task_level2_subject: hierarchy_values.task_level2_subject,
+                            task_level3: hierarchy_values.task_level3, task_level3_subject: hierarchy_values.task_level3_subject,
+                            task_level4: hierarchy_values.task_level4, task_level4_subject: hierarchy_values.task_level4_subject,
+                            task_level5: hierarchy_values.task_level5, task_level5_subject: hierarchy_values.task_level5_subject,
+                            task_level6: hierarchy_values.task_level6, task_level6_subject: hierarchy_values.task_level6_subject,
+                            task_level7: hierarchy_values.task_level7, task_level7_subject: hierarchy_values.task_level7_subject,
+                            task_level8: hierarchy_values.task_level8, task_level8_subject: hierarchy_values.task_level8_subject,
+                            task_level9: hierarchy_values.task_level9, task_level9_subject_copy: hierarchy_values.task_level9_subject_copy,
+                            task_level10: hierarchy_values.task_level10, task_level10_subject: hierarchy_values.task_level10_subject,
                             average: final_average,
                             level_sheet_details: (values.level_sheet_details || []).map(row => ({
                                 doctype: "Task Level Sheet Details",

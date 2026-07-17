@@ -92,6 +92,18 @@ class RABilling(Document):
                 row.quantity = weight_mt
                 row.uom = "Metric Tonne"
                 row.amount = flt(row.rate) * weight_mt
+    @frappe.whitelist()
+    def get_template_details(self):
+        template=frappe.get_doc("Sales Taxes and Charges Template", self.sales_taxes_and_charges_template)
+        row=[]
+        for i in template.taxes:
+            row.append({
+                "charge_type":i.charge_type,
+                "account_head":i.account_head,
+                "description":i.description
+            })
+        return row
+
     def sync_deleted_tasks(self):
         if not self.is_new() and self.get_doc_before_save():
             old_tasks = set(d.task for d in self.get_doc_before_save().ra_abstract_details if d.task)
@@ -491,6 +503,18 @@ def create_sales_invoice(source_name, target_doc=None, item_code=None):
         })
         
         target.run_method("set_missing_values")
+        target.set("taxes",[])
+        target.taxes_and_charges=source.sales_taxes_and_charges_template
+
+        for i in source.tax_details:
+            target.append("taxes",{
+            "charge_type":i.type,
+            "account_head":i.account_head,
+            "rate":i.tax_rate,
+            "net_amount":i.on_amount,
+            "tax_amount":i.tax_amount,
+            "description":i.description
+        })
        
 
     doc = get_mapped_doc(

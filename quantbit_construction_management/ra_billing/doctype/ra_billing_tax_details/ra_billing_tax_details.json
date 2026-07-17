@@ -6,21 +6,17 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "tax_category",
-  "column_break_sgqy",
+  "type",
+  "account_head",
   "tax_rate",
+  "column_break_sgqy",
+  "on_amount",
+  "tax_amount",
   "column_break_awua",
-  "tax_amount"
+  "total_amount",
+  "description"
  ],
  "fields": [
-  {
-   "fieldname": "tax_category",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Tax Category",
-   "options": "Tax Category"
-  },
   {
    "fieldname": "column_break_sgqy",
    "fieldtype": "Column Break"
@@ -42,13 +38,50 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Tax Amount"
+  },
+  {
+   "fieldname": "account_head",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Account Head",
+   "options": "Account"
+  },
+  {
+   "fieldname": "on_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "On Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Total Amount"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "default": "On Net Total",
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Type",
+   "options": "\nActual\nOn Net Total\nOn Previous Row Amount\nOn Previous Row Total\nOn Item Quantity"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-10 11:51:50.103684",
+ "modified": "2026-07-17 16:57:51.932515",
  "modified_by": "Administrator",
  "module": "RA Billing",
  "name": "RA Billing Tax Details",
