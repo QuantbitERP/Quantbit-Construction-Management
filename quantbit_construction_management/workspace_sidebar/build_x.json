@@ -1,6 +1,6 @@
 {
  "app": "quantbit_construction_management",
- "creation": "2026-07-17 12:58:42.326894",
+ "creation": "2026-07-17 13:24:29.653204",
  "docstatus": 0,
  "doctype": "Workspace Sidebar",
  "idx": 0,
@@ -10,17 +10,17 @@
    "collapsible": 1,
    "indent": 0,
    "keep_closed": 0,
-   "label": "Daily Progress",
-   "link_to": "Daily Progress",
+   "label": "Build X",
+   "link_to": "Build X",
    "link_type": "Workspace",
    "show_arrow": 0,
    "type": "Link"
   }
  ],
- "modified": "2026-07-17 13:07:17.021044",
- "modified_by": "Administrator",
- "name": "Daily Progress",
- "owner": "Administrator",
+ "modified": "2026-07-17 14:22:59.512792",
+ "modified_by": "akshay.m@erpdata.in",
+ "name": "Build X",
+ "owner": "akshay.m@erpdata.in",
  "standard": 1,
- "title": "Daily Progress"
+ "title": "Build X"
 }
