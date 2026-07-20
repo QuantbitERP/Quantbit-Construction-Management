@@ -17,7 +17,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Safety",
-   "link_count": 3,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -48,6 +48,16 @@
    "label": "Incident Report",
    "link_count": 0,
    "link_to": "Incident Report",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Risk Register",
+   "link_count": 0,
+   "link_to": "Risk Register",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"

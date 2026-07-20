@@ -1,22 +1,22 @@
 {
  "app": "quantbit_construction_management",
  "charts": [],
- "content": "[{\"id\":\"rHkIHscKri\",\"type\":\"card\",\"data\":{\"card_name\":\"Quality Control\",\"col\":4}}]",
- "creation": "2026-07-03 17:28:22.911497",
+ "content": "[{\"id\":\"documents_card1\",\"type\":\"card\",\"data\":{\"card_name\":\"Documents\",\"col\":4}}]",
+ "creation": "2026-07-20 17:05:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "hide_custom": 0,
  "idx": 0,
- "indicator_color": "green",
+ "indicator_color": "purple",
  "is_hidden": 0,
- "label": "QC",
+ "label": "Documents",
  "link_type": "DocType",
  "links": [
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Quality Control",
+   "label": "Documents",
    "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
@@ -25,9 +25,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Quality Plan",
+   "label": "Drawing Register",
    "link_count": 0,
-   "link_to": "Quality Plan",
+   "link_to": "Drawing Register",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -35,9 +35,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Inspection Lot",
+   "label": "RFI",
    "link_count": 0,
-   "link_to": "Inspection Lot",
+   "link_to": "RFI",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -45,9 +45,9 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "NCR",
+   "label": "Shop Drawing",
    "link_count": 0,
-   "link_to": "NCR",
+   "link_to": "Shop Drawing",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -55,18 +55,18 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Inspection Test Plan",
+   "label": "Transmittal",
    "link_count": 0,
-   "link_to": "Inspection Test Plan",
+   "link_to": "Transmittal",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2026-07-04 12:42:22.650653",
+ "modified": "2026-07-20 17:05:00.000000",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
- "name": "QC",
+ "name": "Documents",
  "number_cards": [],
  "owner": "Administrator",
  "public": 1,
@@ -74,6 +74,6 @@
  "roles": [],
  "sequence_id": 0.0,
  "shortcuts": [],
- "title": "QC",
+ "title": "Documents",
  "type": "Workspace"
 }
