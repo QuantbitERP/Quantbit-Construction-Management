@@ -77,3 +77,8 @@ def delete_task_with_dependencies(task_name):
         frappe.delete_doc("Task Depends On", dep, ignore_permissions=True, force=1)   
     frappe.delete_doc("Task", task_name, ignore_permissions=True, force=1)
     return True
+
+
+
+
+

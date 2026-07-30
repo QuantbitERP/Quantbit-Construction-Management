@@ -1,0 +1,197 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:HOLD-.YYYY.-",
+ "creation": "2026-07-28 12:27:25.554266",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_identity",
+  "hold_no",
+  "naming_series",
+  "project",
+  "drawing",
+  "col_break1",
+  "current_revision",
+  "hold_reason",
+  "hold_since",
+  "col_break2",
+  "expected_release_date",
+  "responsible_party",
+  "hold_cost_impact",
+  "section_impact",
+  "impact_description",
+  "blocked_activities",
+  "section_release",
+  "release_date",
+  "released_by"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_identity",
+   "fieldtype": "Section Break",
+   "label": "Hold Details"
+  },
+  {
+   "fieldname": "hold_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hold No",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "HOLD-.YYYY.-"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "drawing",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Drawing",
+   "options": "Drawing Register",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "drawing.current_rev",
+   "fieldname": "current_revision",
+   "fieldtype": "Data",
+   "label": "Current Revision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hold_reason",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Hold Reason",
+   "options": "\nPending Client Approval\nPending Consultant Comment Resolution\nPending ECN\nPending Statutory Approval\nDesign Incomplete",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "hold_since",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Hold Since",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expected_release_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Expected Release Date"
+  },
+  {
+   "fieldname": "responsible_party",
+   "fieldtype": "Data",
+   "label": "Responsible Party"
+  },
+  {
+   "fieldname": "hold_cost_impact",
+   "fieldtype": "Currency",
+   "label": "Hold Cost Impact"
+  },
+  {
+   "fieldname": "section_impact",
+   "fieldtype": "Section Break",
+   "label": "Impact"
+  },
+  {
+   "fieldname": "impact_description",
+   "fieldtype": "Small Text",
+   "label": "Impact Description"
+  },
+  {
+   "fieldname": "blocked_activities",
+   "fieldtype": "Table",
+   "label": "Blocked Activities",
+   "options": "Holdlist Blocked Activity"
+  },
+  {
+   "fieldname": "section_release",
+   "fieldtype": "Section Break",
+   "label": "Release"
+  },
+  {
+   "fieldname": "release_date",
+   "fieldtype": "Date",
+   "label": "Actual Release Date"
+  },
+  {
+   "fieldname": "released_by",
+   "fieldtype": "Link",
+   "label": "Released By",
+   "options": "User"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-28 12:27:25.554266",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Drawing Holdlist",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

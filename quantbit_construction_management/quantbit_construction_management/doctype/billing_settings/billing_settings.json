@@ -7,7 +7,9 @@
  "field_order": [
   "create_jv",
   "column_break_tpog",
-  "create_purchase_invoice"
+  "create_purchase_invoice",
+  "ra_billing_tab",
+  "ra_billing_service_item"
  ],
  "fields": [
   {
@@ -27,13 +29,25 @@
    "fieldname": "create_purchase_invoice",
    "fieldtype": "Check",
    "label": "Create Purchase Invoice"
+  },
+  {
+   "fieldname": "ra_billing_tab",
+   "fieldtype": "Tab Break",
+   "label": "RA Billing"
+  },
+  {
+   "fieldname": "ra_billing_service_item",
+   "fieldtype": "Link",
+   "label": "RA Billing Service Item",
+   "link_filters": "[[\"Item\",\"is_stock_item\",\"=\",0]]",
+   "options": "Item"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-22 15:12:16.921792",
+ "modified": "2026-07-27 16:48:43.561950",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "Billing Settings",

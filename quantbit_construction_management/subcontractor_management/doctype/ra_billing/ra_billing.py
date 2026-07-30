@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 from openpyxl.cell import read_only
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 from frappe.model.mapper import get_mapped_doc
@@ -42,12 +43,33 @@ def _get_deepest_task_id(row):
             return row.get(fieldname)
     return row.get("task")
 
+
+def _get_ref_tax_row(taxes, tax, idx):
+    """
+    Resolve the reference tax row for 'On Previous Row Amount' / 'On Previous Row
+    Total' charge types, mirroring ERPNext's use of `row_id`. Falls back to the
+    immediately preceding row when `row_id` is not set.
+    """
+    row_id = tax.get("row_id")
+    if row_id:
+        try:
+            pos = int(row_id) - 1
+        except (TypeError, ValueError):
+            pos = idx - 1
+    else:
+        pos = idx - 1
+
+    if 0 <= pos < len(taxes) and pos != idx:
+        return taxes[pos]
+    return None
+
 class RABilling(Document):
 
     def before_save(self):
         self.sync_deleted_tasks()
         self.sync_steel_quantities_to_billing()
         self.update_abstract_details()
+        self.calculate_taxes_and_totals()
         # steel_map = {}
         # for row in self.ra_steel_details:
         #     if row.subtask not in steel_map:
@@ -57,6 +79,68 @@ class RABilling(Document):
         # for row in self.ra_billing_details:
         #     if row.subtask in steel_map:
         #         row.quantity = steel_map[row.subtask]
+
+    def validate(self):
+        self.calculate_taxes_and_totals()
+
+    def calculate_taxes_and_totals(self):
+        """
+        Server-side authoritative tax calculation, mirroring the charge-type
+        behaviour of ERPNext's Sales Invoice (erpnext.controllers.taxes_and_totals).
+
+        RA Billing has a single net total (`grand_total`) rather than per-item
+        rows, so each tax row's "net amount" base is the whole `grand_total`.
+        Supported charge types: Actual, On Net Total, On Previous Row Amount,
+        On Previous Row Total. (On Item Quantity is not applicable — no item qty.)
+        """
+        net_total = flt(self.grand_total)
+
+        if not self.with_tax or not self.tax_details:
+            self.total_taxes_and_charges = 0
+            self.final_grand_total = net_total
+            return
+
+        running_total = net_total
+        total_taxes = 0.0
+
+        for idx, tax in enumerate(self.tax_details):
+            tax.idx = idx + 1
+            charge_type = tax.type
+            rate = flt(tax.tax_rate)
+
+            if charge_type == "Actual":
+                on_amount = 0.0
+                current_tax_amount = flt(tax.tax_amount)
+
+            elif charge_type == "On Net Total":
+                on_amount = net_total
+                current_tax_amount = (rate / 100.0) * on_amount
+
+            elif charge_type == "On Previous Row Amount":
+                ref = _get_ref_tax_row(self.tax_details, tax, idx)
+                on_amount = flt(ref.tax_amount) if ref else 0.0
+                current_tax_amount = (rate / 100.0) * on_amount
+
+            elif charge_type == "On Previous Row Total":
+                ref = _get_ref_tax_row(self.tax_details, tax, idx)
+                on_amount = flt(ref.total_amount) if ref else net_total
+                current_tax_amount = (rate / 100.0) * on_amount
+
+            else:
+                # On Item Quantity or unset -> not applicable to a lump-sum bill
+                on_amount = 0.0
+                current_tax_amount = 0.0
+
+            current_tax_amount = flt(current_tax_amount, tax.precision("tax_amount"))
+
+            tax.on_amount = on_amount
+            tax.tax_amount = current_tax_amount
+            running_total += current_tax_amount
+            tax.total_amount = running_total
+            total_taxes += current_tax_amount
+
+        self.total_taxes_and_charges = flt(total_taxes, self.precision("total_taxes_and_charges"))
+        self.final_grand_total = flt(net_total + total_taxes, self.precision("final_grand_total"))
     def sync_steel_quantities_to_billing(self):
         """
         For every subtask that has reinforcement entries in ra_steel_details,
@@ -94,15 +178,56 @@ class RABilling(Document):
                 row.amount = flt(row.rate) * weight_mt
     @frappe.whitelist()
     def get_template_details(self):
-        template=frappe.get_doc("Sales Taxes and Charges Template", self.sales_taxes_and_charges_template)
-        row=[]
+        """
+        Read the selected Sales Taxes and Charges Template and return its rows in
+        the shape RA Billing's `tax_details` child expects. Mirrors how a Sales
+        Invoice copies template rows into its `taxes` table.
+        """
+        if not self.taxes_and_charges:
+            return []
+
+        template = frappe.get_doc("Sales Taxes and Charges Template", self.taxes_and_charges)
+        rows = []
         for i in template.taxes:
-            row.append({
-                "charge_type":i.charge_type,
-                "account_head":i.account_head,
-                "description":i.description
+            rows.append({
+                "type": i.charge_type,
+                "account_head": i.account_head,
+                "description": i.description,
+                "tax_rate": i.rate,
+                "row_id": i.row_id,
             })
-        return row
+        return rows
+
+    @frappe.whitelist()
+    def set_taxes_from_category(self):
+        """
+        Resolve the Sales Taxes and Charges Template for the selected Tax Category
+        (and Customer) using ERPNext's Tax Rule engine — this delegates to the exact
+        same helper (`erpnext.accounts.party.set_taxes`) that Sales Invoice uses, so
+        the matching behaviour is identical. Returns the resolved template name (also
+        stored on the doc).
+        """
+        if not self.tax_category or not self.customer:
+            return None
+
+        from erpnext.accounts.party import set_taxes
+
+        company = None
+        if self.project:
+            company = frappe.db.get_value("Project", self.project, "company")
+        if not company:
+            company = frappe.defaults.get_user_default("Company") or frappe.db.get_default("Company")
+
+        template = set_taxes(
+            party=self.customer,
+            party_type="Customer",
+            posting_date=frappe.utils.nowdate(),
+            company=company,
+            tax_category=self.tax_category,
+        )
+        if template:
+            self.taxes_and_charges = template
+        return template
 
     def sync_deleted_tasks(self):
         if not self.is_new() and self.get_doc_before_save():
@@ -471,8 +596,10 @@ def get_project_steel_tasks(project):
 @frappe.whitelist()
 def create_sales_invoice(source_name, target_doc=None, item_code=None):
     if not item_code:
-        args = getattr(frappe.flags, "args", None) or frappe.form_dict
-        item_code = args.get("item_code")
+        item_code = frappe.db.get_single_value("Billing Settings", "ra_billing_service_item")
+
+    if not item_code:
+        frappe.throw(_("Please set RA Billing Service Item in Billing Settings."))
 
     item_name = frappe.db.get_value("Item", item_code, "item_name")
     uom = frappe.db.get_value(
@@ -503,18 +630,21 @@ def create_sales_invoice(source_name, target_doc=None, item_code=None):
         })
         
         target.run_method("set_missing_values")
-        target.set("taxes",[])
-        target.taxes_and_charges=source.sales_taxes_and_charges_template
+        target.set("taxes", [])
 
-        for i in source.tax_details:
-            target.append("taxes",{
-            "charge_type":i.type,
-            "account_head":i.account_head,
-            "rate":i.tax_rate,
-            "net_amount":i.on_amount,
-            "tax_amount":i.tax_amount,
-            "description":i.description
-        })
+        if source.with_tax:
+            target.tax_category = source.tax_category
+            target.taxes_and_charges = source.taxes_and_charges
+
+            for i in source.tax_details:
+                target.append("taxes", {
+                    "charge_type": i.type,
+                    "row_id": i.row_id,
+                    "account_head": i.account_head,
+                    "rate": i.tax_rate,
+                    "tax_amount": i.tax_amount,
+                    "description": i.description,
+                })
        
 
     doc = get_mapped_doc(
@@ -2257,7 +2387,7 @@ def calculate_level_matrix(project, matrix):
     """
 
     if not project:
-        frappe.throw(_("Project is required"))
+        frappe.throw(("Project is required"))
 
     matrix = frappe.parse_json(matrix)
     project_doc = frappe.get_doc("Project", project)

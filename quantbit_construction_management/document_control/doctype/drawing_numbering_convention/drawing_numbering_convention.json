@@ -1,0 +1,161 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:DNC-.YYYY.-",
+ "creation": "2026-07-28 11:15:40.400582",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_identity",
+  "convention_name",
+  "naming_series",
+  "project",
+  "col_break1",
+  "format_template",
+  "revision_series",
+  "current_next_number",
+  "section_discipline_codes",
+  "discipline_codes",
+  "section_type_codes",
+  "type_codes",
+  "section_examples",
+  "examples"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_identity",
+   "fieldtype": "Section Break",
+   "label": "Convention Details"
+  },
+  {
+   "fieldname": "convention_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Convention Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "DNC-.YYYY.-"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "e.g. {proj_code}-{discipline_code}-{type_code}-{####}",
+   "fieldname": "format_template",
+   "fieldtype": "Data",
+   "label": "Format Template",
+   "reqd": 1
+  },
+  {
+   "fieldname": "revision_series",
+   "fieldtype": "Select",
+   "label": "Revision Series",
+   "options": "\nAlpha A-Z\nNumeric 00-99\nMixed P1-P3 then A0-A9",
+   "reqd": 1
+  },
+  {
+   "fieldname": "current_next_number",
+   "fieldtype": "Small Text",
+   "label": "Current Next Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_discipline_codes",
+   "fieldtype": "Section Break",
+   "label": "Discipline Codes"
+  },
+  {
+   "fieldname": "discipline_codes",
+   "fieldtype": "Table",
+   "label": "Discipline Codes",
+   "options": "Numbering Discipline Code"
+  },
+  {
+   "fieldname": "section_type_codes",
+   "fieldtype": "Section Break",
+   "label": "Type Codes"
+  },
+  {
+   "fieldname": "type_codes",
+   "fieldtype": "Table",
+   "label": "Type Codes",
+   "options": "Numbering Type Code"
+  },
+  {
+   "fieldname": "section_examples",
+   "fieldtype": "Section Break",
+   "label": "Examples"
+  },
+  {
+   "fieldname": "examples",
+   "fieldtype": "Small Text",
+   "label": "Examples"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-28 11:15:40.400582",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Drawing Numbering Convention",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "convention_name",
+ "track_changes": 1
+}

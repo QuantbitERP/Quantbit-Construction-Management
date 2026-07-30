@@ -18,51 +18,69 @@ frappe.ui.form.on("RA Billing", {
         //     return { filters: filters };
         // });
     },
-    sales_taxes_and_charges_template(frm){
-        if(!frm.doc.sales_taxes_and_charges_template){
+    taxes_and_charges(frm) {
+        // Selecting a Taxes and Charges Template fetches its rows into the
+        // `tax_details` table, exactly like Sales Invoice.
+        if (!frm.doc.taxes_and_charges) {
             frm.clear_table("tax_details");
             frm.refresh_field("tax_details");
-            return
+            calculate_taxes_and_totals(frm);
+            return;
         }
+
         frm.call({
-            doc:frm.doc,
-            method:"get_template_details",
-            callback:function(r){
-                if(!r.message || !r.message.length){
-                    return;
-                }
-                frm.clear_table("tax_details")
+            doc: frm.doc,
+            method: "get_template_details",
+            callback: function (r) {
+                frm.clear_table("tax_details");
 
-                r.message.forEach(function(row){
-                let child=frm.add_child("tax_details");
-                
-                    child.type=row.charge_type;
-                    child.account_head= row.account_head;
-                    child.description= row.description;
-                    child.on_amount= frm.doc.grand_total;
+                (r.message || []).forEach(function (row) {
+                    let child = frm.add_child("tax_details");
+                    child.type = row.type;
+                    child.account_head = row.account_head;
+                    child.description = row.description;
+                    child.tax_rate = row.tax_rate;
+                    child.row_id = row.row_id;
                 });
-                frm.refresh_field("tax_details");
-                
-            
-            }
-        })
 
+                frm.refresh_field("tax_details");
+                calculate_taxes_and_totals(frm);
+            }
+        });
+    },
+    tax_category(frm) {
+        // Resolve the applicable template via the Tax Rule engine, then let the
+        // taxes_and_charges handler load the rows (mirrors Sales Invoice.set_taxes).
+        if (!frm.doc.tax_category) {
+            return;
+        }
+
+        frm.call({
+            doc: frm.doc,
+            method: "set_taxes_from_category",
+            callback: function (r) {
+                if (r.message) {
+                    frm.set_value("taxes_and_charges", r.message);
+                } else {
+                    frappe.show_alert({
+                        message: __("No Tax Rule matched this Tax Category."),
+                        indicator: "orange"
+                    });
+                }
+            }
+        });
     },
     with_tax(frm) {
-        frm.toggle_reqd("tax_details", frm.doc.with_tax);
-
         if (!frm.doc.with_tax) {
             // clear stale tax amounts so nothing lingers if re-checked later inconsistently
             (frm.doc.tax_details || []).forEach(row => {
                 row.tax_amount = 0;
+                row.on_amount = 0;
+                row.total_amount = 0;
             });
             frm.refresh_field("tax_details");
-        } else {
-            // re-checked: recompute every row fresh against current grand_total
-            recalculate_all_tax_rows(frm);
         }
-
-        calculate_final_grand_total(frm);
+        calculate_taxes_and_totals(frm);
     },
     get_details(frm) {
         if (!frm.doc.project) {
@@ -315,36 +333,10 @@ frappe.ui.form.on("RA Billing", {
 
             frm.add_custom_button(__("Sales Invoice"), function () {
 
-                let d = new frappe.ui.Dialog({
-                    title: __("Select Item"),
-                    fields: [
-                        {
-                            fieldname: "item_code",
-                            fieldtype: "Link",
-                            label: __("Item"),
-                            options: "Item",
-                            reqd: 1,
-                            filters: {
-                                "is_stock_item": 0
-                            }
-                        }
-                    ],
-                    primary_action_label: __("Create"),
-                    primary_action(values) {
-
-                        d.hide();
-
-                        frappe.model.open_mapped_doc({
-                            method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.create_sales_invoice",
-                            frm: frm,
-                            args: {
-                                item_code: values.item_code
-                            }
-                        });
-                    }
+                frappe.model.open_mapped_doc({
+                    method: "quantbit_construction_management.subcontractor_management.doctype.ra_billing.ra_billing.create_sales_invoice",
+                    frm: frm
                 });
-
-                d.show();
 
             }, __("Create"));
         }
@@ -832,58 +824,100 @@ function calculate_grand_total(frm) {
     );
     frm.set_value("grand_total", total);
 
-    // grand_total changed -> every tax row (based on grand_total) is stale, recalc all
-    recalculate_all_tax_rows(frm);
+    // grand_total (net total) changed -> taxes based on it are stale, recompute all
+    calculate_taxes_and_totals(frm);
 }
 
-function recalculate_all_tax_rows(frm) {
-    (frm.doc.tax_details || []).forEach(row => {
-        row.tax_amount = flt(
-            (flt(frm.doc.grand_total) * flt(row.tax_rate)) / 100,
-            precision("tax_amount", row)
-        );
-    });
-    frm.refresh_field("tax_details");
-    calculate_final_grand_total(frm);
+// Resolve the reference row for "On Previous Row Amount/Total" charge types,
+// mirroring ERPNext's use of row_id (1-indexed). Falls back to the row above.
+function get_ref_tax_row(taxes, row, idx) {
+    let pos = idx - 1;
+    if (row.row_id) {
+        let parsed = parseInt(row.row_id, 10);
+        if (!isNaN(parsed)) {
+            pos = parsed - 1;
+        }
+    }
+    if (pos >= 0 && pos < taxes.length && pos !== idx) {
+        return taxes[pos];
+    }
+    return null;
 }
 
-function calculate_row_tax(frm, cdt, cdn) {
-    let row = locals[cdt][cdn];
-    let tax_amount = flt(
-        (flt(frm.doc.grand_total) * flt(row.tax_rate)) / 100,
-        precision("tax_amount", row)
-    );
-    frappe.model.set_value(cdt, cdn, "tax_amount", tax_amount);
-    calculate_final_grand_total(frm);
-}
+// Full charge-type aware tax calculation, mirroring Sales Invoice
+// (erpnext.controllers.taxes_and_totals). Net total base = grand_total.
+function calculate_taxes_and_totals(frm) {
+    let net_total = flt(frm.doc.grand_total);
+    let taxes = frm.doc.tax_details || [];
 
-function calculate_final_grand_total(frm) {
-    let tax_total = 0;
-
-    if (frm.doc.with_tax) {
-        (frm.doc.tax_details || []).forEach(row => {
-            tax_total += flt(row.tax_amount);
-        });
+    if (!frm.doc.with_tax || !taxes.length) {
+        frm.set_value("total_taxes_and_charges", 0);
+        frm.set_value("final_grand_total", net_total);
+        return;
     }
 
-    let final_grand_total = flt(frm.doc.grand_total) + tax_total;
-    frm.set_value("final_grand_total", final_grand_total);
-    frm.refresh_field("final_grand_total");
+    let running_total = net_total;
+    let total_taxes = 0;
+
+    taxes.forEach((row, idx) => {
+        let rate = flt(row.tax_rate);
+        let on_amount = 0;
+        let current_tax_amount = 0;
+
+        if (row.type === "Actual") {
+            current_tax_amount = flt(row.tax_amount);
+        } else if (row.type === "On Net Total") {
+            on_amount = net_total;
+            current_tax_amount = (rate / 100) * on_amount;
+        } else if (row.type === "On Previous Row Amount") {
+            let ref = get_ref_tax_row(taxes, row, idx);
+            on_amount = ref ? flt(ref.tax_amount) : 0;
+            current_tax_amount = (rate / 100) * on_amount;
+        } else if (row.type === "On Previous Row Total") {
+            let ref = get_ref_tax_row(taxes, row, idx);
+            on_amount = ref ? flt(ref.total_amount) : net_total;
+            current_tax_amount = (rate / 100) * on_amount;
+        } else {
+            // On Item Quantity / unset -> not applicable to a lump-sum bill
+            current_tax_amount = 0;
+        }
+
+        current_tax_amount = flt(current_tax_amount, precision("tax_amount", row));
+
+        row.on_amount = on_amount;
+        row.tax_amount = current_tax_amount;
+        running_total += current_tax_amount;
+        row.total_amount = running_total;
+        total_taxes += current_tax_amount;
+    });
+
+    frm.refresh_field("tax_details");
+    frm.set_value("total_taxes_and_charges", flt(total_taxes, precision("total_taxes_and_charges", frm.doc)));
+    frm.set_value("final_grand_total", flt(net_total + total_taxes, precision("final_grand_total", frm.doc)));
 }
 
 frappe.ui.form.on("RA Billing Tax Details", {
-    tax_rate(frm, cdt, cdn) {
-        calculate_row_tax(frm, cdt, cdn);
+    type(frm) {
+        calculate_taxes_and_totals(frm);
     },
-    tax_category(frm, cdt, cdn) {
-        calculate_row_tax(frm, cdt, cdn);
+    tax_rate(frm) {
+        calculate_taxes_and_totals(frm);
     },
-    tax_details_add(frm, cdt, cdn) {
-        calculate_row_tax(frm, cdt, cdn);
+    tax_amount(frm) {
+        // Only "Actual" rows are user-entered; recompute so dependent rows update.
+        calculate_taxes_and_totals(frm);
+    },
+    row_id(frm) {
+        calculate_taxes_and_totals(frm);
+    },
+    account_head(frm) {
+        calculate_taxes_and_totals(frm);
+    },
+    tax_details_add(frm) {
+        calculate_taxes_and_totals(frm);
     },
     tax_details_remove(frm) {
-        calculate_final_grand_total(frm);
+        calculate_taxes_and_totals(frm);
     }
-
 });
 
