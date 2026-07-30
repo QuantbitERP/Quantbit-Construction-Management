@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "type",
+  "row_id",
   "account_head",
   "tax_rate",
   "column_break_sgqy",
@@ -75,6 +76,12 @@
    "in_standard_filter": 1,
    "label": "Type",
    "options": "\nActual\nOn Net Total\nOn Previous Row Amount\nOn Previous Row Total\nOn Item Quantity"
+  },
+  {
+   "depends_on": "eval:[\"On Previous Row Amount\",\"On Previous Row Total\"].includes(doc.type)",
+   "fieldname": "row_id",
+   "fieldtype": "Data",
+   "label": "Reference Row #"
   }
  ],
  "grid_page_length": 50,

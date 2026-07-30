@@ -1,0 +1,269 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:ECN-.YYYY.-",
+ "creation": "2026-07-28 11:01:50.835266",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_identity",
+  "ecn_no",
+  "naming_series",
+  "title",
+  "project",
+  "col_break1",
+  "change_category",
+  "initiated_by",
+  "initiation_date",
+  "col_break2",
+  "approval_status",
+  "approved_by",
+  "approved_date",
+  "section_description",
+  "description",
+  "technical_justification",
+  "section_drawings",
+  "affected_drawings",
+  "section_impact",
+  "impact_cost",
+  "impact_days",
+  "col_break3",
+  "safety_impact",
+  "requires_vo",
+  "linked_vo",
+  "section_implementation",
+  "implementation_status",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_identity",
+   "fieldtype": "Section Break",
+   "label": "ECN Details"
+  },
+  {
+   "fieldname": "ecn_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "ECN No",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "ECN-.YYYY.-"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "change_category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Change Category",
+   "options": "\nClient Instruction\nDesign Error\nSite Condition\nRegulatory\nValue Engineering",
+   "reqd": 1
+  },
+  {
+   "fieldname": "initiated_by",
+   "fieldtype": "Link",
+   "label": "Initiated By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "initiation_date",
+   "fieldtype": "Date",
+   "label": "Initiation Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "approval_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Approval Status",
+   "options": "\nDraft\nUnder Review\nApproved\nRejected"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User"
+  },
+  {
+   "fieldname": "approved_date",
+   "fieldtype": "Date",
+   "label": "Approved Date"
+  },
+  {
+   "fieldname": "section_description",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Long Text",
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "technical_justification",
+   "fieldtype": "Long Text",
+   "label": "Technical Justification"
+  },
+  {
+   "fieldname": "section_drawings",
+   "fieldtype": "Section Break",
+   "label": "Affected Drawings"
+  },
+  {
+   "fieldname": "affected_drawings",
+   "fieldtype": "Table",
+   "label": "Affected Drawings",
+   "options": "ECN Affected Drawing"
+  },
+  {
+   "fieldname": "section_impact",
+   "fieldtype": "Section Break",
+   "label": "Impact Assessment"
+  },
+  {
+   "fieldname": "impact_cost",
+   "fieldtype": "Currency",
+   "label": "Cost Impact"
+  },
+  {
+   "fieldname": "impact_days",
+   "fieldtype": "Int",
+   "label": "Schedule Impact (Days)"
+  },
+  {
+   "fieldname": "col_break3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "safety_impact",
+   "fieldtype": "Select",
+   "label": "Safety Impact",
+   "options": "\nYes\nNo\nAssessment Required"
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_vo",
+   "fieldtype": "Check",
+   "label": "Requires Variation Order"
+  },
+  {
+   "fieldname": "linked_vo",
+   "fieldtype": "Link",
+   "label": "Linked Variation Order",
+   "options": "Quotation"
+  },
+  {
+   "fieldname": "section_implementation",
+   "fieldtype": "Section Break",
+   "label": "Implementation"
+  },
+  {
+   "fieldname": "implementation_status",
+   "fieldtype": "Select",
+   "label": "Implementation Status",
+   "options": "\nPending\nIn Progress\nCompleted"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Engineering Change Notice",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-28 11:01:50.835266",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Engineering Change Notice",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

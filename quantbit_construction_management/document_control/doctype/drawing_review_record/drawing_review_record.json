@@ -1,0 +1,206 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:DRR-.YYYY.-",
+ "creation": "2026-07-28 10:54:08.348731",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_identity",
+  "review_no",
+  "naming_series",
+  "drawing",
+  "revision_reviewed",
+  "col_break1",
+  "review_type",
+  "reviewer",
+  "review_date",
+  "col_break2",
+  "target_response_date",
+  "response_date",
+  "status",
+  "section_disposition",
+  "disposition",
+  "disposition_notes",
+  "col_break3",
+  "comment_count",
+  "open_comment_count",
+  "next_revision_required"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_identity",
+   "fieldtype": "Section Break",
+   "label": "Review Details"
+  },
+  {
+   "fieldname": "review_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Review No",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "DRR-.YYYY.-"
+  },
+  {
+   "fieldname": "drawing",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Drawing",
+   "options": "Drawing Register",
+   "reqd": 1
+  },
+  {
+   "fieldname": "revision_reviewed",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Revision Reviewed"
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "review_type",
+   "fieldtype": "Select",
+   "label": "Review Type",
+   "options": "\nInterdisciplinary\nClient\nConsultant\nThird Party\nHAZOP\nStatutory",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reviewer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Reviewer",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "review_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Review Date"
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_response_date",
+   "fieldtype": "Date",
+   "label": "Target Response Date"
+  },
+  {
+   "fieldname": "response_date",
+   "fieldtype": "Date",
+   "label": "Response Date"
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "\nOpen\nResponded\nClosed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_disposition",
+   "fieldtype": "Section Break",
+   "label": "Disposition"
+  },
+  {
+   "fieldname": "disposition",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Disposition",
+   "options": "\nA - Approved\nB - Approved with Comments\nC - Revise and Resubmit\nD - Rejected"
+  },
+  {
+   "fieldname": "disposition_notes",
+   "fieldtype": "Small Text",
+   "label": "Disposition Notes"
+  },
+  {
+   "fieldname": "col_break3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "comment_count",
+   "fieldtype": "Int",
+   "label": "Total Comments",
+   "read_only": 1
+  },
+  {
+   "fieldname": "open_comment_count",
+   "fieldtype": "Int",
+   "label": "Open Comments",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "next_revision_required",
+   "fieldtype": "Check",
+   "label": "Next Revision Required"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-28 10:54:08.348731",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Drawing Review Record",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "drawing",
+ "track_changes": 1
+}

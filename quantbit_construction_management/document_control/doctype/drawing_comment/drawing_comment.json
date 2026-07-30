@@ -1,0 +1,226 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:DC-.YYYY.-",
+ "creation": "2026-07-28 10:54:37.675016",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_identity",
+  "comment_no",
+  "naming_series",
+  "review_record",
+  "drawing",
+  "col_break1",
+  "revision_reviewed",
+  "category",
+  "severity",
+  "col_break2",
+  "raised_by",
+  "raised_date",
+  "reference_location",
+  "section_comment",
+  "comment_text",
+  "section_response",
+  "resolution",
+  "response_text",
+  "col_break3",
+  "response_by",
+  "response_date",
+  "incorporated_in_revision",
+  "is_overdue"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_identity",
+   "fieldtype": "Section Break",
+   "label": "Comment Details"
+  },
+  {
+   "fieldname": "comment_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Comment No",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "DC-.YYYY.-"
+  },
+  {
+   "fieldname": "review_record",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Review Record",
+   "options": "Drawing Review Record",
+   "reqd": 1
+  },
+  {
+   "fieldname": "drawing",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Drawing",
+   "options": "Drawing Register"
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "revision_reviewed",
+   "fieldtype": "Data",
+   "label": "Revision Reviewed"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Category",
+   "options": "\nDesign\nDrafting\nCoordination\nSafety\nRegulatory\nInformation"
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Severity",
+   "options": "\nMajor\nMinor\nEditorial",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "raised_by",
+   "fieldtype": "Link",
+   "label": "Raised By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "raised_date",
+   "fieldtype": "Date",
+   "label": "Raised Date",
+   "reqd": 1
+  },
+  {
+   "description": "Sheet / grid / detail reference",
+   "fieldname": "reference_location",
+   "fieldtype": "Data",
+   "label": "Reference Location"
+  },
+  {
+   "fieldname": "section_comment",
+   "fieldtype": "Section Break",
+   "label": "Comment"
+  },
+  {
+   "fieldname": "comment_text",
+   "fieldtype": "Long Text",
+   "label": "Comment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_response",
+   "fieldtype": "Section Break",
+   "label": "Response"
+  },
+  {
+   "default": "Open",
+   "fieldname": "resolution",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Resolution",
+   "options": "\nOpen\nAccepted\nAccepted with Modification\nNot Accepted\nWithdrawn"
+  },
+  {
+   "fieldname": "response_text",
+   "fieldtype": "Long Text",
+   "label": "Response"
+  },
+  {
+   "fieldname": "col_break3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "response_by",
+   "fieldtype": "Link",
+   "label": "Response By",
+   "options": "User"
+  },
+  {
+   "fieldname": "response_date",
+   "fieldtype": "Date",
+   "label": "Response Date"
+  },
+  {
+   "fieldname": "incorporated_in_revision",
+   "fieldtype": "Data",
+   "label": "Incorporated in Revision"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_overdue",
+   "fieldtype": "Check",
+   "label": "Is Overdue",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-28 10:54:37.675016",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Drawing Comment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

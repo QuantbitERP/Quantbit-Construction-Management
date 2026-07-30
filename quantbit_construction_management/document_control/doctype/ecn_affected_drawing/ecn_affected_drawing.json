@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "autoincrement",
+ "creation": "2026-07-28 11:01:33.874856",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "drawing",
+  "current_rev",
+  "drawing_title",
+  "new_rev_required"
+ ],
+ "fields": [
+  {
+   "columns": 4,
+   "fieldname": "drawing",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Drawing",
+   "options": "Drawing Register",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "drawing.current_rev",
+   "fieldname": "current_rev",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Current Revision",
+   "read_only": 1
+  },
+  {
+   "columns": 4,
+   "fetch_from": "drawing.title",
+   "fieldname": "drawing_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Drawing Title",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "new_rev_required",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "New Rev Required"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-28 11:01:33.874856",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "ECN Affected Drawing",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

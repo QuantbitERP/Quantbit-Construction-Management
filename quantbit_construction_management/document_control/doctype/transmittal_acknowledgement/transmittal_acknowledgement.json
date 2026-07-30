@@ -1,0 +1,187 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:TACK-.YYYY.-",
+ "creation": "2026-07-28 10:52:36.790487",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_identity",
+  "ack_no",
+  "naming_series",
+  "transmittal",
+  "col_break1",
+  "ack_date",
+  "ack_by",
+  "ack_company",
+  "col_break2",
+  "ack_method",
+  "section_status",
+  "drawings_received_ok",
+  "drawings_with_discrepancy",
+  "discrepancy_notes",
+  "col_break3",
+  "comments",
+  "section_portal",
+  "token"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_identity",
+   "fieldtype": "Section Break",
+   "label": "Acknowledgement Details"
+  },
+  {
+   "fieldname": "ack_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Acknowledgement No",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "TACK-.YYYY.-"
+  },
+  {
+   "fieldname": "transmittal",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Transmittal",
+   "options": "Transmittal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "ack_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Acknowledgement Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ack_by",
+   "fieldtype": "Data",
+   "label": "Acknowledged By",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ack_company",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Acknowledging Company"
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ack_method",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Acknowledgement Method",
+   "options": "\nPortal\nEmail\nPhysical",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_status",
+   "fieldtype": "Section Break",
+   "label": "Receipt Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "drawings_received_ok",
+   "fieldtype": "Check",
+   "label": "Drawings Received OK"
+  },
+  {
+   "default": "0",
+   "fieldname": "drawings_with_discrepancy",
+   "fieldtype": "Check",
+   "label": "Drawings with Discrepancy"
+  },
+  {
+   "fieldname": "discrepancy_notes",
+   "fieldtype": "Small Text",
+   "label": "Discrepancy Notes"
+  },
+  {
+   "fieldname": "col_break3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "section_portal",
+   "fieldtype": "Section Break",
+   "label": "Portal (System)"
+  },
+  {
+   "description": "Time-limited token for external portal URL \u2014 system use only",
+   "fieldname": "token",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Portal Token"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-28 10:52:36.790487",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Transmittal Acknowledgement",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

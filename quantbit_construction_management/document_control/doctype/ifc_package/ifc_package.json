@@ -1,0 +1,186 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:IFCP-.YYYY.-",
+ "creation": "2026-07-28 11:03:25.398132",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_identity",
+  "package_no",
+  "naming_series",
+  "package_name",
+  "project",
+  "col_break1",
+  "work_front_or_zone",
+  "target_issue_date",
+  "actual_issue_date",
+  "col_break2",
+  "completeness_pct",
+  "issued_by",
+  "transmittal_no",
+  "linked_wbs_activity",
+  "section_drawings",
+  "drawings",
+  "section_notes",
+  "comments"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_identity",
+   "fieldtype": "Section Break",
+   "label": "Package Details"
+  },
+  {
+   "fieldname": "package_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Package No",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "IFCP-.YYYY.-"
+  },
+  {
+   "fieldname": "package_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Package Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "work_front_or_zone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Work Front / Zone"
+  },
+  {
+   "fieldname": "target_issue_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Target Issue Date"
+  },
+  {
+   "fieldname": "actual_issue_date",
+   "fieldtype": "Date",
+   "label": "Actual Issue Date"
+  },
+  {
+   "fieldname": "col_break2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "completeness_pct",
+   "fieldtype": "Percent",
+   "label": "Completeness %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "options": "User"
+  },
+  {
+   "fieldname": "transmittal_no",
+   "fieldtype": "Link",
+   "label": "Transmittal No",
+   "options": "Transmittal"
+  },
+  {
+   "fieldname": "linked_wbs_activity",
+   "fieldtype": "Link",
+   "label": "Linked WBS Activity",
+   "options": "Task"
+  },
+  {
+   "fieldname": "section_drawings",
+   "fieldtype": "Section Break",
+   "label": "Drawings"
+  },
+  {
+   "fieldname": "drawings",
+   "fieldtype": "Table",
+   "label": "Drawings",
+   "options": "IFC Package Drawing"
+  },
+  {
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-28 11:03:25.398132",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "IFC Package",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Projects User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "package_name",
+ "track_changes": 1
+}
