@@ -20,6 +20,8 @@
   "submission_date",
   "submission_ref",
   "expected_clearance_date",
+  "revision_history_section",
+  "revisions",
   "section_status",
   "approval_status",
   "actual_clearance_date",
@@ -184,12 +186,23 @@
    "fieldname": "linked_ptw",
    "fieldtype": "Data",
    "label": "Linked PTW No"
+  },
+  {
+   "fieldname": "revision_history_section",
+   "fieldtype": "Section Break",
+   "label": "Revision History"
+  },
+  {
+   "fieldname": "revisions",
+   "fieldtype": "Table",
+   "label": "Revision History",
+   "options": "Drawing Revision"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-28 12:26:14.139424",
+ "modified": "2026-08-12 14:36:17.733065",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Statutory Approval Register",

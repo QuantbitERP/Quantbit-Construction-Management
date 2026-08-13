@@ -26,6 +26,7 @@
   "net_amount",
   "supporting_docs",
   "section_break_qzei",
+  "get_data",
   "bill_items",
   "section_attachments",
   "amended_from"
@@ -54,13 +55,13 @@
    "fieldname": "bill_no",
    "fieldtype": "Data",
    "label": "Sc Bill No.",
-   "read_only": 1,
    "unique": 1
   },
   {
    "fieldname": "subcontract",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Subcontract",
+   "options": "Contractor",
    "reqd": 1
   },
   {
@@ -161,15 +162,20 @@
    "fieldname": "bill_items",
    "fieldtype": "Table",
    "label": "Bill Items",
-   "options": "SC Bill Item",
+   "options": "SC Bill Items",
    "reqd": 1
+  },
+  {
+   "fieldname": "get_data",
+   "fieldtype": "Button",
+   "label": "Get Data"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-04 12:37:20.397298",
+ "modified": "2026-08-11 17:24:13.301650",
  "modified_by": "Administrator",
  "module": "Subcontractor Management",
  "name": "SC Bill",

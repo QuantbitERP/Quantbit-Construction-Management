@@ -18,17 +18,30 @@ class BillofQuantities(Document):
     def calculate_contract_value(self):
         total = 0
         for row in self.boq_items:
+            row.amount = flt(row.quantity) * flt(row.unit_rate)
+            row.internal_amount = flt(row.internal_qty) * flt(row.internal_rate)
+            row.actual_amount = flt(row.actual_qty) * flt(row.actual_rate)
             total += row.amount or 0
         self.contract_value = total
 
 @frappe.whitelist()
-def update_task_bom_details(task_name, bom_details):
-    if isinstance(bom_details, str):
-        bom_details = json.loads(bom_details)
+def update_task_bom_details(task_name, bom_details=None):
+    if not bom_details:
+        bom_details = []
+    elif isinstance(bom_details, str):
+        try:
+            bom_details = json.loads(bom_details)
+        except Exception:
+            bom_details = []
     
     task = frappe.get_doc("Task", task_name)
     task.set("custom_bom_details", [])
+    
     for row in bom_details:
+        # Skip rows marked for deletion by Frappe UI
+        if str(row.get("docstatus")) == "2" or str(row.get("__deleted")) == "1":
+            continue
+            
         task.append("custom_bom_details", {
             "item": row.get("item"),
             "item_name": row.get("item_name"),
@@ -38,6 +51,7 @@ def update_task_bom_details(task_name, bom_details):
             "item_type": row.get("item_type"),
             "total_amount": flt(row.get("qty") or 0) * flt(row.get("rate") or 0)
         })
+        
     task.save(ignore_permissions=True)
     return task.name
 
@@ -425,7 +439,7 @@ def get_all_children(task_name, visited=None):
             children.extend(get_all_children(child, visited))
     return children
 
-def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_children=False):
+def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_children=False, custom_floor=None, custom_block=None):
     """
     Clones a stage and its tasks/subtasks/dependencies recursively into a BOQ.
     1. Collects templates into a dynamic dictionary hierarchy:
@@ -433,6 +447,9 @@ def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_chil
     2. Logs hierarchy_dict to Frappe Error Log.
     3. Creates new documents in order: Stage -> Task -> Subtask.
     4. Recreates parent_task and depends_on links.
+
+    custom_floor / custom_block (optional): applied only to the cloned stage itself
+    (Floor/Block are Stage-level-only groupings — see Task-custom_floor / Task-custom_block).
     """
     hierarchy_dict = {}
     visited = set()
@@ -536,12 +553,26 @@ def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_chil
     # Map to store { old_task_name: new_task_name }
     cloned_map = {}
 
-    # Helper function to clone/insert a task doc
-    def insert_task(t_name):
+    # Helper function to clone/insert a task doc.
+    # parent_new_name (when known) is the already-cloned new parent this node will
+    # end up under — used only to check for an existing duplicate before inserting;
+    # the actual parent_task wiring still happens in the rewire pass below, unchanged.
+    def insert_task(t_name, parent_new_name=None):
         old_task = frappe.get_doc("Task", t_name)
         status = old_task.status
         if status == "Template":
             status = "Open"
+
+        # Don't re-clone a task that's already present under this exact new parent
+        # (e.g. this action already ran once for the same template).
+        existing = frappe.db.exists("Task", {
+            "subject": old_task.subject,
+            "parent_task": parent_new_name,
+            "custom_boq_name": boq_name,
+        })
+        if existing:
+            cloned_map[t_name] = existing
+            return
 
         new_task = frappe.get_doc({
             "doctype": "Task",
@@ -556,12 +587,26 @@ def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_chil
             "description": old_task.description,
             "status": status,
             "priority": old_task.priority,
-            "is_template": 0
+            "is_template": 0,
+            "exp_start_date": old_task.exp_start_date,
+            "exp_end_date": old_task.exp_end_date,
+            "color": old_task.color
         })
         frappe.log_error(message=str(frappe.as_json(new_task)), title="Test")
 
         new_task.insert(ignore_permissions=True)
         cloned_map[t_name] = new_task.name
+
+        needs_save = False
+
+        # Floor / Block apply only to the cloned stage itself
+        if t_name == stage_name:
+            if custom_floor:
+                new_task.custom_floor = custom_floor
+                needs_save = True
+            if custom_block:
+                new_task.custom_block = custom_block
+                needs_save = True
 
         # Copy BOM details
         if old_task.get("custom_bom_details"):
@@ -575,22 +620,26 @@ def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_chil
                     "item_type": row.item_type,
                     "total_amount": row.total_amount
                 })
+            needs_save = True
+
+        if needs_save:
             new_task.save(ignore_permissions=True)
 
-    # 1. Create Stage first
+    # 1. Create Stage first (top-level; the rewire pass below handles the rare case
+    #    where a dependency-pulled "stage" entry actually has its own parent_task)
     for s_name in hierarchy_dict.keys():
         insert_task(s_name)
 
-    # 2. Create Task second
+    # 2. Create Task second — its new parent (the Stage) is already in cloned_map
     for s_name, tasks_dict in hierarchy_dict.items():
         for t_name in tasks_dict.keys():
-            insert_task(t_name)
+            insert_task(t_name, cloned_map.get(s_name))
 
-    # 3. Create Subtask third
+    # 3. Create Subtask third — its new parent (the Task) is already in cloned_map
     for s_name, tasks_dict in hierarchy_dict.items():
         for t_name, subtasks_list in tasks_dict.items():
             for st_name in subtasks_list:
-                insert_task(st_name)
+                insert_task(st_name, cloned_map.get(t_name))
 
     # 4. Recreate parent_task and depends_on relationships
     for old_name, new_name in cloned_map.items():
@@ -645,13 +694,25 @@ def create_stage_task(boq_name=None, selected_stages=None, values=None, include_
         if isinstance(include_children, str):
             include_children = frappe.parse_json(include_children)
 
+        if isinstance(values, str):
+            try:
+                values = json.loads(values)
+            except Exception:
+                values = {}
+        values = values or {}
+        # Floor / Block (Stage-level only) — same location applied to every selected template stage.
+        custom_floor = values.get("floor") or None
+        custom_block = values.get("block") or None
+
         created = []
         for stage_name in selected_stages:
             new_tasks = clone_task_hierarchy(
                 stage_name=stage_name,
                 boq_name=boq_name,
                 include_tasks=bool(include_tasks),
-                include_children=bool(include_children)
+                include_children=bool(include_children),
+                custom_floor=custom_floor,
+                custom_block=custom_block
             )
             if new_tasks:
                 created.extend(new_tasks)
@@ -681,7 +742,10 @@ def create_task(  boq_name=None,
                 "custom_boq_name":boq_name,
                 "parent_task":parent_stage,
                 "task_weight": old_doc.task_weight,
-                "description": old_doc.description
+                "description": old_doc.description,
+                "exp_start_date": old_doc.exp_start_date,
+                "exp_end_date": old_doc.exp_end_date,
+                "color": old_doc.color
             })
 
             new_doc.insert(ignore_permissions=True)
@@ -699,7 +763,10 @@ def create_task(  boq_name=None,
                         "custom_boq_name": boq_name,
                         "parent_task": new_doc.name,
                         "task_weight": old_subtask.task_weight,
-                        "description": old_subtask.description
+                        "description": old_subtask.description,
+                        "exp_start_date": old_subtask.exp_start_date,
+                        "exp_end_date": old_subtask.exp_end_date,
+                        "color": old_subtask.color
                     })
                     new_subtask.insert(ignore_permissions=True)
                     
@@ -737,6 +804,9 @@ def create_subtask(boq_name=None, selected_stages=None, values=None,task=None):
                 "parent_task":task,
                 "custom_is_steel_subtask": old_doc.custom_is_steel_subtask,
                 "custom_is_level_task": old_doc.custom_is_level_task,
+                "exp_start_date": old_doc.exp_start_date,
+                "exp_end_date": old_doc.exp_end_date,
+                "color": old_doc.color
             })
 
             new_doc.insert(ignore_permissions=True)
@@ -862,7 +932,10 @@ def duplicate_boq(boq_name):
             "description": t.description,
             "status": status,
             "priority": t.priority or "Medium",
-            "is_template": 0
+            "is_template": 0,
+            "exp_start_date": t.exp_start_date,
+            "exp_end_date": t.exp_end_date,
+            "color": t.color
         })
         new_task.insert(ignore_permissions=True)
 

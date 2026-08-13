@@ -10,7 +10,6 @@
   "section_identity",
   "review_no",
   "naming_series",
-  "drawing",
   "revision_reviewed",
   "col_break1",
   "review_type",
@@ -20,13 +19,38 @@
   "target_response_date",
   "response_date",
   "status",
+  "transmittal_no",
+  "section_break_ziyt",
+  "drawing",
+  "column_break_sydn",
+  "drawing_no",
+  "column_break_pnrk",
+  "drawing_file",
+  "section_break_dosu",
+  "from_entity",
+  "column_break_crck",
+  "from_entity_type",
+  "column_break_dmzq",
+  "to_entity",
+  "column_break_arhj",
+  "to_entity_type",
   "section_disposition",
   "disposition",
   "disposition_notes",
   "col_break3",
   "comment_count",
   "open_comment_count",
-  "next_revision_required"
+  "next_revision_required",
+  "section_review_comments",
+  "review_comments",
+  "approver",
+  "amended_from",
+  "more_info_tab",
+  "doc_link_transmittal",
+  "doc_link_drawing_register",
+  "column_break_fcvw",
+  "doc_type_link_transmittal",
+  "doc_type_link_drawing_register"
  ],
  "fields": [
   {
@@ -58,6 +82,11 @@
    "reqd": 1
   },
   {
+   "fieldname": "drawing_no",
+   "fieldtype": "Data",
+   "label": "Drawing No"
+  },
+  {
    "fieldname": "revision_reviewed",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -81,6 +110,12 @@
    "label": "Reviewer",
    "options": "User",
    "reqd": 1
+  },
+  {
+   "fieldname": "approver",
+   "fieldtype": "Link",
+   "label": "Approver",
+   "options": "User"
   },
   {
    "fieldname": "review_date",
@@ -151,12 +186,143 @@
    "fieldname": "next_revision_required",
    "fieldtype": "Check",
    "label": "Next Revision Required"
+  },
+  {
+   "fieldname": "section_review_comments",
+   "fieldtype": "Section Break",
+   "label": "Review Comments"
+  },
+  {
+   "fieldname": "review_comments",
+   "fieldtype": "Table",
+   "label": "Drawing Review Comments",
+   "options": "Drawing Review Comment"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Drawing Review Record",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_break_dosu",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "from_entity",
+   "fieldtype": "Dynamic Link",
+   "label": "From entity ",
+   "options": "from_entity_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_crck",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_dmzq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_arhj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_entity_type",
+   "fieldtype": "Link",
+   "label": "From Entity Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_entity",
+   "fieldtype": "Dynamic Link",
+   "label": "To Entity ",
+   "options": "to_entity_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_entity_type",
+   "fieldtype": "Link",
+   "label": "To Entity Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transmittal_no",
+   "fieldtype": "Link",
+   "label": "Transmittal No",
+   "options": "Transmittal"
+  },
+  {
+   "fieldname": "drawing_file",
+   "fieldtype": "Attach",
+   "label": "Drawing File"
+  },
+  {
+   "fieldname": "section_break_ziyt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_sydn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_pnrk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "more_info_tab",
+   "fieldtype": "Tab Break",
+   "label": "More Info"
+  },
+  {
+   "fieldname": "column_break_fcvw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "doc_link_transmittal",
+   "fieldtype": "Dynamic Link",
+   "label": "Doc Link",
+   "options": "doc_type_link_transmittal",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doc_type_link_transmittal",
+   "fieldtype": "Link",
+   "label": "Doc Type Link",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doc_link_drawing_register",
+   "fieldtype": "Dynamic Link",
+   "label": "Doc Link",
+   "options": "doc_type_link_drawing_register",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doc_type_link_drawing_register",
+   "fieldtype": "Link",
+   "label": "Doc Type Link",
+   "options": "DocType",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-07-28 10:54:08.348731",
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Transmittal Acknowledgement",
+   "link_fieldname": "doc_link_review_record"
+  }
+ ],
+ "modified": "2026-08-08 14:48:06.010727",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Drawing Review Record",
@@ -164,6 +330,7 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -173,10 +340,13 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "submit": 1,
    "write": 1
   },
   {
+   "cancel": 1,
    "create": 1,
+   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
@@ -184,16 +354,22 @@
    "report": 1,
    "role": "Projects User",
    "share": 1,
+   "submit": 1,
    "write": 1
   },
   {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
    "email": 1,
    "export": 1,
    "print": 1,
    "read": 1,
    "report": 1,
    "role": "All",
-   "share": 1
+   "share": 1,
+   "submit": 1,
+   "write": 1
   }
  ],
  "row_format": "Dynamic",

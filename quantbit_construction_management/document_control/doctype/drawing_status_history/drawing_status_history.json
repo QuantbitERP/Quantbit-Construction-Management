@@ -1,0 +1,66 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-05 10:13:36.292921",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "from_status",
+  "to_status",
+  "changed_by",
+  "changed_on",
+  "reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "from_status",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "From Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_status",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "To Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "changed_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Changed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "changed_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Changed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-05 10:13:36.292921",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Drawing Status History",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

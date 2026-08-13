@@ -17,14 +17,36 @@
   "ack_company",
   "col_break2",
   "ack_method",
+  "section_break_xqsn",
+  "from_entity",
+  "column_break_tmkb",
+  "from_entity_type",
+  "column_break_gmbj",
+  "to_entity",
+  "column_break_crav",
+  "to_entity_type",
+  "section_break_dkfg",
+  "drawing_tiltle",
+  "sheet_no",
+  "column_break_iclq",
+  "drawing_no",
+  "drawing_file",
   "section_status",
   "drawings_received_ok",
   "drawings_with_discrepancy",
+  "drawing_with_comments",
   "discrepancy_notes",
   "col_break3",
   "comments",
   "section_portal",
-  "token"
+  "token",
+  "amended_from",
+  "more_info_tab",
+  "doc_link_review_record",
+  "doc_link_drawing_register",
+  "column_break_hjsg",
+  "doc_type_link_review_record",
+  "doc_type_link_drawing_register"
  ],
  "fields": [
   {
@@ -133,12 +155,138 @@
    "fieldtype": "Data",
    "hidden": 1,
    "label": "Portal Token"
+  },
+  {
+   "fieldname": "section_break_xqsn",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "from_entity",
+   "fieldtype": "Dynamic Link",
+   "label": "From Entity ",
+   "options": "from_entity_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tmkb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_gmbj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_crav",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_entity_type",
+   "fieldtype": "Link",
+   "label": "From Entity Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_entity",
+   "fieldtype": "Dynamic Link",
+   "label": "To Entity ",
+   "options": "to_entity_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_entity_type",
+   "fieldtype": "Link",
+   "label": "To Entity Type ",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "drawing_with_comments",
+   "fieldtype": "Check",
+   "label": "Drawing with Comments"
+  },
+  {
+   "fieldname": "section_break_dkfg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "drawing_tiltle",
+   "fieldtype": "Data",
+   "label": "Drawing Tiltle"
+  },
+  {
+   "fieldname": "column_break_iclq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "drawing_no",
+   "fieldtype": "Data",
+   "label": "Drawing No"
+  },
+  {
+   "fieldname": "sheet_no",
+   "fieldtype": "Data",
+   "label": "Sheet No"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Transmittal Acknowledgement",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "drawing_file",
+   "fieldtype": "Attach",
+   "label": "Drawing File"
+  },
+  {
+   "fieldname": "more_info_tab",
+   "fieldtype": "Tab Break",
+   "label": "More Info"
+  },
+  {
+   "fieldname": "column_break_hjsg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "doc_link_review_record",
+   "fieldtype": "Dynamic Link",
+   "label": "Doc Link",
+   "options": "doc_type_link_review_record",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doc_link_drawing_register",
+   "fieldtype": "Dynamic Link",
+   "label": "Doc Link",
+   "options": "doc_type_link_drawing_register",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doc_type_link_drawing_register",
+   "fieldtype": "Link",
+   "label": "Doc Type Link",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doc_type_link_review_record",
+   "fieldtype": "Link",
+   "label": "Doc Type Link",
+   "options": "DocType",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
+ "is_submittable": 1,
  "links": [],
- "modified": "2026-07-28 10:52:36.790487",
+ "modified": "2026-08-08 14:47:43.989967",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Transmittal Acknowledgement",

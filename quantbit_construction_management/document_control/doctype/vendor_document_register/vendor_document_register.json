@@ -16,10 +16,13 @@
   "supplier",
   "purchase_order",
   "equipment_tag",
+  "related_drawing",
   "col_break2",
   "document_type",
   "vendor_doc_no",
   "revision",
+  "revision_history_section",
+  "revisions",
   "section_schedule",
   "required_by_date",
   "submission_date",
@@ -164,12 +167,30 @@
    "fieldtype": "Data",
    "label": "S3 File Key",
    "read_only": 1
+  },
+  {
+   "fieldname": "related_drawing",
+   "fieldtype": "Link",
+   "label": "Related Drawing",
+   "options": "Drawing Register",
+   "reqd": 1
+  },
+  {
+   "fieldname": "revision_history_section",
+   "fieldtype": "Section Break",
+   "label": "Revision History"
+  },
+  {
+   "fieldname": "revisions",
+   "fieldtype": "Table",
+   "label": "Revision History",
+   "options": "Drawing Revision"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-28 11:03:47.821556",
+ "modified": "2026-08-12 14:25:23.943556",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Vendor Document Register",

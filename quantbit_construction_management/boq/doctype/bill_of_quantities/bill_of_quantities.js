@@ -639,6 +639,16 @@ async function fetch_items_for_task(frm, row) {
 
 frappe.ui.form.on("BOQ Item", {
 
+    quantity: function (frm, cdt, cdn) {
+        const row = locals[cdt][cdn];
+        frappe.model.set_value(cdt, cdn, "amount", (row.quantity || 0) * (row.unit_rate || 0));
+    },
+
+    unit_rate: function (frm, cdt, cdn) {
+        const row = locals[cdt][cdn];
+        frappe.model.set_value(cdt, cdn, "amount", (row.quantity || 0) * (row.unit_rate || 0));
+    },
+
     internal_qty: function (frm, cdt, cdn) {
         const row = locals[cdt][cdn];
         frappe.model.set_value(cdt, cdn, "internal_amount", (row.internal_qty || 0) * (row.internal_rate || 0));
@@ -728,6 +738,11 @@ function render_combined_boq(frm) {
 }
 
 window.expanded_nodes = window.expanded_nodes || new Set();
+
+/* ─── Floor / Block option lists (kept in sync with the custom_floor / custom_block
+   Select fields on Task — see fixtures/custom_field.json) ──────────────────────────── */
+const FLOOR_OPTIONS = ["", ...Array.from({ length: 20 }, (_, i) => `Floor-${i + 1}`)];
+const BLOCK_OPTIONS = ["", ...Array.from({ length: 10 }, (_, i) => `Block-${i + 1}`)];
 
 frappe.ui.form.on('Bill of Quantities', {
     refresh: function (frm) {
@@ -984,6 +999,170 @@ function validate_subtask_weight(frm, task_name, new_weight, exclude_task = null
     });
 }
 
+/* ─── Floor / Block grouping  */
+function get_floor_key(floor_val) {
+    return `__floor__${floor_val}`;
+}
+function get_block_key(floor_val, block_val) {
+    return `${get_floor_key(floor_val)}__block__${block_val || "Unassigned"}`;
+}
+
+function group_stage_objs_by_floor_block(stage_objs) {
+    let any_floor = stage_objs.some(s => s.data.custom_floor);
+    if (!any_floor) return stage_objs; // nothing to group — untouched, existing behavior
+
+    let floor_map = {};
+    let floor_order = [];
+    let ungrouped = [];
+
+    stage_objs.forEach(stageObj => {
+        let floor_val = stageObj.data.custom_floor;
+        if (!floor_val) { ungrouped.push(stageObj); return; }
+
+        let floor_key = get_floor_key(floor_val);
+        if (!floor_map[floor_key]) {
+            floor_map[floor_key] = {
+                name: floor_key, subject: floor_val,
+                __virtual_type: "floor", children: [], __blocks: {}
+            };
+            floor_order.push(floor_key);
+        }
+        let floor_node = floor_map[floor_key];
+
+        let block_val = stageObj.data.custom_block || "Unassigned";
+        let block_key = get_block_key(floor_val, block_val);
+        if (!floor_node.__blocks[block_key]) {
+            let block_node = { name: block_key, subject: block_val, __virtual_type: "block", children: [] };
+            floor_node.__blocks[block_key] = block_node;
+            floor_node.children.push(block_node);
+        }
+        floor_node.__blocks[block_key].children.push(stageObj);
+    });
+
+    return floor_order.map(k => floor_map[k]).concat(ungrouped);
+}
+
+/* Same margin formula the rest of this file already uses for "total weight" rows
+   nested under a parent rendered at a given depth — except depth 0 (a genuinely
+   top-level, ungrouped stage) which has always used a flush-left 0 margin. */
+function stage_total_margin(base_depth) {
+    return base_depth === 0 ? 0 : (base_depth * 35) + 28;
+}
+
+/* ─── Render a Floor / Block grouping row (organizational only — no CRUD) ──────── */
+function render_group_row(node, depth, tasks_all) {
+    let node_type = node.__virtual_type;
+    let bg = node_type === "floor" ? "#4c1d95" : "#0f766e";
+    let margin = (depth * 35) + "px";
+    let has_children = node.children && node.children.length > 0;
+    let is_expanded = expanded_nodes.has(node.name);
+    let icon = has_children ? (is_expanded ? "▼" : "▶") : "•";
+    let child_count = node.children ? node.children.length : 0;
+    let badge_label = node_type === "floor" ? "Blocks" : "Stages";
+
+    let out = `
+    <div class="hierarchy-row" data-name="${node.name}" data-type="${node_type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:white; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+      <div class="hover-details">
+         <div style="border-bottom: 1px solid #444; margin-bottom: 5px; font-weight: bold; padding-bottom: 3px;">${node.subject}</div>
+         <div><span class="detail-label">Type:</span> ${node_type === "floor" ? "Floor" : "Block"}</div>
+         <div><span class="detail-label">${badge_label}:</span> ${child_count}</div>
+      </div>
+
+      <div class="toggle-node" style="display:flex; align-items:center; flex-grow:1;">
+        <span class="toggle-icon">${icon}</span>
+        <div>
+          <div style="font-size:10px; opacity:0.75; letter-spacing:0.5px;">${node_type === "floor" ? "FLOOR" : "BLOCK"}</div>
+          <div style="font-weight:600; font-size:15px;">${node.subject}</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:5px; align-items:center;">
+          <button class="btn btn-info btn-xs" style="pointer-events:none;" title="${badge_label}">${child_count}</button>
+      </div>
+    </div>`;
+
+    if (is_expanded && has_children) {
+        node.children.forEach(child => {
+            out += child.__virtual_type
+                ? render_group_row(child, depth + 1, tasks_all)
+                : render_stage_block(child, depth + 1, tasks_all);
+        });
+        // A Block's children are real Stages — give them the same per-child weight-total
+        // row every other level already shows. (A Floor's children are Blocks, which
+        // carry no weight of their own, so none is shown there.)
+        if (node_type === "block") {
+            node.children.forEach(child => {
+                out += render_total_row(child.data.subject, flt(child.data.task_weight || 0).toFixed(2), stage_total_margin(depth + 1));
+            });
+        }
+    }
+
+    return out;
+}
+
+/* ─── Render one Stage and everything under it (unchanged logic, now depth-parameterized
+   so it can be nested under Floor/Block wrapper rows as well as rendered at top level) ── */
+function render_stage_block(stageObj, base_depth, tasks_all) {
+    let out = '';
+
+    function renderChildren(parentName, depth) {
+        let out2 = '';
+        let children = tasks_all.filter(t => t.parent_task === parentName);
+
+        children.forEach(child => {
+            let child_type = child.custom_is_subtask == 1 ? "subtask" : "task";
+            let expanded = expanded_nodes.has(child.name);
+
+            out2 += render_row(child, child_type, expanded, depth);
+
+            if (expanded) {
+                out2 += renderChildren(child.name, depth + 1);
+            }
+        });
+
+        if (children.length > 0) {
+            children.forEach(child => {
+                out2 += render_total_row(child.subject, flt(child.task_weight || 0).toFixed(2), (depth * 35) + 28);
+            });
+        }
+
+        return out2;
+    }
+
+    const is_stage_expanded = expanded_nodes.has(stageObj.data.name);
+    out += render_row(stageObj.data, "stage", is_stage_expanded, base_depth);
+
+    if (is_stage_expanded) {
+        stageObj.tasks.forEach(taskObj => {
+            const is_task_expanded = expanded_nodes.has(taskObj.data.name);
+            out += render_row(taskObj.data, "task", is_task_expanded, base_depth + 1);
+
+            if (is_task_expanded) {
+                taskObj.subtasks.forEach(sub => {
+                    let row_type = sub.custom_is_task == 1 ? "task" : "subtask";
+                    let is_child_expanded = expanded_nodes.has(sub.name);
+
+                    out += render_row(sub, row_type, is_child_expanded, base_depth + 2);
+                    // CHILD OF CHILD TASK
+                    if (is_child_expanded) {
+                        out += renderChildren(sub.name, base_depth + 3);
+                    }
+                });
+
+                taskObj.subtasks.forEach(sub => {
+                    out += render_total_row(sub.subject, flt(sub.task_weight || 0).toFixed(2), ((base_depth + 2) * 35) + 28);
+                });
+            }
+        });
+
+        stageObj.tasks.forEach(tObj => {
+            out += render_total_row(tObj.data.subject, flt(tObj.data.task_weight || 0).toFixed(2), ((base_depth + 1) * 35) + 28);
+        });
+    }
+
+    return out;
+}
+
 function load_hierarchy(frm) {
     frappe.call({
         method: "frappe.client.get_list",
@@ -996,7 +1175,8 @@ function load_hierarchy(frm) {
             fields: [
                 "name", "subject", "parent_task", "status", "priority",
                 "description", "task_weight", "custom_is_stage",
-                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date", "progress"
+                "custom_is_task", "custom_is_subtask", "expected_time", "exp_end_date", "progress",
+                "custom_floor", "custom_block"
             ],
             order_by: "creation asc",
             limit_page_length: 1000
@@ -1037,48 +1217,6 @@ function load_hierarchy(frm) {
                     });
                 });
             });
-            function renderChildren(parentName, depth) {
-
-                let children = tasks.filter(
-                    t => t.parent_task === parentName
-                );
-
-                children.forEach(child => {
-
-                    let child_type =
-                        child.custom_is_subtask == 1
-                            ? "subtask"
-                            : "task";
-
-                    let expanded =
-                        expanded_nodes.has(child.name);
-
-                    html += render_row(
-                        child,
-                        child_type,
-                        expanded,
-                        depth
-                    );
-
-                    if (expanded) {
-                        renderChildren(
-                            child.name,
-                            depth + 1
-                        );
-                    }
-
-                });
-
-                if (children.length > 0) {
-                    children.forEach(child => {
-                        html += render_total_row(
-                            child.subject,
-                            flt(child.task_weight || 0).toFixed(2),
-                            (depth * 35) + 28
-                        );
-                    });
-                }
-            }
 
             let html = `<div style="padding:15px;">
         <div class="hierarchy-controls">
@@ -1087,92 +1225,19 @@ function load_hierarchy(frm) {
           <button class="btn btn-primary btn-xs add-stage">+ Add Stage</button>
         </div>`;
 
-            let overall_stage_total = 0;
+            /* Floor / Block grouping */
+            let stage_objs = Object.values(stages);
+            let display_groups = group_stage_objs_by_floor_block(stage_objs);
 
-            Object.values(stages).forEach(stageObj => {
-                let stage_progress = 0;
-                stageObj.tasks.forEach(taskObj => {
-                    let progress = taskObj.data.progress || 0;
-                    let weight = taskObj.data.task_weight || 0;
-                    stage_progress += (progress * weight) / 100;
-                });
-                overall_stage_total += flt(stageObj.data.task_weight || 0);
-
-                const is_stage_expanded = expanded_nodes.has(stageObj.data.name);
-                html += render_row(stageObj.data, "stage", is_stage_expanded, 0);
-
-                if (is_stage_expanded) {
-                    stageObj.tasks.forEach(taskObj => {
-                        let subtask_total = 0;
-                        taskObj.subtasks.forEach(sub => {
-                            subtask_total += flt(sub.task_weight || 0);
-                        });
-
-                        const is_task_expanded = expanded_nodes.has(taskObj.data.name);
-                        html += render_row(taskObj.data, "task", is_task_expanded, 1);
-
-                        if (is_task_expanded) {
-
-                            taskObj.subtasks.forEach(sub => {
-
-                                let row_type =
-                                    sub.custom_is_task == 1
-                                        ? "task"
-                                        : "subtask";
-
-                                let is_child_expanded =
-                                    expanded_nodes.has(sub.name);
-
-                                html += render_row(
-                                    sub,
-                                    row_type,
-                                    is_child_expanded,
-                                    2
-                                );
-                                // CHILD OF CHILD TASK
-                                if (is_child_expanded) {
-
-                                    renderChildren(
-                                        sub.name,
-                                        3
-                                    );
-
-                                }
-
-                            });
-
-                            taskObj.subtasks.forEach(sub => {
-                                html += render_total_row(
-                                    sub.subject,
-                                    flt(sub.task_weight || 0).toFixed(2),
-                                    98
-                                );
-                            });
-                        }
-                    });
-
-
-                    let task_weight_sum = 0;
-                    stageObj.tasks.forEach(tObj => {
-                        task_weight_sum += flt(tObj.data.task_weight || 0);
-                    });
-                    stageObj.tasks.forEach(tObj => {
-                        html += render_total_row(
-                            tObj.data.subject,
-                            flt(tObj.data.task_weight || 0).toFixed(2),
-                            63
-                        );
-                    });
-                }
+            display_groups.forEach(entry => {
+                html += entry.__virtual_type
+                    ? render_group_row(entry, 0, tasks)
+                    : render_stage_block(entry, 0, tasks);
             });
 
-
-            Object.values(stages).forEach(stageObj => {
-                html += render_total_row(
-                    stageObj.data.subject,
-                    flt(stageObj.data.task_weight || 0).toFixed(2),
-                    0
-                );
+            display_groups.forEach(entry => {
+                if (entry.__virtual_type) return; // Floor/Block rows carry no weightage of their own
+                html += render_total_row(entry.data.subject, flt(entry.data.task_weight || 0).toFixed(2), 0);
             });
 
             html += "</div>";
@@ -1413,6 +1478,13 @@ function attach_events(frm, all_tasks) {
             if (t.custom_is_stage || t.custom_is_task || t.custom_is_subtask)
                 expanded_nodes.add(t.name);
         });
+        // Also expand any Floor/Block grouping rows derived from the current data.
+        all_tasks.forEach(t => {
+            if (t.custom_is_stage == 1 && t.custom_floor) {
+                expanded_nodes.add(get_floor_key(t.custom_floor));
+                expanded_nodes.add(get_block_key(t.custom_floor, t.custom_block));
+            }
+        });
         load_hierarchy(frm);
     });
 
@@ -1468,6 +1540,22 @@ function attach_events(frm, all_tasks) {
                     fieldtype: "Check",
                     default: 0,
                     depends_on: "eval:doc.existing_stage && doc.existing_stage.length > 0"
+                },
+                {
+                    fieldtype: "Column Break"
+                },
+                {
+                    label: "Floor",
+                    fieldname: "floor",
+                    fieldtype: "Select",
+                    options: FLOOR_OPTIONS,
+                    description: __("Applies whichever way the stage is added below.")
+                },
+                {
+                    label: "Block",
+                    fieldname: "block",
+                    fieldtype: "Select",
+                    options: BLOCK_OPTIONS
                 },
 
                 {
@@ -1570,7 +1658,9 @@ function attach_events(frm, all_tasks) {
                             is_group: 1,
                             task_weight: values.task_weight,
                             description: values.description,
-                            is_template: 0
+                            is_template: 0,
+                            custom_floor: values.floor || null,
+                            custom_block: values.block || null
                         };
 
                         // CREATE MAIN STAGE
@@ -2419,7 +2509,7 @@ function attach_events(frm, all_tasks) {
                     "Edit Subtask";
 
         frappe.db.get_doc("Task", docname).then(doc => {
-            frappe.prompt([
+            let edit_fields = [
                 { label: "Name", fieldname: "subject", fieldtype: "Data", default: doc.subject, reqd: 1 },
                 {
                     label: "Status", fieldname: "status", fieldtype: "Select",
@@ -2434,12 +2524,22 @@ function attach_events(frm, all_tasks) {
                 {
                     label: "Weightage", fieldname: "task_weight", fieldtype: "Float",
                     default: doc.task_weight
-                },
-                {
-                    label: "Description", fieldname: "description", fieldtype: "Small Text",
-                    default: doc.description
                 }
-            ], function (values) {
+            ];
+
+            // Floor / Block only ever apply to Stage-level tasks.
+            if (type === "stage") {
+                edit_fields.push({ fieldtype: "Column Break" });
+                edit_fields.push({ label: "Floor", fieldname: "custom_floor", fieldtype: "Select", options: FLOOR_OPTIONS, default: doc.custom_floor });
+                edit_fields.push({ label: "Block", fieldname: "custom_block", fieldtype: "Select", options: BLOCK_OPTIONS, default: doc.custom_block });
+            }
+
+            edit_fields.push({
+                label: "Description", fieldname: "description", fieldtype: "Small Text",
+                default: doc.description
+            });
+
+            frappe.prompt(edit_fields, function (values) {
 
                 if (type === "stage") {
 
@@ -2814,7 +2914,7 @@ function show_bom_dialog(frm, task_name) {
                             columns: 2
                         },
                         {
-                            fieldname: "amount",
+                            fieldname: "total_amount",
                             fieldtype: "Float",
                             label: __("Amount"),
                             in_list_view: 1,
@@ -2840,6 +2940,9 @@ function show_bom_dialog(frm, task_name) {
                                     indicator: "green"
                                 });
                                 d.hide();
+                                // Clear the locally cached task so reopening the dialog fetches fresh data from DB
+                                frappe.model.remove_from_locals("Task", task_name);
+                                
                                 load_hierarchy(frm);
                                 update_boq_items_for_subtask(frm, task_name);
                             }
@@ -2887,10 +2990,10 @@ function show_bom_dialog(frm, task_name) {
                 // set values
                 row.qty = qty;
                 row.rate = rate;
-                row.amount = qty * rate;
+                row.total_amount = qty * rate;
 
                 // refresh only amount field
-                grid_row.refresh_field("amount");
+                grid_row.refresh_field("total_amount");
             }
         );
 

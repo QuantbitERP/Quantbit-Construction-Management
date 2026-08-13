@@ -24,6 +24,7 @@
   "impact_description",
   "blocked_activities",
   "section_release",
+  "status",
   "release_date",
   "released_by"
  ],
@@ -132,6 +133,14 @@
    "fieldname": "section_release",
    "fieldtype": "Section Break",
    "label": "Release"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Active\nReleased"
   },
   {
    "fieldname": "release_date",
