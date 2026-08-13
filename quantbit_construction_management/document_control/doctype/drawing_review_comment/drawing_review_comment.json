@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-04 13:07:29.520670",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "comment_no",
+  "comment",
+  "column_break_mvhg",
+  "sheet_no",
+  "severity",
+  "response",
+  "column_break_vwvd",
+  "discipline",
+  "status",
+  "responded_by",
+  "responded_date",
+  "transmittal_no"
+ ],
+ "fields": [
+  {
+   "fieldname": "comment_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Comment No"
+  },
+  {
+   "fieldname": "sheet_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sheet No"
+  },
+  {
+   "fieldname": "discipline",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Discipline",
+   "options": "Civil\nStructural\nArchitectural\nMechanical\nElectrical\nPiping\nI&C"
+  },
+  {
+   "fieldname": "comment",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "Comment"
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Severity",
+   "options": "Minor\nMajor"
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Open\nClosed"
+  },
+  {
+   "fieldname": "response",
+   "fieldtype": "Text",
+   "label": "Response"
+  },
+  {
+   "fieldname": "responded_by",
+   "fieldtype": "Link",
+   "label": "Responded By",
+   "options": "User"
+  },
+  {
+   "fieldname": "responded_date",
+   "fieldtype": "Date",
+   "label": "Responded Date"
+  },
+  {
+   "fieldname": "column_break_mvhg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_vwvd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transmittal_no",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Transmittal No",
+   "options": "Transmittal"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-08-07 16:52:01.832673",
+ "modified_by": "Administrator",
+ "module": "Document Control",
+ "name": "Drawing Review Comment",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

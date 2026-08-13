@@ -1,0 +1,8 @@
+{
+    "venvPath": "/home/erpadmin/bench-construction",
+    "venv": "env",
+    "extraPaths": [
+        "/home/erpadmin/bench-construction/apps/frappe",
+        "/home/erpadmin/bench-construction/apps/erpnext"
+    ]
+}

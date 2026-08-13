@@ -2,6 +2,11 @@ window.expanded_nodes = window.expanded_nodes || new Set();
     window.detail_expanded_nodes = window.detail_expanded_nodes || new Set();
     window.last_project_progress = window.last_project_progress || null;
 
+    /* ─── Floor / Block option lists (kept in sync with the custom_floor / custom_block
+       Select fields on Task — see fixtures/custom_field.json) ──────────────────────── */
+    const FLOOR_OPTIONS = ["", ...Array.from({ length: 20 }, (_, i) => `Floor-${i + 1}`)];
+    const BLOCK_OPTIONS = ["", ...Array.from({ length: 10 }, (_, i) => `Block-${i + 1}`)];
+
     frappe.ui.form.on('Project', {
         refresh: function (frm) {
             inject_hierarchy_css();
@@ -245,6 +250,7 @@ window.expanded_nodes = window.expanded_nodes || new Set();
 
     /* ─── Node type helpers ──────────────────────────────────────────────────── */
     function get_node_type(node) {
+        if (node.__virtual_type)         return node.__virtual_type; // "floor" | "block"
         if (node.custom_is_stage == 1)   return "stage";
         if (node.custom_is_task == 1)    return "task";
         if (node.custom_is_subtask == 1) return "subtask";
@@ -252,9 +258,121 @@ window.expanded_nodes = window.expanded_nodes || new Set();
     }
 
     function get_node_colors(node_type) {
+        if (node_type === "floor")   return { bg: "#4c1d95", text: "#ffffff" };
+        if (node_type === "block")   return { bg: "#0f766e", text: "#ffffff" };
         if (node_type === "stage")   return { bg: "#1a365d", text: "#ffffff" };
         if (node_type === "task")    return { bg: "#e9c46a", text: "#333333" };
         return                              { bg: "#fdf6e3", text: "#333333" };
+    }
+
+    /* ─── Floor / Block grouping (display-only, additive, backward compatible) ─────────
+       Wraps stage-level roots under synthetic "floor" and "block" nodes when at least
+       one stage carries a custom_floor value. Stages without a Floor stay exactly where
+       they are today — as plain top-level roots — so projects that never use Floor/Block
+       render identically to before this feature existed. */
+    function get_floor_key(floor_val) {
+        return `__floor__${floor_val}`;
+    }
+    function get_block_key(floor_val, block_val) {
+        return `${get_floor_key(floor_val)}__block__${block_val || "Unassigned"}`;
+    }
+
+    function group_stages_by_floor_block(stage_roots) {
+        let any_floor = stage_roots.some(s => s.custom_floor);
+        if (!any_floor) return stage_roots; // nothing to group — untouched, existing behavior
+
+        let floor_map = {};
+        let floor_order = [];
+        let ungrouped = [];
+
+        stage_roots.forEach(stage => {
+            if (!stage.custom_floor) { ungrouped.push(stage); return; }
+
+            let floor_val = stage.custom_floor;
+            let floor_key = get_floor_key(floor_val);
+            if (!floor_map[floor_key]) {
+                floor_map[floor_key] = {
+                    name: floor_key, subject: floor_val,
+                    __virtual_type: "floor", children: [], __blocks: {}
+                };
+                floor_order.push(floor_key);
+            }
+            let floor_node = floor_map[floor_key];
+
+            let block_val = stage.custom_block || "Unassigned";
+            let block_key = get_block_key(floor_val, block_val);
+            if (!floor_node.__blocks[block_key]) {
+                let block_node = { name: block_key, subject: block_val, __virtual_type: "block", children: [] };
+                floor_node.__blocks[block_key] = block_node;
+                floor_node.children.push(block_node);
+            }
+            floor_node.__blocks[block_key].children.push(stage);
+        });
+
+        return floor_order.map(k => floor_map[k]).concat(ungrouped);
+    }
+
+    /* ─── Render a Floor / Block grouping node (organizational only — no CRUD) ──── */
+    function render_group_node(node, depth, frm) {
+        let margin        = depth * 28;
+        let node_type      = node.__virtual_type;
+        let colors         = get_node_colors(node_type);
+        let has_children   = node.children && node.children.length > 0;
+        let is_children_expanded = expanded_nodes.has(node.name);
+        let children_icon  = has_children ? (is_children_expanded ? "▼" : "▶") : "•";
+        let child_count    = node.children ? node.children.length : 0;
+        let badge_label    = node_type === "floor" ? "BLOCKS" : "STAGES";
+
+        let html = `
+        <div class="hierarchy-row"
+            data-name="${node.name}"
+            data-depth="${depth}"
+            data-type="${node_type}"
+            style="margin-left:${margin}px;margin-top:6px;background:${colors.bg};color:${colors.text};">
+
+            <div class="hover-details">
+                <div style="border-bottom:1px solid #444;margin-bottom:5px;font-weight:bold;padding-bottom:3px;">${node.subject}</div>
+                <div><span class="detail-label">Type:</span> ${node_type === "floor" ? "Floor" : "Block"}</div>
+                <div><span class="detail-label">${badge_label}:</span> ${child_count}</div>
+            </div>
+
+            <div class="h-summary">
+                <div style="display:flex;align-items:center;flex:1;min-width:0;gap:2px;">
+                    <span class="toggle-children-icon" data-name="${node.name}" style="color:${colors.text};margin-left:16px;">
+                        ${children_icon}
+                    </span>
+                    <div style="min-width:0;">
+                        <div style="font-size:9px;opacity:0.75;letter-spacing:0.5px;">${node_type === "floor" ? "FLOOR" : "BLOCK"}</div>
+                        <div style="font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            ${node.subject}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px;">
+                    <div style="display:flex;flex-direction:column;align-items:center;line-height:1;">
+                        <span style="font-size:8px;opacity:0.7;margin-bottom:2px;letter-spacing:0.3px;">${badge_label}</span>
+                        <span class="btn btn-info btn-xs" style="pointer-events:none;margin:0;">${child_count}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        if (is_children_expanded && has_children) {
+            node.children.forEach(child => {
+                html += child.__virtual_type ? render_group_node(child, depth + 1, frm) : render_node(child, depth + 1, frm);
+            });
+            // A Block's children are real Stages — give them the same per-child
+            // weight-total row every other level already shows. (A Floor's children
+            // are Blocks, which carry no weight of their own, so none is shown there.)
+            if (node_type === "block") {
+                node.children.forEach(child => {
+                    html += render_total_row(child.subject, flt(child.task_weight || 0).toFixed(2), ((depth + 1) * 28) + 28);
+                });
+            }
+        }
+
+        return html;
     }
 
     /* ─── Weight validation ──────────────────────────────────────────────────── */
@@ -574,7 +692,7 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                     "name", "subject", "parent_task", "status", "priority",
                     "description", "task_weight", "custom_is_stage",
                     "custom_is_task", "custom_is_subtask", "expected_time",
-                    "exp_end_date", "progress",
+                    "exp_end_date", "progress", "custom_floor", "custom_block",
                     "custom_total_labour_cost", "custom_total_equipment_cost", "custom_total_material_cost"
                 ],
                 order_by: "creation asc",
@@ -602,6 +720,12 @@ window.expanded_nodes = window.expanded_nodes || new Set();
 
                 roots.forEach(root => compute_costs(root));
 
+                /* Floor / Block grouping is purely a DISPLAY concern: it wraps the same
+                   already-computed stage nodes under synthetic "floor"/"block" rows.
+                   When no stage has a Floor set, display_roots === roots and the tree
+                   renders exactly as it did before this feature existed. */
+                let display_roots = group_stages_by_floor_block(roots);
+
                 let html = `
                 <div style="padding:12px;">
                     <div class="hierarchy-controls">
@@ -610,9 +734,12 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                         <button class="btn btn-primary btn-xs add-stage">+ Add Stage</button>
                     </div>`;
 
-                roots.forEach(root => { html += render_node(root, 0, frm); });
+                display_roots.forEach(root => {
+                    html += root.__virtual_type ? render_group_node(root, 0, frm) : render_node(root, 0, frm);
+                });
 
-                roots.forEach(root => {
+                display_roots.forEach(root => {
+                    if (root.__virtual_type) return; // Floor/Block rows carry no weightage of their own
                     html += render_total_row(
                         root.subject,
                         flt(root.task_weight || 0).toFixed(2),
@@ -628,18 +755,28 @@ window.expanded_nodes = window.expanded_nodes || new Set();
         });
     }
 
-    /* ─── Edit dialog (unchanged) ────────────────────────────────────────────── */
+    /* ─── Edit dialog ─────────────────────────────────────────────────────────── */
     function open_edit_task_dialog(frm, docname, node_type) {
         let type_label = node_type === "stage" ? "Stage" : node_type === "task" ? "Task" : "Subtask";
 
         frappe.db.get_doc("Task", docname).then(doc => {
-            frappe.prompt([
+            let fields = [
                 { label: "Name",        fieldname: "subject",     fieldtype: "Data",       default: doc.subject,     reqd: 1 },
                 { label: "Status",      fieldname: "status",      fieldtype: "Select",     options: ["Open","Working","Completed","Cancelled"], default: doc.status },
                 { label: "Priority",    fieldname: "priority",    fieldtype: "Select",     options: ["Low","Medium","High","Urgent"], default: doc.priority },
-                { label: "Weightage*",  fieldname: "task_weight", fieldtype: "Float",      default: doc.task_weight },
-                { label: "Description", fieldname: "description", fieldtype: "Small Text", default: doc.description }
-            ], function (values) {
+                { label: "Weightage*",  fieldname: "task_weight", fieldtype: "Float",      default: doc.task_weight }
+            ];
+
+            // Floor / Block only ever apply to Stage-level tasks.
+            if (node_type === "stage") {
+                fields.push({ fieldtype: "Column Break" });
+                fields.push({ label: "Floor", fieldname: "custom_floor", fieldtype: "Select", options: FLOOR_OPTIONS, default: doc.custom_floor });
+                fields.push({ label: "Block", fieldname: "custom_block", fieldtype: "Select", options: BLOCK_OPTIONS, default: doc.custom_block });
+            }
+
+            fields.push({ label: "Description", fieldname: "description", fieldtype: "Small Text", default: doc.description });
+
+            frappe.prompt(fields, function (values) {
                 frappe.call({
                     method: "frappe.client.set_value",
                     args: { doctype: "Task", name: docname, fieldname: values },
@@ -694,6 +831,13 @@ window.expanded_nodes = window.expanded_nodes || new Set();
         /* ── Expand All ─────────────────────────────────────────────────── */
         wrapper.find(".expand-all").off("click").on("click", function () {
             all_tasks.forEach(t => expanded_nodes.add(t.name));
+            // Also expand any Floor/Block grouping rows derived from the current data.
+            all_tasks.forEach(t => {
+                if (t.custom_is_stage == 1 && t.custom_floor) {
+                    expanded_nodes.add(get_floor_key(t.custom_floor));
+                    expanded_nodes.add(get_block_key(t.custom_floor, t.custom_block));
+                }
+            });
             load_hierarchy(frm);
         });
 
@@ -735,10 +879,16 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                     { label: "Weightage", fieldname: "existing_stage_weight", fieldtype: "Float", depends_on: "eval:doc.existing_stage" },
                     { label: "Include Tasks",    fieldname: "include_tasks",    fieldtype: "Check", default: 0, depends_on: "eval:doc.existing_stage" },
                     { label: "Include Subtasks", fieldname: "include_children", fieldtype: "Check", default: 0, depends_on: "eval:doc.existing_stage" },
+                    { fieldtype: "Column Break", depends_on: "eval:doc.existing_stage" },
+                    { label: "Floor", fieldname: "existing_stage_floor", fieldtype: "Select", options: FLOOR_OPTIONS, depends_on: "eval:doc.existing_stage" },
+                    { label: "Block", fieldname: "existing_stage_block", fieldtype: "Select", options: BLOCK_OPTIONS, depends_on: "eval:doc.existing_stage" },
                     { fieldtype: "Section Break" },
                     { label: "OR Create New Stage", fieldname: "section_label", fieldtype: "HTML", options: "<b>Create New Stage</b>" },
                     { label: "Stage Name",  fieldname: "subject",      fieldtype: "Data"       },
                     { label: "Weightage",   fieldname: "task_weight",  fieldtype: "Float"      },
+                    { fieldtype: "Column Break" },
+                    { label: "Floor", fieldname: "floor",  fieldtype: "Select", options: FLOOR_OPTIONS },
+                    { label: "Block", fieldname: "block",  fieldtype: "Select", options: BLOCK_OPTIONS },
                     { label: "Description", fieldname: "description",  fieldtype: "Small Text" }
                 ],
                 primary_action_label: "Add",
@@ -762,10 +912,14 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                                 method: "quantbit_construction_management.api.clone_task_hierarchy",
                                 args: {
                                     source_task: values.existing_stage, target_project: frm.doc.name,
-                                    include_dependencies: values.include_dependencies,
+                                    /* Stage -> Task descent is gated by include_tasks; Task -> Subtask
+                                       (and any deeper Child Task nesting) descent is gated by include_children. */
+                                    include_tasks: values.include_tasks,
                                     include_children: values.include_children,
                                     task_weight: values.existing_stage_weight,
                                     custom_boq_name: frm.doc.custom_bill_of_quantities,
+                                    custom_floor: values.existing_stage_floor || null,
+                                    custom_block: values.existing_stage_block || null,
                                     /* Only copy subject + type/group flags — strip quantity/achieved/etc. */
                                     fields_to_copy: ["subject", "custom_is_stage", "custom_is_task", "custom_is_subtask", "is_group"]
                                 },
@@ -786,7 +940,8 @@ window.expanded_nodes = window.expanded_nodes || new Set();
                             method: "frappe.client.insert",
                             args: { doc: { doctype: "Task", subject: values.subject, project: frm.doc.name,
                                 custom_boq_name: frm.doc.custom_bill_of_quantities || null,
-                                custom_is_stage: 1, is_group: 1, task_weight: values.task_weight, description: values.description } },
+                                custom_is_stage: 1, is_group: 1, task_weight: values.task_weight, description: values.description,
+                                custom_floor: values.floor || null, custom_block: values.block || null } },
                             callback() { frappe.show_alert({ message: __("Stage Created"), indicator: "green" }); d.hide(); load_hierarchy(frm); }
                         });
                     });

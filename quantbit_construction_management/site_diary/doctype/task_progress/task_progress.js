@@ -82,49 +82,16 @@ frappe.ui.form.on("Task Progress", {
 
 frappe.ui.form.on("Task Progress Details", {
     form_render(frm, cdt, cdn) {
+
+        // hydrate the in-memory baseline from the row's own saved values
+        // (does NOT re-fetch from Task, so re-rendering the row never
+        // wipes out achieved_today / total_achieved that's already there)
+        hydrate_baseline(frm, cdt, cdn);
+
         setTimeout(() => {
             refresh_task_levels(frm, cdt, cdn);
             render_html_images(frm, cdt, cdn);
         }, 100);
-    },
-    task(frm, cdt, cdn) {
-
-        let row = locals[cdt][cdn];
-
-        if (!row.task) return;
-
-        frappe.call({
-            method: "quantbit_construction_management.site_diary.doctype.task_progress.task_progress.get_previous_task_progress",
-            args: {
-                task: row.task,
-                current_doc: frm.doc.name
-            },
-
-            callback(r) {
-
-                if (!r.message) return;
-
-                let d = r.message;
-
-                frappe.model.set_value(cdt, cdn,
-                    "total_qty",
-                    d.total_qty || 0
-                );
-
-                frappe.model.set_value(cdt, cdn,
-                    "total_achieved",
-                    d.previous_total_achieved || 0
-                );
-
-                frappe.model.set_value(cdt, cdn,
-                    "percent_completed",
-                    d.percent_completed || 0
-                );
-
-                row._last_achieved_today = 0;
-            }
-        });
-
     },
     parent_task: function (frm, cdt, cdn) {
 
@@ -150,37 +117,47 @@ frappe.ui.form.on("Task Progress Details", {
     },
     task: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
     task_level1: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
 
     task_level2: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
 
     task_level3: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
 
     task_level4: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
 
     task_level5: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
     task_level6: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
     task_level7: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
     task_level8: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
     task_level9: function (frm, cdt, cdn) {
         refresh_task_levels(frm, cdt, cdn);
+        load_task_baseline(frm, cdt, cdn);
     },
     achieved_today(frm, cdt, cdn) {
         calculate_progress(frm, cdt, cdn);
@@ -298,51 +275,26 @@ function refresh_task_levels(frm, cdt, cdn) {
         return;
     }
 
-    if (deepest_task) {
-        // Fetch task values
-        frappe.db.get_value(
-            "Task",
-            deepest_task,
-            [
-                "custom_total_quantity",
-                "custom_total_achieved"
-            ]
-        ).then(r => {
+    // NOTE: this function only handles level-field visibility + the
+    // dependency check. It must NOT touch total_qty/total_achieved -
+    // it runs on every form_render (i.e. every time a row is opened),
+    // and re-fetching those from the Task here used to stomp on
+    // whatever the user had already entered in achieved_today.
+    // See load_task_baseline()/hydrate_baseline() for that.
+    frappe.call({
+        method: "quantbit_construction_management.site_diary.doctype.task_progress.task_progress.has_dependencies",
+        args: {
+            task: deepest_task
+        },
+        callback: function (r) {
 
             if (r.message) {
-                frappe.model.set_value(
-                    cdt,
-                    cdn,
-                    "total_qty",
-                    r.message.custom_total_quantity || 0
-                );
-
-                frappe.model.set_value(
-                    cdt,
-                    cdn,
-                    "total_achieved",
-                    r.message.custom_total_achieved || 0
-                );
+                visible_level += 1;
             }
-        });
 
-        frappe.call({
-            method: "quantbit_construction_management.site_diary.doctype.task_progress.task_progress.has_dependencies",
-            args: {
-                task: deepest_task
-            },
-            callback: function (r) {
-
-                if (r.message) {
-                    visible_level += 1;
-                }
-
-                apply_visibility(frm, row.name, visible_level);
-            }
-        });
-    } else {
-        apply_visibility(frm, row.name, visible_level);
-    }
+            apply_visibility(frm, row.name, visible_level);
+        }
+    });
 }
 
 function apply_visibility(frm, rowname, visible_level) {
@@ -358,19 +310,70 @@ function apply_visibility(frm, rowname, visible_level) {
     }
 }
 
-function calculate_progress(frm, cdt, cdn) {
+function load_task_baseline(frm, cdt, cdn) {
+    // Loads the starting point for this row's progress calculation -
+    // i.e. what the deepest task's quantity/achieved already are,
+    // BEFORE today's entry - straight from the Task. Runs only when
+    // the task selection actually changes, and only once per task, so
+    // it never overwrites achieved_today that's already been typed in.
 
     let row = locals[cdt][cdn];
 
-    let previous_total = flt(row.total_achieved);
+    let deepest_task = get_deepest_task(frm, cdt, cdn);
+
+    if (!deepest_task || row._baseline_task === deepest_task) return;
+
+    frappe.db.get_value(
+        "Task",
+        deepest_task,
+        ["custom_total_quantity", "custom_total_achieved"]
+    ).then(r => {
+
+        if (!r.message) return;
+
+        row._baseline_task = deepest_task;
+        row._baseline_achieved = flt(r.message.custom_total_achieved);
+
+        frappe.model.set_value(cdt, cdn, "total_qty", flt(r.message.custom_total_quantity));
+        frappe.model.set_value(cdt, cdn, "achieved_today", 0);
+        apply_progress(frm, cdt, cdn);
+    });
+}
+
+function hydrate_baseline(frm, cdt, cdn) {
+    // Restores the in-memory baseline for a row that already has saved
+    // total_achieved/achieved_today (e.g. re-opening an existing draft),
+    // without re-fetching from the Task. Runs once per row.
+
+    let row = locals[cdt][cdn];
+
+    if (row._baseline_achieved !== undefined) return;
+
+    let deepest_task = get_deepest_task(frm, cdt, cdn);
+    if (!deepest_task) return;
+
+    row._baseline_task = deepest_task;
+    row._baseline_achieved = flt(row.total_achieved) - flt(row.achieved_today);
+}
+
+function calculate_progress(frm, cdt, cdn) {
+    // Make sure a baseline exists (covers rows loaded straight from the
+    // database, e.g. via bulk edit, where form_render's hydrate never ran).
+    hydrate_baseline(frm, cdt, cdn);
+    apply_progress(frm, cdt, cdn);
+}
+
+function apply_progress(frm, cdt, cdn) {
+
+    let row = locals[cdt][cdn];
+
+    let baseline_achieved = flt(row._baseline_achieved);
 
     let achieved_today = flt(row.achieved_today);
 
     let total_qty = flt(row.total_qty);
 
-    let diff = achieved_today - (row._last_achieved_today || 0);
-
-    let total_achieved = previous_total + diff;
+    let total_achieved = baseline_achieved + achieved_today;
 
     let percent_completed = 0;
 
@@ -387,8 +390,6 @@ function calculate_progress(frm, cdt, cdn) {
         "percent_completed",
         percent_completed
     );
-
-    row._last_achieved_today = achieved_today;
 }
 
 function render_html_images(frm, cdt, cdn) {

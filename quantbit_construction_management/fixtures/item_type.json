@@ -2,6 +2,20 @@
  {
   "docstatus": 0,
   "doctype": "Item Type",
+  "item_type_name": "Task",
+  "modified": "2026-06-23 17:06:34.425184",
+  "name": "Task"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Item Type",
+  "item_type_name": "998717",
+  "modified": "2026-07-01 22:06:20.607344",
+  "name": "998717"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Item Type",
   "item_type_name": "Tools",
   "modified": "2026-06-12 13:18:05.121628",
   "name": "Tools"

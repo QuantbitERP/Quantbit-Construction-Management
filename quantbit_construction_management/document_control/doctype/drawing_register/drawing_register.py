@@ -3,91 +3,196 @@
 
 import frappe
 from frappe.model.document import Document
-from quantbit_construction_management.utils import generate_unique_8_digit_number
-
+from frappe.utils import today
 
 class DrawingRegister(Document):
+	def before_save(self):
+		# When child table is empty and it's a main drawing, set current_rev to "Main"
+		if self.is_main and not self.get("revisions"):
+			self.current_rev = "Main"
+			if not self.status or self.status == "Draft":
+				self.status = "In Preparation"
+				
+		self.update_drawing_number()
 
-	def before_insert(self):
-
-		if not self.drawing_no:
-
-			self.drawing_no = generate_unique_8_digit_number(
-				"Drawing Register",
-				"drawing_no"
-			)
-
-	def validate(self):
-
-		self.validate_unique_drawing_no()
-		self.validate_ifc_file_required()
-		self.prevent_edit_if_superseded()
-		self.validate_revision_table()
-		self.update_current_revision()
-
-
-	def validate_unique_drawing_no(self):
-
-		existing = frappe.db.exists(
-			"Drawing Register",
-			{
-				"project": self.project,
-				"drawing_no": self.drawing_no,
-				"name": ["!=", self.name]
-			}
-		)
-
-		if existing:
-			frappe.throw(
-				f"Drawing number {self.drawing_no} already exists in this project."
-			)
-
-
-	def validate_ifc_file_required(self):
-
-		if self.status == "Issued for Construction" and not self.file:
-			frappe.throw(
-				"Please attach drawing file before issuing IFC drawing."
-			)
-
-
-	def prevent_edit_if_superseded(self):
-
-		if self.status == "Superseded" and not self.is_new():
-			frappe.throw(
-				"Superseded drawings are read-only. Create a new revision."
-			)
-
-
-	def validate_revision_table(self):
-
-		revision_list = []
-		last_date = None
-
-		for row in self.revisions:
-
-			if row.revision in revision_list:
-				frappe.throw(
-					f"Revision '{row.revision}' already exists for this drawing."
-				)
-
-			revision_list.append(row.revision)
-
-			if last_date and row.revision_date < last_date:
-				frappe.throw(
-					"Revision date cannot be earlier than previous revision."
-				)
-
-			last_date = row.revision_date
-
+	def update_drawing_number(self):
+		if self.is_main and not self.get("revisions"):
+			self.current_rev = "Main"
 			
-	def update_current_revision(self):
+		if not self.project or not self.discipline or not self.drawing_type:
+			return
+			
+		# Generate sequence or extract base
+		if not self.drawing_no:
+			project_name = frappe.db.get_value("Project", self.project, "project_name") or self.project
+			convention_name = frappe.db.get_value("Drawing Numbering Convention", {"project": self.project}, "name")
+			
+			disc_code = ""
+			type_code = ""
+			template = "PROJ-DISC-TYPE-NUM"
+			
+			if convention_name:
+				convention = frappe.get_doc("Drawing Numbering Convention", convention_name)
+				if convention.format_template:
+					template = convention.format_template
+				for row in convention.get("discipline_codes"):
+					if row.discipline == self.discipline:
+						disc_code = row.code
+						break
+				for row in convention.get("type_codes"):
+					if row.drawing_type == self.drawing_type:
+						type_code = row.code
+						break
+						
+			# Fallbacks
+			if not disc_code: disc_code = str(self.discipline)[:3].upper() if self.discipline else ""
+			if not type_code: type_code = str(self.drawing_type)[0].upper() if self.drawing_type else ""
+			proj_code = "".join([w[0].upper() for w in str(project_name).split() if w])
+			
+			# Build autoname format from template
+			autoname_format = template.replace("PROJ", proj_code).replace("DISC", disc_code).replace("TYPE", type_code).replace("NUM", ".####")
+			
+			from frappe.model.naming import make_autoname
+			base_number = make_autoname(autoname_format)
+		else:
+			base_number = self.drawing_no.split(" - ")[0]
+			
+		rev = self.current_rev or "Main"
+		self.drawing_no = f"{base_number} - {rev}"
 
-		if self.revisions:
+	def on_submit(self):
+		# Create Transmittal against this drawing register
+		transmittal = self.create_transmittal()
+		
+		# If transmittal is created, status should be IFR
+		if transmittal:
+			self.db_set("status", "IFR")
+			frappe.msgprint(f"Drawing Submitted. Transmittal {transmittal.name} created automatically.")
 
-			latest_revision = sorted(
-				self.revisions,
-				key=lambda x: x.revision_date
-			)[-1]
+	def create_transmittal(self):
+		try:
+			transmittal = frappe.new_doc("Transmittal")
+			transmittal.project = self.project
+			transmittal.date = today()
+			transmittal.purpose = "IFR"
+			
+			# Map entity fields
+			transmittal.from_entity_type = self.from_entity_type
+			transmittal.from_entity = self.from_entity
+			transmittal.to_entity_type = self.to_entity_type
+			transmittal.to_entity = self.to_entity
+			transmittal.doc_type_link_drawing_register = "Drawing Register"
+			transmittal.doc_link_drawing_register = self.name
+			
+			# Fallback to fetch file from sidebar attachments if the field is empty
+			file_url = self.file
+			if not file_url:
+				attached_file = frappe.db.get_value("File", {"attached_to_doctype": "Drawing Register", "attached_to_name": self.name}, "file_url")
+				if attached_file:
+					file_url = attached_file
+			
+			# Link the drawing in the Transmittal's child table
+			transmittal.append("drawings", {
+				"drawing": self.name,
+				"drawing_no": self.drawing_no,
+				"revision": self.current_rev,
+				"purpose": "IFR",
+				"attach_zuit": file_url,
+				"sheet_no": self.sheet_no
+			})
+			
+			transmittal.insert(ignore_permissions=True)
+			transmittal.submit()
+			return transmittal
+		except Exception as e:
+			frappe.throw(f"Failed to create Transmittal: {str(e)}")
 
-			self.current_rev = latest_revision.revision
+@frappe.whitelist()
+def sync_revision_to_main(main_id, revision=None, revision_date=None, file=None, status=None, issued_by=None, purpose=None, description=None, transmittal_no=None):
+	main_doc = frappe.get_doc("Drawing Register", main_id)
+	
+	# Avoid duplicate insertion
+	for row in main_doc.revisions:
+		if row.revision == revision:
+			return
+			
+	main_doc.append("revisions", {
+		"revision": revision,
+		"revision_date": revision_date,
+		"file": file,
+		"status": status,
+		"issued_by": issued_by,
+		"purpose": purpose,
+		"description": description,
+		"transmittal_no": transmittal_no
+	})
+	main_doc.flags.ignore_validate_update_after_submit = True
+	main_doc.save(ignore_permissions=True)
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_entities_without_role(doctype, txt, searchfield, start, page_len, filters):
+	entity_doctype = filters.get("entity_doctype")
+	
+	if entity_doctype == "User":
+		return frappe.db.sql("""
+			SELECT name, full_name
+			FROM `tabUser`
+			WHERE name NOT IN (
+				SELECT parent FROM `tabHas Role` WHERE role = 'Drawing Reviwer'
+			)
+			AND (name LIKE %(txt)s OR full_name LIKE %(txt)s)
+			ORDER BY name
+			LIMIT %(start)s, %(page_len)s
+		""", {
+			"txt": f"%{txt}%",
+			"start": start,
+			"page_len": page_len
+		})
+	elif entity_doctype == "Customer":
+		return frappe.db.sql("""
+			SELECT name, customer_name
+			FROM `tabCustomer`
+			WHERE name LIKE %(txt)s OR customer_name LIKE %(txt)s
+			ORDER BY name
+			LIMIT %(start)s, %(page_len)s
+		""", {
+			"txt": f"%{txt}%",
+			"start": start,
+			"page_len": page_len
+		})
+	return []
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_entities_with_role(doctype, txt, searchfield, start, page_len, filters):
+	entity_doctype = filters.get("entity_doctype")
+	
+	if entity_doctype == "User":
+		return frappe.db.sql("""
+			SELECT name, full_name
+			FROM `tabUser`
+			WHERE name IN (
+				SELECT parent FROM `tabHas Role` WHERE role = 'Drawing Reviwer'
+			)
+			AND (name LIKE %(txt)s OR full_name LIKE %(txt)s)
+			ORDER BY name
+			LIMIT %(start)s, %(page_len)s
+		""", {
+			"txt": f"%{txt}%",
+			"start": start,
+			"page_len": page_len
+		})
+	elif entity_doctype == "Customer":
+		return frappe.db.sql("""
+			SELECT name, customer_name
+			FROM `tabCustomer`
+			WHERE name LIKE %(txt)s OR customer_name LIKE %(txt)s
+			ORDER BY name
+			LIMIT %(start)s, %(page_len)s
+		""", {
+			"txt": f"%{txt}%",
+			"start": start,
+			"page_len": page_len
+		})
+	return []

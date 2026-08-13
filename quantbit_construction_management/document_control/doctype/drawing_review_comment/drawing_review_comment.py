@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class DrawingComment(Document):
+class DrawingReviewComment(Document):
 	pass

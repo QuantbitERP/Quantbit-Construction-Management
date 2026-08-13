@@ -645,7 +645,7 @@ def create_sales_invoice(source_name, target_doc=None, item_code=None):
                     "tax_amount": i.tax_amount,
                     "description": i.description,
                 })
-       
+    
 
     doc = get_mapped_doc(
         "RA Billing",
@@ -1798,7 +1798,7 @@ def export_ra_excel(ra_billing):
             except: pass
         ws_meas.column_dimensions[column].width = (max_length + 2)
     ws_meas.column_dimensions['A'].width = 8 
-  
+
 # --- Abstract Sheet ---
     abs_headers = [
         "Sr. No", "Stage", "Description", "UOM", "Rate",
@@ -1848,7 +1848,7 @@ def export_ra_excel(ra_billing):
 
         stage_steel_kg = measurement_stage_kg_totals.get(row.stage_subject, 0)
         stage_steel_mt = measurement_stage_mt_totals.get(row.stage_subject, 0)
-      
+    
         rate = flt(row.rate)
 
         if stage_steel_kg:
@@ -2104,7 +2104,7 @@ def export_ra_excel(ra_billing):
         ws_level.column_dimensions[column].width = (max_length + 2)
     ws_level.column_dimensions['A'].width = 8 
 
-  
+
     # --- Level Data Sheet: EXACT copy of the on-screen grid ---
     matrix_json = doc.get("level_data_json")
     matrix = None
@@ -2461,7 +2461,7 @@ def calculate_level_matrix(project, matrix):
 
             for parameter in resolved_this_pass:
                 pending.pop(parameter, None)
-\
+
             if not resolved_this_pass:
                 break
 
@@ -2632,7 +2632,7 @@ HIERARCHY_FIELDS = [f"task_level{i}" for i in range(1, 11)]
 def _row_key(row_like):
 
     parts = [row_like.get("stage") if isinstance(row_like, dict) else row_like.stage,
-             row_like.get("task") if isinstance(row_like, dict) else row_like.task]
+            row_like.get("task") if isinstance(row_like, dict) else row_like.task]
 
     for f in HIERARCHY_FIELDS:
         val = row_like.get(f) if isinstance(row_like, dict) else row_like.get(f)
