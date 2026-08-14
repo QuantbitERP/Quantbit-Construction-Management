@@ -12,19 +12,22 @@
   "naming_series",
   "title",
   "project",
+  "drawing",
   "col_break1",
   "change_category",
   "initiated_by",
   "initiation_date",
+  "urgency",
+  "drawing_number",
   "col_break2",
   "approval_status",
   "approved_by",
   "approved_date",
+  "current_revusion",
+  "new_revision",
   "section_description",
   "description",
   "technical_justification",
-  "section_drawings",
-  "affected_drawings",
   "section_impact",
   "impact_cost",
   "impact_days",
@@ -140,17 +143,6 @@
    "label": "Technical Justification"
   },
   {
-   "fieldname": "section_drawings",
-   "fieldtype": "Section Break",
-   "label": "Affected Drawings"
-  },
-  {
-   "fieldname": "affected_drawings",
-   "fieldtype": "Table",
-   "label": "Affected Drawings",
-   "options": "ECN Affected Drawing"
-  },
-  {
    "fieldname": "section_impact",
    "fieldtype": "Section Break",
    "label": "Impact Assessment"
@@ -207,13 +199,40 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "urgency",
+   "fieldtype": "Select",
+   "label": "Urgency",
+   "options": "\nImmediate\nWithin 24h\nWithin 1 week"
+  },
+  {
+   "fieldname": "drawing",
+   "fieldtype": "Link",
+   "label": "Drawing",
+   "options": "Drawing Register"
+  },
+  {
+   "fieldname": "drawing_number",
+   "fieldtype": "Data",
+   "label": "Drawing Number"
+  },
+  {
+   "fieldname": "current_revusion",
+   "fieldtype": "Data",
+   "label": "Current Revusion"
+  },
+  {
+   "fieldname": "new_revision",
+   "fieldtype": "Data",
+   "label": "New Revision"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-07-28 11:01:50.835266",
+ "modified": "2026-08-13 17:47:09.410513",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Engineering Change Notice",

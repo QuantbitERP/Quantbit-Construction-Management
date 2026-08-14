@@ -34,7 +34,9 @@ class TransmittalAcknowledgement(Document):
 					issued_by=transmitted_drawing.from_entity,
 					purpose="IFR",
 					description=self.comments,
-					transmittal_no=self.transmittal
+					transmittal_no=self.transmittal,
+					is_ecn=self.get("is_ecn"),
+					ecn_reference=self.get("ecn_reference")
 				)
 			except Exception:
 				pass

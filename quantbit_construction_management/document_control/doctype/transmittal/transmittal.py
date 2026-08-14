@@ -54,6 +54,9 @@ class Transmittal(Document):
 			review.doc_type_link_drawing_register = "Drawing Register"
 			review.doc_link_drawing_register = drawing.name
 			
+			review.is_ecn = item.get("is_ecn") or drawing.get("is_ecn")
+			review.ecn_reference = item.get("ecn_reference") or drawing.get("ecn_reference")
+			
 			review.append("review_comments", {
 				"sheet_no": item.sheet_no,
 				"transmittal_no": self.name

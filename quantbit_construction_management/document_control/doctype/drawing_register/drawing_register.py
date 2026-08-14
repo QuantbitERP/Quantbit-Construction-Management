@@ -7,11 +7,15 @@ from frappe.utils import today
 
 class DrawingRegister(Document):
 	def before_save(self):
-		# When child table is empty and it's a main drawing, set current_rev to "Main"
-		if self.is_main and not self.get("revisions"):
-			self.current_rev = "Main"
-			if not self.status or self.status == "Draft":
-				self.status = "In Preparation"
+		if self.is_main:
+			# When child table is empty and it's a main drawing, set current_rev to "Main"
+			if not self.get("revisions"):
+				self.current_rev = "Main"
+				if not self.status or self.status == "Draft":
+					self.status = "In Preparation"
+			else:
+				# Set current_rev to the latest revision from the history
+				self.current_rev = self.revisions[-1].revision
 				
 		self.update_drawing_number()
 
@@ -83,6 +87,8 @@ class DrawingRegister(Document):
 			transmittal.to_entity = self.to_entity
 			transmittal.doc_type_link_drawing_register = "Drawing Register"
 			transmittal.doc_link_drawing_register = self.name
+			transmittal.is_ecn = self.get("is_ecn")
+			transmittal.ecn_reference = self.get("ecn_reference")
 			
 			# Fallback to fetch file from sidebar attachments if the field is empty
 			file_url = self.file
@@ -98,7 +104,9 @@ class DrawingRegister(Document):
 				"revision": self.current_rev,
 				"purpose": "IFR",
 				"attach_zuit": file_url,
-				"sheet_no": self.sheet_no
+				"sheet_no": self.sheet_no,
+				"is_ecn": self.get("is_ecn"),
+				"ecn_reference": self.get("ecn_reference")
 			})
 			
 			transmittal.insert(ignore_permissions=True)
@@ -108,7 +116,7 @@ class DrawingRegister(Document):
 			frappe.throw(f"Failed to create Transmittal: {str(e)}")
 
 @frappe.whitelist()
-def sync_revision_to_main(main_id, revision=None, revision_date=None, file=None, status=None, issued_by=None, purpose=None, description=None, transmittal_no=None):
+def sync_revision_to_main(main_id, revision=None, revision_date=None, file=None, status=None, issued_by=None, purpose=None, description=None, transmittal_no=None, is_ecn=0, ecn_reference=None):
 	main_doc = frappe.get_doc("Drawing Register", main_id)
 	
 	# Avoid duplicate insertion
@@ -124,7 +132,9 @@ def sync_revision_to_main(main_id, revision=None, revision_date=None, file=None,
 		"issued_by": issued_by,
 		"purpose": purpose,
 		"description": description,
-		"transmittal_no": transmittal_no
+		"transmittal_no": transmittal_no,
+		"is_ecn": is_ecn,
+		"ecn_reference": ecn_reference
 	})
 	main_doc.flags.ignore_validate_update_after_submit = True
 	main_doc.save(ignore_permissions=True)

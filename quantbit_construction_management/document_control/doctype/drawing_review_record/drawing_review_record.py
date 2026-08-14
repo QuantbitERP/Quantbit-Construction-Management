@@ -58,6 +58,9 @@ class DrawingReviewRecord(Document):
 			ack.doc_link_review_record = self.name
 			ack.doc_type_link_drawing_register = "Drawing Register"
 			ack.doc_link_drawing_register = self.drawing
+			ack.is_ecn = self.get("is_ecn")
+			ack.ecn_reference = self.get("ecn_reference")
+			
 			if self.drawing:
 				ack.drawing_tiltle = frappe.db.get_value("Drawing Register", self.drawing, "title")
 				

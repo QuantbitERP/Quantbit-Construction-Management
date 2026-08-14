@@ -22,6 +22,7 @@
   "transmittal_no",
   "section_break_ziyt",
   "drawing",
+  "is_ecn",
   "column_break_sydn",
   "drawing_no",
   "column_break_pnrk",
@@ -311,6 +312,13 @@
    "label": "Doc Type Link",
    "options": "DocType",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_ecn",
+   "fieldtype": "Check",
+   "label": "Is ECN",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -322,7 +330,7 @@
    "link_fieldname": "doc_link_review_record"
   }
  ],
- "modified": "2026-08-08 14:48:06.010727",
+ "modified": "2026-08-13 17:36:39.575072",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Drawing Review Record",
