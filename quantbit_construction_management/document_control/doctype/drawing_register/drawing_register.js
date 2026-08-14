@@ -80,14 +80,14 @@ frappe.ui.form.on("Drawing Register", {
 		
 		// If Drawing is submitted, check the LATEST Acknowledgement
 		if (frm.doc.docstatus === 1 && frm.doc.is_main) {
-			let create_rev_fn = function() {
+			let create_rev_fn = function(is_ecn_flag = 0, ecn_ref_val = null) {
 				let latest_rev_in_table = "Main";
 				if (frm.doc.revisions && frm.doc.revisions.length > 0) {
 					latest_rev_in_table = frm.doc.revisions[frm.doc.revisions.length - 1].revision;
 				}
 				
 				if (latest_rev_in_table === "Main") {
-					generate_revision_doc(frm.doc, frm.doc.name);
+					generate_revision_doc(frm.doc, frm.doc.name, is_ecn_flag, ecn_ref_val);
 				} else {
 					frappe.db.get_list('Drawing Register', {
 						filters: { 
@@ -98,10 +98,10 @@ frappe.ui.form.on("Drawing Register", {
 					}).then(records => {
 						if (records && records.length > 0) {
 							frappe.db.get_doc('Drawing Register', records[0].name).then(latest_doc => {
-								generate_revision_doc(latest_doc, frm.doc.name);
+								generate_revision_doc(latest_doc, frm.doc.name, is_ecn_flag, ecn_ref_val);
 							});
 						} else {
-							generate_revision_doc(frm.doc, frm.doc.name);
+							generate_revision_doc(frm.doc, frm.doc.name, is_ecn_flag, ecn_ref_val);
 						}
 					});
 				}
@@ -113,26 +113,26 @@ frappe.ui.form.on("Drawing Register", {
 					frappe.db.get_value('Transmittal Acknowledgement', {
 						'transmittal': last_row.transmittal_no,
 						'docstatus': 1
-					}, ['name', 'drawing_with_comments', 'drawings_received_ok'], (r) => {
+					}, ['name', 'drawing_with_comments', 'drawings_received_ok', 'is_ecn', 'ecn_reference'], (r) => {
 						if (r && r.name && r.drawing_with_comments) {
-							frm.add_custom_button(__('Create Revision'), create_rev_fn).addClass('btn-danger');
+							frm.add_custom_button(__('Create Revision'), () => create_rev_fn(r.is_ecn, r.ecn_reference)).addClass('btn-danger');
 						}
 					});
 				} else if (last_row.status === "Issued for Review") {
-					frm.add_custom_button(__('Create Revision'), create_rev_fn).addClass('btn-danger');
+					frm.add_custom_button(__('Create Revision'), () => create_rev_fn(0, null)).addClass('btn-danger');
 				}
 			} else {
 				frappe.db.get_value('Transmittal Acknowledgement', {
 					'drawing_no': frm.doc.drawing_no,
 					'docstatus': 1
-				}, ['name', 'drawing_with_comments', 'drawings_received_ok'], (r) => {
+				}, ['name', 'drawing_with_comments', 'drawings_received_ok', 'is_ecn', 'ecn_reference'], (r) => {
 					if (r && r.name && !r.drawings_received_ok) {
-						frm.add_custom_button(__('Create Revision'), create_rev_fn).addClass('btn-danger');
+						frm.add_custom_button(__('Create Revision'), () => create_rev_fn(r.is_ecn, r.ecn_reference)).addClass('btn-danger');
 					}
 				});
 			}
 			
-			function generate_revision_doc(base_doc, main_name) {
+			function generate_revision_doc(base_doc, main_name, is_ecn_flag = 0, ecn_ref_val = null) {
 				frappe.model.with_doctype('Drawing Register', function() {
 					let doc = frappe.model.get_new_doc('Drawing Register');
 					
@@ -163,6 +163,10 @@ frappe.ui.form.on("Drawing Register", {
 					doc.issue_date = frappe.datetime.get_today();
 					
 					doc.is_main = 0;
+					doc.is_ecn = is_ecn_flag ? 1 : 0;
+					if (ecn_ref_val) {
+						doc.ecn_reference = ecn_ref_val;
+					}
 					doc.doc_type_link_drawing_register = "Drawing Register";
 					doc.doc_link_drawing_register = main_name;
 					

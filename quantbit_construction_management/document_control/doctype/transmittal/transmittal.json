@@ -22,6 +22,7 @@
   "column_break_wizy",
   "project",
   "to_entity",
+  "is_ecn",
   "section_break_fbsf",
   "drawings",
   "section_break_actn",
@@ -233,6 +234,13 @@
    "label": "Doc Type Link",
    "options": "DocType",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_ecn",
+   "fieldtype": "Check",
+   "label": "Is ECN",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -243,7 +251,7 @@
    "link_fieldname": "doc_link_transmittal"
   }
  ],
- "modified": "2026-08-08 14:48:28.815901",
+ "modified": "2026-08-13 17:35:13.290122",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Transmittal",
