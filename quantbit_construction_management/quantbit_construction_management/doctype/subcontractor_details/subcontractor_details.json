@@ -7,11 +7,14 @@
  "engine": "InnoDB",
  "field_order": [
   "subcontractor",
-  "subcontractor_name",
   "quantity",
+  "column_break_uqlh",
+  "subcontractor_name",
   "rate",
-  "amount",
+  "column_break_ebcf",
   "date",
+  "amount",
+  "column_break_xetx",
   "billed_qty",
   "paid_qty"
  ],
@@ -45,31 +48,47 @@
    "fieldname": "amount",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Amount"
+   "label": "Amount",
+   "read_only": 1
   },
   {
    "fieldname": "billed_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Billed Qty"
+   "label": "Billed Qty",
+   "read_only": 1
   },
   {
    "fieldname": "paid_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Paid Qty"
+   "label": "Paid Qty",
+   "read_only": 1
   },
   {
    "fieldname": "date",
    "fieldtype": "Date",
-   "label": "Date"
+   "label": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_uqlh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_ebcf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_xetx",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-08-11 14:04:34.313820",
+ "modified": "2026-08-14 11:27:12.260239",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "Subcontractor Details",

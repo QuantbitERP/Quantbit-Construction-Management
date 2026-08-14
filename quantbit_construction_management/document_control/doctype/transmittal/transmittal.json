@@ -40,7 +40,8 @@
   "more_info_tab",
   "doc_link_drawing_register",
   "column_break_tlak",
-  "doc_type_link_drawing_register"
+  "doc_type_link_drawing_register",
+  "ecn_reference"
  ],
  "fields": [
   {
@@ -241,6 +242,12 @@
    "fieldtype": "Check",
    "label": "Is ECN",
    "read_only": 1
+  },
+  {
+   "fieldname": "ecn_reference",
+   "fieldtype": "Data",
+   "label": "ECN Reference",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -251,7 +258,7 @@
    "link_fieldname": "doc_link_transmittal"
   }
  ],
- "modified": "2026-08-13 17:35:13.290122",
+ "modified": "2026-08-14 10:38:39.244612",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Transmittal",

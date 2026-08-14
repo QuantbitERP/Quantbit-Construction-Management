@@ -18,7 +18,8 @@
   "drawing_no",
   "section_notes",
   "remarks",
-  "disposition"
+  "disposition",
+  "ecn_reference"
  ],
  "fields": [
   {
@@ -93,12 +94,18 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Sheet No"
+  },
+  {
+   "fieldname": "ecn_reference",
+   "fieldtype": "Data",
+   "label": "ECN Reference",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "istable": 1,
  "links": [],
- "modified": "2026-08-08 10:37:34.360651",
+ "modified": "2026-08-14 10:38:40.387189",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Transmittal Drawing",

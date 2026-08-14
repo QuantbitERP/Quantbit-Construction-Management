@@ -738,6 +738,7 @@ function render_combined_boq(frm) {
 }
 
 window.expanded_nodes = window.expanded_nodes || new Set();
+window.detail_expanded_nodes = window.detail_expanded_nodes || new Set();
 
 /* ─── Floor / Block option lists (kept in sync with the custom_floor / custom_block
    Select fields on Task — see fixtures/custom_field.json) ──────────────────────────── */
@@ -882,8 +883,83 @@ frappe.realtime.on("project_progress_refresh", (data) => {
 
 function inject_hierarchy_css() {
     const css = `
-        .hierarchy-row { position: relative; transition: all 0.2s ease; cursor: pointer; margin-bottom: 5px; }
-        .hierarchy-row:hover { filter: brightness(0.95); transform: translateX(5px); }
+        /* ── Base row ──────────────────────────────────────────────────── */
+        .hierarchy-row {
+            position: relative;
+            cursor: pointer;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: box-shadow 0.15s ease;
+        }
+        .hierarchy-row:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        /* ── Compact summary bar (always visible) ───────────────────────── */
+        .h-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 12px;
+            min-height: 38px;
+            user-select: none;
+        }
+
+        /* ── Full detail panel (hidden by default, holds all the action
+               buttons — this is what stops Progress/Subtask/etc. from being
+               squeezed onto the summary row and misaligning as depth grows) ── */
+        .h-detail {
+            display: none;
+            padding: 10px 14px 12px 14px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            animation: fadeSlideDown 0.18s ease;
+        }
+        .h-detail.open { display: block; }
+
+        @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Toggle arrow (expands/collapses the detail/actions panel) ──── */
+        .toggle-detail-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.35);
+            font-size: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.15s;
+            flex-shrink: 0;
+            margin-right: 8px;
+            color: inherit;
+        }
+        .toggle-detail-icon:hover { background: rgba(255,255,255,0.35); }
+        .toggle-detail-icon.open  { transform: rotate(90deg); }
+
+        /* ── Children expand icon ───────────────────────────────────────── */
+        .toggle-children-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-right: 6px;
+            opacity: 0.75;
+            transition: opacity 0.15s;
+        }
+        .toggle-children-icon:hover { opacity: 1; }
+
+        /* ── Hover tooltip ─────────────────────────────────────────────── */
         .hover-details {
             display: none; position: absolute; top: -10px; left: 50%;
             transform: translateX(-50%) translateY(-100%); background: #2d3436;
@@ -892,9 +968,32 @@ function inject_hierarchy_css() {
             pointer-events: none;
         }
         .hierarchy-row:hover .hover-details { display: block; }
-        .toggle-icon { margin-right: 8px; font-weight: bold; cursor: pointer; width: 15px; display: inline-block; text-align: center; }
         .detail-label { color: #bdc3c7; font-weight: bold; margin-right: 5px; }
-        .hierarchy-controls { margin-bottom: 15px; display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* ── Controls bar ──────────────────────────────────────────────── */
+        .hierarchy-controls { margin-bottom: 12px; display: flex; gap: 8px; justify-content: flex-end; }
+
+        /* ── Progress bar (inside detail) ────────────────────────────────── */
+        .h-progress-bar {
+            height: 6px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            overflow: hidden;
+            margin-top: 6px;
+            width: 160px;
+        }
+        .h-progress-fill { height: 6px; border-radius: 4px; }
+
+        /* ── Action buttons row (inside detail) — wraps instead of
+               overflowing/misaligning when there's not enough width ────── */
+        .h-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
         .weight-warning { color: #e74c3c; font-weight: 600; margin-top: 5px; }
     `;
     frappe.dom.set_style(css, 'project-hierarchy-style');
@@ -1042,9 +1141,6 @@ function group_stage_objs_by_floor_block(stage_objs) {
     return floor_order.map(k => floor_map[k]).concat(ungrouped);
 }
 
-/* Same margin formula the rest of this file already uses for "total weight" rows
-   nested under a parent rendered at a given depth — except depth 0 (a genuinely
-   top-level, ungrouped stage) which has always used a flush-left 0 margin. */
 function stage_total_margin(base_depth) {
     return base_depth === 0 ? 0 : (base_depth * 35) + 28;
 }
@@ -1061,23 +1157,28 @@ function render_group_row(node, depth, tasks_all) {
     let badge_label = node_type === "floor" ? "Blocks" : "Stages";
 
     let out = `
-    <div class="hierarchy-row" data-name="${node.name}" data-type="${node_type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:white; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    <div class="hierarchy-row" data-name="${node.name}" data-type="${node_type}" style="margin-left:${margin};margin-top:10px;background:${bg};color:white;">
       <div class="hover-details">
          <div style="border-bottom: 1px solid #444; margin-bottom: 5px; font-weight: bold; padding-bottom: 3px;">${node.subject}</div>
          <div><span class="detail-label">Type:</span> ${node_type === "floor" ? "Floor" : "Block"}</div>
          <div><span class="detail-label">${badge_label}:</span> ${child_count}</div>
       </div>
 
-      <div class="toggle-node" style="display:flex; align-items:center; flex-grow:1;">
-        <span class="toggle-icon">${icon}</span>
-        <div>
-          <div style="font-size:10px; opacity:0.75; letter-spacing:0.5px;">${node_type === "floor" ? "FLOOR" : "BLOCK"}</div>
-          <div style="font-weight:600; font-size:15px;">${node.subject}</div>
+      <div class="h-summary">
+        <div style="display:flex;align-items:center;flex:1;min-width:0;gap:2px;">
+          <span class="toggle-children-icon" style="color:white;margin-left:16px;">${icon}</span>
+          <div style="min-width:0;">
+            <div style="font-size:9px;opacity:0.75;letter-spacing:0.5px;">${node_type === "floor" ? "FLOOR" : "BLOCK"}</div>
+            <div style="font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${node.subject}</div>
+          </div>
         </div>
-      </div>
 
-      <div style="display:flex; gap:5px; align-items:center;">
-          <button class="btn btn-info btn-xs" style="pointer-events:none;" title="${badge_label}">${child_count}</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px;">
+          <div style="display:flex;flex-direction:column;align-items:center;line-height:1;">
+            <span style="font-size:8px;opacity:0.7;margin-bottom:2px;letter-spacing:0.3px;">${badge_label.toUpperCase()}</span>
+            <span class="btn btn-info btn-xs" style="pointer-events:none;margin:0;">${child_count}</span>
+          </div>
+        </div>
       </div>
     </div>`;
 
@@ -1087,9 +1188,7 @@ function render_group_row(node, depth, tasks_all) {
                 ? render_group_row(child, depth + 1, tasks_all)
                 : render_stage_block(child, depth + 1, tasks_all);
         });
-        // A Block's children are real Stages — give them the same per-child weight-total
-        // row every other level already shows. (A Floor's children are Blocks, which
-        // carry no weight of their own, so none is shown there.)
+        
         if (node_type === "block") {
             node.children.forEach(child => {
                 out += render_total_row(child.data.subject, flt(child.data.task_weight || 0).toFixed(2), stage_total_margin(depth + 1));
@@ -1100,8 +1199,6 @@ function render_group_row(node, depth, tasks_all) {
     return out;
 }
 
-/* ─── Render one Stage and everything under it (unchanged logic, now depth-parameterized
-   so it can be nested under Floor/Block wrapper rows as well as rendered at top level) ── */
 function render_stage_block(stageObj, base_depth, tasks_all) {
     let out = '';
 
@@ -1297,35 +1394,21 @@ function render_row(item, type, is_expanded, depth = 0) {
     let color = type === "stage" ? "white" : "#333";
     let btnClass = type === "stage" ? "btn-light" : "btn-default";
 
+    let is_detail_open = detail_expanded_nodes.has(item.name);
+
     // Icon logic
-    let icon = "";
-    if (type !== "subtask") {
-        icon = is_expanded ? "▼" : "▶";
-    }
+    let icon = type !== "subtask" ? (is_expanded ? "▼" : "▶") : "•";
+
     let progress = flt(item.progress || 0);
+    let progress_color = progress >= 100 ? "#2ecc71" : progress > 70 ? "#27ae60" : progress > 30 ? "#f1c40f" : "#fb8c00";
+
     let descendant_count = get_descendant_count(
         window.current_hierarchy_tasks || [],
         item.name
     );
-    let descendant_btn = "";
-    if (
-        type !== "subtask" &&
-        descendant_count > 0
-    ) {
-        descendant_btn = `
-            <button class="btn btn-info btn-xs"
-                title="Descendant Count">
-                ${descendant_count}
-            </button>
-        `;
-    }
-    let progress_bar = `
-    <div style="margin-top:6px;width:150px;background:#eee;border-radius:6px;height:6px;">
-    <div style="width:${progress}%;background:#27ae60;height:6px;border-radius:6px;"></div>
-    </div>
-    `;
+
     return `
-    <div class="hierarchy-row" data-name="${item.name}" data-type="${type}" style="margin-left:${margin}; margin-top:10px; padding:12px; background:${bg}; color:${color}; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">    
+    <div class="hierarchy-row" data-name="${item.name}" data-type="${type}" style="margin-left:${margin};margin-top:10px;background:${bg};color:${color};">
       <div class="hover-details">
          <div style="border-bottom: 1px solid #444; margin-bottom: 5px; font-weight: bold; padding-bottom: 3px;">${item.name}</div>
          <div><span class="detail-label">Status:</span> ${item.status || 'Open'}</div>
@@ -1335,21 +1418,71 @@ function render_row(item, type, is_expanded, depth = 0) {
          <div style="margin-top:5px; font-style: italic; color: #ecf0f1;">${item.description || 'No description provided.'}</div>
       </div>
 
-      <div class="toggle-node" style="display:flex; align-items:center; flex-grow:1;">
-        <span class="toggle-icon">${icon}</span>
-        <div>
-          <div style="font-weight:600; font-size:${type === 'stage' ? '16px' : '14px'};">${item.subject}</div>
-          <div style="font-size:11px; opacity:0.7;">${item.name}</div>
-           ${progress_bar}
+      <!-- ── COMPACT SUMMARY BAR (always visible) ── -->
+      <div class="h-summary">
+
+        <!-- Left: detail-toggle + children-toggle + name/id -->
+        <div style="display:flex;align-items:center;flex:1;min-width:0;gap:2px;">
+
+          <!-- Detail expand/collapse arrow — opens the actions panel below -->
+          <span class="toggle-detail-icon ${is_detail_open ? 'open' : ''}"
+              data-name="${item.name}" title="Show / hide actions">
+              ❯
+          </span>
+
+          <!-- Children expand/collapse (▶ / ▼ / •) -->
+          <span class="toggle-children-icon" title="Expand / collapse children">
+              ${icon}
+          </span>
+
+          <!-- Name + ID -->
+          <div style="min-width:0;">
+            <div style="font-weight:600;font-size:${type === 'stage' ? '15px' : '13px'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                ${item.subject}
+            </div>
+            <div style="font-size:10px;opacity:0.65;font-family:monospace;">${item.name}</div>
+          </div>
+        </div>
+
+        <!-- Right: labeled badge group (Count / Weight / Progress) -->
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px;">
+
+            ${type !== "subtask" && descendant_count > 0
+                ? `<div style="display:flex;flex-direction:column;align-items:center;line-height:1;">
+                        <span style="font-size:8px;opacity:0.7;margin-bottom:2px;letter-spacing:0.3px;">COUNT</span>
+                        <span class="btn btn-info btn-xs" style="pointer-events:none;margin:0;" title="Descendant Count">
+                            ${descendant_count}
+                        </span>
+                </div>`
+                : ""}
+
+            <div style="display:flex;flex-direction:column;align-items:center;line-height:1;">
+                <span style="font-size:8px;opacity:0.7;margin-bottom:2px;letter-spacing:0.3px;">WEIGHT</span>
+                <span class="btn btn-warning btn-xs" style="pointer-events:none;margin:0;" title="Weight">
+                    ${item.task_weight || 0}%
+                </span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:center;line-height:1;">
+                <span style="font-size:8px;opacity:0.7;margin-bottom:2px;letter-spacing:0.3px;">PROGRESS</span>
+                <span class="btn btn-success btn-xs" style="pointer-events:none;margin:0;">
+                    ${progress.toFixed(2)}%
+                </span>
+            </div>
         </div>
       </div>
 
-    <div style="display:flex; gap:5px; align-items:center;">
-          <button class="btn btn-success btn-xs">
-             ${progress.toFixed(2)}%
-           </button>
-    
-           <button class="btn ${btnClass} btn-xs redirect-item"
+      <!-- ── FULL DETAIL PANEL (toggled) ── -->
+      <div class="h-detail ${is_detail_open ? 'open' : ''}">
+
+        <!-- Progress bar -->
+        <div class="h-progress-bar">
+            <div class="h-progress-fill" style="width:${progress}%;background:${progress_color};"></div>
+        </div>
+
+        <!-- Action buttons — wraps instead of overflowing -->
+        <div class="h-actions">
+            <button class="btn ${btnClass} btn-xs redirect-item"
                 data-name="${item.name}"
                 title="Open Form View"
                 ${cur_frm.doc.docstatus == 1 ? "disabled" : ""}>
@@ -1409,12 +1542,7 @@ function render_row(item, type, is_expanded, depth = 0) {
                     + Subtask
                 </button>`
             : ""}
-            ${descendant_btn}
-            <button class="btn btn-warning btn-xs show-weight"
-                data-name="${item.name}"
-                title="Weight">
-                ${item.task_weight || 0}%
-            </button>
+        </div>
       </div>
     </div>`;
 
@@ -1456,8 +1584,27 @@ function render_total_row(label, total, margin_left) {
 function attach_events(frm, all_tasks) {
     const wrapper = frm.fields_dict.task_hierarchy.$wrapper;
 
-    // TOGGLE EXPAND / COLLAPSE
-    wrapper.find(".toggle-node").off("click").on("click", function (e) {
+    // TOGGLE DETAIL PANEL (the ❯ arrow — shows/hides the action buttons)
+    wrapper.find(".toggle-detail-icon").off("click").on("click", function (e) {
+        e.stopPropagation();
+        let name = $(this).data("name");
+        let row  = wrapper.find(`.hierarchy-row[data-name="${name}"]`);
+        let detail = row.find(".h-detail").first();
+        let icon   = row.find(".toggle-detail-icon").first();
+
+        if (detail_expanded_nodes.has(name)) {
+            detail_expanded_nodes.delete(name);
+            detail.removeClass("open");
+            icon.removeClass("open");
+        } else {
+            detail_expanded_nodes.add(name);
+            detail.addClass("open");
+            icon.addClass("open");
+        }
+    });
+
+    // TOGGLE EXPAND / COLLAPSE (the ▶ / ▼ children icon)
+    wrapper.find(".toggle-children-icon").off("click").on("click", function (e) {
         e.stopPropagation();
         let row = $(this).closest(".hierarchy-row");
         let name = row.data("name");
@@ -1653,6 +1800,7 @@ function attach_events(frm, all_tasks) {
                         let main_doc = {
                             doctype: "Task",
                             subject: values.subject,
+                            project: frm.doc.project || null,
                             custom_boq_name: frm.doc.name,
                             custom_is_stage: 1,
                             is_group: 1,
@@ -1915,6 +2063,7 @@ function attach_events(frm, all_tasks) {
                         let main_doc = {
                             doctype: "Task",
                             subject: values.subject,
+                            project: frm.doc.project || null,
                             custom_boq_name: frm.doc.name,
                             parent_task: stage,
                             custom_is_task: 1,
@@ -2155,6 +2304,8 @@ function attach_events(frm, all_tasks) {
 
                     subject: values.subject,
 
+                    project: frm.doc.project || null,
+
                     custom_boq_name: frm.doc.name,
 
                     parent_task: parent_name,
@@ -2394,6 +2545,7 @@ function attach_events(frm, all_tasks) {
                         let main_doc = {
                             doctype: "Task",
                             subject: values.subject,
+                            project: frm.doc.project || null,
                             custom_boq_name: frm.doc.name,
                             parent_task: parent_task,
                             custom_is_subtask: 1,
@@ -2755,18 +2907,9 @@ function attach_events(frm, all_tasks) {
             __("Are you sure you want to delete this {0}?", [type]),
 
             function () {
-
-                // =====================================
-                // REMOVE MATCHING SUBTASK ROWS ONLY
-                // =====================================
-
                 let boq_index = (frm.doc.boq_items || []).length;
-
                 while (boq_index--) {
-
                     let boq_row = frm.doc.boq_items[boq_index];
-
-                    // MATCH CLICKED TASK/SUBTASK ID
                     if (
                         boq_row.subtask &&
                         boq_row.subtask === docname
@@ -2784,11 +2927,6 @@ function attach_events(frm, all_tasks) {
                 frm.refresh_field("boq_items");
                 frm.dirty();
                 frm.save();
-
-                // =====================================
-                // REMOVE TASK ROW FROM tasks_details
-                // =====================================
-
                 let task_index = (frm.doc.tasks_details || []).findIndex(
                     d => d.task === docname
                 );
@@ -2805,11 +2943,6 @@ function attach_events(frm, all_tasks) {
 
                     frm.refresh_field("tasks_details");
                 }
-
-                // =====================================
-                // DELETE DEPENDENCIES
-                // =====================================
-
                 frappe.call({
                     method: "quantbit_construction_management.boq.doctype.bill_of_quantities.bill_of_quantities.delete_task_with_dependencies",
                     args: {
@@ -2833,7 +2966,6 @@ function attach_events(frm, all_tasks) {
 
     });
 
-    // SHOW BOM DIALOG
     wrapper.find(".show-bom").off("click").on("click", function (e) {
         e.stopPropagation();
         let docname = $(this).data("name");
