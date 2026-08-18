@@ -51,7 +51,8 @@
   "doc_link_drawing_register",
   "column_break_fcvw",
   "doc_type_link_transmittal",
-  "doc_type_link_drawing_register"
+  "doc_type_link_drawing_register",
+  "ecn_reference"
  ],
  "fields": [
   {
@@ -319,6 +320,12 @@
    "fieldtype": "Check",
    "label": "Is ECN",
    "read_only": 1
+  },
+  {
+   "fieldname": "ecn_reference",
+   "fieldtype": "Data",
+   "label": "ECN Reference",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -330,7 +337,7 @@
    "link_fieldname": "doc_link_review_record"
   }
  ],
- "modified": "2026-08-13 17:36:39.575072",
+ "modified": "2026-08-14 10:38:40.750067",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Drawing Review Record",

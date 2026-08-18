@@ -47,7 +47,8 @@
   "doc_link_drawing_register",
   "column_break_hjsg",
   "doc_type_link_review_record",
-  "doc_type_link_drawing_register"
+  "doc_type_link_drawing_register",
+  "ecn_reference"
  ],
  "fields": [
   {
@@ -288,13 +289,19 @@
    "fieldtype": "Check",
    "label": "Is ECN",
    "read_only": 1
+  },
+  {
+   "fieldname": "ecn_reference",
+   "fieldtype": "Data",
+   "label": "ECN Reference",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-08-13 17:37:27.288884",
+ "modified": "2026-08-14 10:38:41.424649",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Transmittal Acknowledgement",

@@ -41,7 +41,36 @@ class RFI(Document):
 	def on_submit(self):
 
 		if self.priority in ["High", "Urgent"]:
+			frappe.msgprint(f"High priority RFI {self.name} submitted.")
+			
+		if self.response_by:
+			try:
+				frappe.sendmail(
+					recipients=[self.response_by],
+					subject=f"New RFI Submitted: {self.name} - {self.subject}",
+					message=f"<p>Hello,</p><p>A new RFI <b>{self.name}</b> has been submitted by {self.raised_by}.</p><p><b>Subject:</b> {self.subject}</p><p>Please review and provide a response.</p>",
+					reference_doctype=self.doctype,
+					reference_name=self.name,
+					now=True
+				)
+				frappe.msgprint(f"Email sent to {self.response_by}")
+			except Exception as e:
+				frappe.log_error(f"Failed to send RFI email: {str(e)}")
 
-			frappe.msgprint(
-				f"High priority RFI {self.name} submitted."
-			)
+	def on_update_after_submit(self):
+		doc_before_save = self.get_doc_before_save()
+		if doc_before_save:
+			if self.response and self.response != doc_before_save.response:
+				if self.raised_by:
+					try:
+						frappe.sendmail(
+							recipients=[self.raised_by],
+							subject=f"RFI Responded: {self.name} - {self.subject}",
+							message=f"<p>Hello,</p><p>A response has been added to RFI <b>{self.name}</b>.</p><p><b>Response:</b><br>{self.response}</p>",
+							reference_doctype=self.doctype,
+							reference_name=self.name,
+							now=True
+						)
+						frappe.msgprint(f"Response notification sent to {self.raised_by}")
+					except Exception as e:
+						frappe.log_error(f"Failed to send RFI response email: {str(e)}")

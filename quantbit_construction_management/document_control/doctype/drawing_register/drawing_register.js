@@ -69,14 +69,15 @@ frappe.ui.form.on("Drawing Register", {
 			});
 		}
 		
-		let is_new_unlinked = frm.is_new() && !frm.doc.amended_from && !frm.doc.doc_link_drawing_register;
-		let is_existing_main = !frm.is_new() && frm.doc.is_main;
+		let is_unlinked = !frm.doc.amended_from && !frm.doc.doc_link_drawing_register;
 		
-		if (is_new_unlinked || is_existing_main) {
+		if (is_unlinked || frm.doc.is_main) {
 			frm.set_df_property('is_main', 'hidden', 0);
 		} else {
 			frm.set_df_property('is_main', 'hidden', 1);
 		}
+		
+		frm.toggle_display("ifc_package", frm.doc.is__ifc_package ? true : false);
 		
 		// If Drawing is submitted, check the LATEST Acknowledgement
 		if (frm.doc.docstatus === 1 && frm.doc.is_main) {
@@ -107,6 +108,19 @@ frappe.ui.form.on("Drawing Register", {
 				}
 			};
 
+			let create_rfi_fn = function() {
+				frappe.model.with_doctype('RFI', function() {
+					let doc = frappe.model.get_new_doc('RFI');
+					doc.project = frm.doc.project;
+					doc.related_drawing = frm.doc.name;
+					doc.subject = frm.doc.title ? "RFI for " + frm.doc.title : "RFI for " + frm.doc.drawing_no;
+					doc.discipline = frm.doc.discipline;
+					doc.raised_by = frm.doc.from_entity;
+					doc.response_by = frm.doc.to_entity;
+					frappe.set_route('Form', 'RFI', doc.name);
+				});
+			};
+
 			if (frm.doc.revisions && frm.doc.revisions.length > 0) {
 				let last_row = frm.doc.revisions[frm.doc.revisions.length - 1];
 				if (last_row.transmittal_no) {
@@ -116,6 +130,7 @@ frappe.ui.form.on("Drawing Register", {
 					}, ['name', 'drawing_with_comments', 'drawings_received_ok', 'is_ecn', 'ecn_reference'], (r) => {
 						if (r && r.name && r.drawing_with_comments) {
 							frm.add_custom_button(__('Create Revision'), () => create_rev_fn(r.is_ecn, r.ecn_reference)).addClass('btn-danger');
+							frm.add_custom_button(__('Create RFI Request'), create_rfi_fn).addClass('btn-warning');
 						}
 					});
 				} else if (last_row.status === "Issued for Review") {
@@ -128,6 +143,7 @@ frappe.ui.form.on("Drawing Register", {
 				}, ['name', 'drawing_with_comments', 'drawings_received_ok', 'is_ecn', 'ecn_reference'], (r) => {
 					if (r && r.name && !r.drawings_received_ok) {
 						frm.add_custom_button(__('Create Revision'), () => create_rev_fn(r.is_ecn, r.ecn_reference)).addClass('btn-danger');
+						frm.add_custom_button(__('Create RFI Request'), create_rfi_fn).addClass('btn-warning');
 					}
 				});
 			}
@@ -200,5 +216,9 @@ frappe.ui.form.on("Drawing Register", {
 		if (frm.doc.is_main) {
 			frm.set_value("current_rev", "Main");
 		}
+	},
+	
+	is__ifc_package: function(frm) {
+		frm.toggle_display("ifc_package", frm.doc.is__ifc_package ? true : false);
 	}
 });

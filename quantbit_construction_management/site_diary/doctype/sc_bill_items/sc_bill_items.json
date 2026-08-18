@@ -14,15 +14,14 @@
   "billable_qty",
   "column_break_uhda",
   "rate",
+  "paid",
+  "subcontractor_refer",
   "column_break_qndk",
   "amount",
+  "billed",
   "column_break_12wg",
   "billed_qty",
   "paid_qty",
-  "billed",
-  "paid",
-  "section_break_rhm4",
-  "subcontractor_refer",
   "section_break_zocu",
   "parent_task",
   "parent_task_subject",
@@ -247,25 +246,32 @@
    "fieldname": "billed_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Billed Qty"
+   "label": "Billed Qty",
+   "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "paid_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Paid Qty"
+   "label": "Paid Qty",
+   "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "billed",
    "fieldtype": "Check",
-   "label": "Billed"
+   "label": "Billed",
+   "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "paid",
    "fieldtype": "Check",
-   "label": "Paid"
+   "label": "Paid",
+   "read_only": 1
   },
   {
    "fieldname": "qty",
@@ -289,12 +295,9 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "section_break_rhm4",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "subcontractor_refer",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Subcontractor Refer",
    "options": "Subcontractor Details"
   },
@@ -319,7 +322,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-08-12 10:16:06.413847",
+ "modified": "2026-08-14 11:30:14.949608",
  "modified_by": "Administrator",
  "module": "Site Diary",
  "name": "SC Bill Items",

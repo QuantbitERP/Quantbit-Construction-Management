@@ -13,12 +13,14 @@
   "project",
   "title",
   "is_main",
+  "is__ifc_package",
   "col_break_ident1",
   "discipline",
   "drawing_type",
   "scale",
   "sheet_no",
   "is_ecn",
+  "ifc_package",
   "col_break_ident2",
   "current_rev",
   "status",
@@ -443,6 +445,18 @@
    "fieldtype": "Data",
    "label": "ECN Reference",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is__ifc_package",
+   "fieldtype": "Check",
+   "label": "Is  IFC Package"
+  },
+  {
+   "fieldname": "ifc_package",
+   "fieldtype": "Link",
+   "label": "IFC package",
+   "options": "IFC Package"
   }
  ],
  "grid_page_length": 50,
@@ -465,7 +479,7 @@
    "link_fieldname": "doc_link_drawing_register"
   }
  ],
- "modified": "2026-08-13 18:17:44.040785",
+ "modified": "2026-08-14 10:32:58.366496",
  "modified_by": "Administrator",
  "module": "Document Control",
  "name": "Drawing Register",

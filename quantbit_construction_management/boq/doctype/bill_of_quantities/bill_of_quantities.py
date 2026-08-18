@@ -439,18 +439,10 @@ def get_all_children(task_name, visited=None):
             children.extend(get_all_children(child, visited))
     return children
 
+@frappe.whitelist()
 def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_children=False, custom_floor=None, custom_block=None):
-    """
-    Clones a stage and its tasks/subtasks/dependencies recursively into a BOQ.
-    1. Collects templates into a dynamic dictionary hierarchy:
-       hierarchy_dict = { stage: { task: [ subtask, ... ] } }
-    2. Logs hierarchy_dict to Frappe Error Log.
-    3. Creates new documents in order: Stage -> Task -> Subtask.
-    4. Recreates parent_task and depends_on links.
+    boq_project = frappe.db.get_value("Bill of Quantities", boq_name, "project")
 
-    custom_floor / custom_block (optional): applied only to the cloned stage itself
-    (Floor/Block are Stage-level-only groupings — see Task-custom_floor / Task-custom_block).
-    """
     hierarchy_dict = {}
     visited = set()
 
@@ -552,19 +544,12 @@ def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_chil
 
     # Map to store { old_task_name: new_task_name }
     cloned_map = {}
-
-    # Helper function to clone/insert a task doc.
-    # parent_new_name (when known) is the already-cloned new parent this node will
-    # end up under — used only to check for an existing duplicate before inserting;
-    # the actual parent_task wiring still happens in the rewire pass below, unchanged.
     def insert_task(t_name, parent_new_name=None):
         old_task = frappe.get_doc("Task", t_name)
         status = old_task.status
         if status == "Template":
             status = "Open"
 
-        # Don't re-clone a task that's already present under this exact new parent
-        # (e.g. this action already ran once for the same template).
         existing = frappe.db.exists("Task", {
             "subject": old_task.subject,
             "parent_task": parent_new_name,
@@ -581,6 +566,7 @@ def clone_task_hierarchy(stage_name, boq_name, include_tasks=False, include_chil
             "custom_is_task": old_task.custom_is_task,
             "custom_is_subtask": old_task.custom_is_subtask,
             "is_group": old_task.is_group,
+            "project": boq_project,
             "custom_boq_name": boq_name,
             "parent_task": None,
             "task_weight": 0,
@@ -730,6 +716,11 @@ def create_task(  boq_name=None,
             include_children = frappe.parse_json(include_children)
         created = []
 
+        # Keep every cloned Task in sync with whichever Project this BOQ is already
+        # linked to — otherwise a task/subtask added here never shows up under that
+        # Project (progress rollup, task lists, Gantt, etc. all key off Task.project).
+        boq_project = frappe.db.get_value("Bill of Quantities", boq_name, "project")
+
         for task_name in selected_tasks:
 
             old_doc = frappe.get_doc("Task", task_name)
@@ -739,6 +730,7 @@ def create_task(  boq_name=None,
                 "subject": old_doc.subject,
                 "custom_is_task": 1,
                 "is_group":1,
+                "project": boq_project,
                 "custom_boq_name":boq_name,
                 "parent_task":parent_stage,
                 "task_weight": old_doc.task_weight,
@@ -760,6 +752,7 @@ def create_task(  boq_name=None,
                         "doctype": "Task",
                         "subject": old_subtask.subject,
                         "custom_is_subtask": 1,
+                        "project": boq_project,
                         "custom_boq_name": boq_name,
                         "parent_task": new_doc.name,
                         "task_weight": old_subtask.task_weight,
@@ -791,6 +784,7 @@ def create_subtask(boq_name=None, selected_stages=None, values=None,task=None):
             selected_stages = json.loads(selected_stages)
 
         created = []
+        boq_project = frappe.db.get_value("Bill of Quantities", boq_name, "project")
 
         for stage_name in selected_stages:
 
@@ -800,6 +794,7 @@ def create_subtask(boq_name=None, selected_stages=None, values=None,task=None):
                 "doctype": "Task",
                 "subject": old_doc.subject,
                 "custom_is_subtask": 1,
+                "project": boq_project,
                 "custom_boq_name":boq_name,
                 "parent_task":task,
                 "custom_is_steel_subtask": old_doc.custom_is_steel_subtask,
@@ -968,15 +963,10 @@ def duplicate_boq(boq_name):
 
 @frappe.whitelist()
 def amend_subtask(task_name, boq, new_qty):
-
     task = frappe.get_doc("Task", task_name)
-
     old_qty = flt(task.custom_total_quantity)
-
     task.custom_total_quantity = flt(new_qty)
-
     task.save(ignore_permissions=True)
-
     changes = {
         "total_quantity": {
             "old": old_qty,
@@ -985,15 +975,10 @@ def amend_subtask(task_name, boq, new_qty):
     }
 
     frappe.get_doc({
-
         "doctype":"BOQ Amendment Log",
-
         "reference_doc" :"Bill Of Quantities",
-
         "reference_doc_link":boq,
-
         "value_changed":frappe.as_json(changes)
-
     }).insert(ignore_permissions=True)
 
     return True

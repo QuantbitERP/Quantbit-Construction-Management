@@ -19,6 +19,24 @@ class DrawingRegister(Document):
 				
 		self.update_drawing_number()
 
+	def on_update(self):
+		self.sync_to_ifc_package()
+
+	def sync_to_ifc_package(self):
+		if self.get("is__ifc_package") and self.get("ifc_package") and self.is_main:
+			try:
+				ifc = frappe.get_doc("IFC Package", self.ifc_package)
+				exists = any(d.drawing == self.name for d in ifc.drawings)
+				if not exists:
+					ifc.append("drawings", {
+						"drawing": self.name
+					})
+					ifc.flags.ignore_validate_update_after_submit = True
+					ifc.save(ignore_permissions=True)
+					frappe.msgprint(f"Drawing automatically added to IFC Package: <a href='/app/ifc-package/{self.ifc_package}'>{self.ifc_package}</a>")
+			except Exception as e:
+				frappe.log_error(f"Failed to sync to IFC Package: {str(e)}")
+
 	def update_drawing_number(self):
 		if self.is_main and not self.get("revisions"):
 			self.current_rev = "Main"
