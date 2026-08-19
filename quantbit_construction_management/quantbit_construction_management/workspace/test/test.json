@@ -1,0 +1,44 @@
+{
+ "app": "Quantbit Construction Management",
+ "charts": [],
+ "content": "[{\"id\":\"YgAdcFm12d\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Test\",\"col\":3}},{\"id\":\"uGY_kbHPrC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"quality-management\",\"col\":3}}]",
+ "creation": "2026-08-19 14:47:21.295437",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Test",
+ "link_type": "DocType",
+ "links": [],
+ "modified": "2026-08-19 17:55:04.916922",
+ "modified_by": "Administrator",
+ "module": "Quantbit Construction Management",
+ "name": "Test",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 0.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Test",
+   "type": "URL",
+   "url": "http://127.0.0.1:8004/quality-management"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "quality-management",
+   "type": "URL",
+   "url": "/quality-management"
+  }
+ ],
+ "title": "Test",
+ "type": "Workspace"
+}
