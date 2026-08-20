@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quality Management Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lime: #7ab800;
+    --lime-light: #eef6d6;
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --card2: #f4f6f9;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --border: #e2e6ea;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --purple: #7c3aed;
+    --purple-light: #f3e8ff;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; }
+
+  /* Hide default Frappe headers and footers to look like a full-screen standalone application */
+  header, .navbar, footer, .web-footer, .breadcrumb, .page-breadcrumbs, .navbar-default, #website-navbar {
+      display: none !important;
+  }
+  body {
+      padding-top: 0 !important;
+  }
+  /* Force full screen container layout in Frappe website renderer */
+  .page-container, .web-page, #body, .main-section {
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; min-height: 100vh; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,.04);
+  }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .tag { font-size: 10px; letter-spacing: 3px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+  .sidebar-logo .name { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin-top: 4px; }
+  .nav { padding: 16px 0; flex: 1; }
+  .nav-section { padding: 8px 20px 4px; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--muted); cursor: pointer; border-left: 3px solid transparent; transition: all .15s; font-size: 13px; }
+  .nav-item:hover { color: var(--text); background: var(--lime-light); }
+  .nav-item.active { color: var(--lime); border-left-color: var(--lime); background: var(--lime-light); font-weight: 600; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); position: relative; }
+  .user-chip { display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--lime); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .user-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .user-role { font-size: 10px; color: var(--muted); }
+
+  /* Custom Sidebar Profile Dropdown Menu styling */
+  .profile-dropdown {
+      display: none;
+      position: absolute;
+      bottom: 45px;
+      left: 0;
+      width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+      padding: 6px 0;
+      text-align: left;
+  }
+  .profile-dropdown.show {
+      display: block;
+  }
+  .profile-dropdown a {
+      display: block;
+      padding: 8px 16px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.15s;
+  }
+  .profile-dropdown a:hover {
+      background: var(--lime-light);
+      color: var(--lime);
+  }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .page-tag { font-size: 10px; letter-spacing: 2px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+  .page-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge { background: var(--lime-light); color: var(--lime); border: 1px solid #c8e87a; border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 600; }
+  .btn { background: var(--lime); color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .date-range { font-size: 12px; color: var(--muted); }
+
+  /* CONTENT & SECTIONS */
+  .content { padding: 24px 28px; flex: 1; }
+  .view-section { display: none; }
+  .view-section.active { display: block; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--lime); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.amber::before { background: var(--amber); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-label { font-size: 11px; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-value { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; }
+  .kpi-value span { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+  .kpi-trend { margin-top: 8px; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+  .trend-up { color: var(--green); font-weight: 600; }
+  .trend-down { color: var(--red); font-weight: 600; }
+  .kpi-sub { color: var(--muted); }
+
+  .mid-row { display: grid; grid-template-columns: 1fr 1fr 340px; gap: 16px; margin-bottom: 20px; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .pill { background: var(--card2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--muted); cursor: pointer; }
+  .pill.active { background: var(--lime-light); color: var(--lime); border-color: #c8e87a; font-weight: 600; }
+
+  /* BAR CHART */
+  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding-top: 10px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; }
+  .bar-label { font-size: 10px; color: var(--muted); }
+  .bar-val { font-size: 10px; color: var(--text); font-weight: 600; }
+
+  /* DONUT */
+  .donut-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 8px; width: 100%; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { font-size: 12px; color: var(--text); }
+  .legend-pct { font-size: 12px; color: var(--muted); margin-left: auto; font-weight: 600; }
+
+  /* GAUGE */
+  .gauge-wrap { text-align: center; }
+  .gauge-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .gauge-tiers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .gauge-tier { background: var(--card2); border-radius: 6px; padding: 10px; text-align: center; border: 1px solid var(--border); }
+  .gauge-tier-val { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; }
+  .gauge-tier-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* TABLE */
+  .bottom-row { display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+
+  .status-chip { border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .s-open { background: var(--red-light); color: var(--red); }
+  .s-closed { background: var(--green-light); color: var(--green); }
+  .s-review { background: var(--amber-light); color: var(--amber); }
+  .s-issued { background: var(--green-light); color: var(--green); }
+
+  .severity { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .sev-crit { background: var(--red); }
+  .sev-high { background: var(--amber); }
+  .sev-med { background: var(--blue); }
+  .sev-low { background: var(--green); }
+
+  /* Pagination Styling */
+  .pagination-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+  }
+  .btn-page {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+  }
+  .btn-page:hover:not(:disabled) {
+      background: var(--lime-light);
+      color: var(--lime);
+      border-color: var(--lime);
+  }
+  .btn-page:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+  }
+  .page-info {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+  }
+
+  /* Activity Feed / Monitor */
+  .feed-item { display: flex; gap: 12px; margin-bottom: 16px; position: relative; }
+  .feed-item:not(:last-child)::after { content: ''; position: absolute; top: 16px; left: 5px; width: 1px; height: calc(100% + 4px); background: var(--border); }
+  .feed-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--lime); margin-top: 4px; flex-shrink: 0; }
+  .feed-text { font-size: 12.5px; color: var(--text); line-height: 1.4; }
+  .feed-user { font-weight: 600; color: var(--text); }
+  .feed-doc { font-family: 'Space Grotesk', sans-serif; font-weight: 600; color: var(--lime); }
+  .feed-meta { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  /* Project selector & Inputs */
+  .filter-select {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+  }
+  .search-box {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      width: 200px;
+  }
+
+  /* Custom Searchable Dropdown */
+  .searchable-dropdown {
+      position: relative;
+      display: inline-block;
+      min-width: 180px;
+      user-select: none;
+      text-align: left;
+  }
+  .dropdown-trigger {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+  }
+  .dropdown-trigger:hover {
+      border-color: var(--lime);
+  }
+  .dropdown-trigger .arrow {
+      font-size: 8px;
+      color: var(--muted);
+      transition: transform 0.2s;
+  }
+  .searchable-dropdown.open .dropdown-trigger .arrow {
+      transform: rotate(180deg);
+  }
+  .searchable-dropdown .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      z-index: 1000;
+      padding: 6px;
+  }
+  .searchable-dropdown.open .dropdown-menu {
+      display: block;
+  }
+  .dropdown-search-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      outline: none;
+      box-sizing: border-box;
+      margin-bottom: 6px;
+      background: var(--surface);
+      color: var(--text);
+  }
+  .dropdown-search-input:focus {
+      border-color: var(--lime);
+  }
+  .dropdown-options {
+      max-height: 200px;
+      overflow-y: auto;
+  }
+  .dropdown-option {
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text);
+  }
+  .dropdown-option:hover {
+      background: var(--bg);
+  }
+  .dropdown-option.selected {
+      background: var(--lime-light);
+      color: var(--lime);
+      font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="tag">Module 01</div>
+    <div class="name">QualityOps</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-view="dashboard"><span>◈</span> Dashboard</div>
+    <div class="nav-item" data-view="monitor"><span>◷</span> Live Monitor</div>
+    <div class="nav-section">Management</div>
+    <div class="nav-item" data-view="ncr"><span>⊟</span> NCR Registry</div>
+    <div class="nav-item" data-view="capa"><span>⊕</span> CAPA Tracking</div>
+    <div class="nav-item" data-view="audit"><span>◫</span> Audit Schedule</div>
+    <div class="nav-item" data-view="inspections"><span>⊞</span> Inspections</div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" data-view="analytics"><span>↗</span> Analytics</div>
+    <div class="nav-item" data-view="export"><span>⤓</span> Export</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip" id="profile-trigger">
+      <div class="avatar" id="user-avatar">AK</div>
+      <div>
+        <div class="user-name" id="user-fullname">Arjun Kumar</div>
+        <div class="user-role" id="user-role-label">Quality Manager</div>
+      </div>
+      <!-- Profile Menu Dropdown -->
+      <div class="profile-dropdown" id="profile-dropdown-menu">
+        <a href="/me" target="_blank">👤 My Account</a>
+        <a href="/app" target="_blank">💻 Switch to Desk</a>
+        <a href="/apps" target="_blank">🧩 Apps</a>
+        <hr style="border:none;border-top:1px solid var(--border);margin:4px 0;">
+        <a href="/logout" style="color:var(--red);">🚪 Log out</a>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-tag">01 · Quality Management</div>
+      <div class="page-title" id="page-title-text">Dashboard Overview</div>
+    </div>
+    <div class="topbar-right">
+      <div class="searchable-dropdown" id="project-dropdown-container">
+          <div class="dropdown-trigger" id="project-dropdown-trigger">
+              <span id="selected-project-label">All Projects</span>
+              <span class="arrow">▼</span>
+          </div>
+          <div class="dropdown-menu" id="project-dropdown-menu">
+              <input type="text" id="project-search-input" class="dropdown-search-input" placeholder="Search project...">
+              <div class="dropdown-options" id="project-options-list">
+                  <div class="dropdown-option selected" data-value="">All Projects</div>
+              </div>
+          </div>
+      </div>
+      <input type="text" id="quality-search" class="search-box" placeholder="Search quality data...">
+      <span class="date-range">Aug 2026</span>
+      <span class="badge">● Live</span>
+      <button class="btn" id="btn-create-ncr">+ New NCR</button>
+    </div>
+  </div>
+
+  <div class="content">
+    
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view-section active">
+      <!-- KPI ROW -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">First Pass Yield</div>
+          <div class="kpi-value" id="kpi-fpy">97.4<span>%</span></div>
+          <div class="kpi-trend"><span class="trend-up">↑ Live</span><span class="kpi-sub">inspections</span></div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">Open NCRs</div>
+          <div class="kpi-value" id="kpi-open-ncrs">14</div>
+          <div class="kpi-trend"><span class="trend-down">● Active</span><span class="kpi-sub">non-conformances</span></div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-label">CAPA Overdue</div>
+          <div class="kpi-value" id="kpi-capa-overdue">6</div>
+          <div class="kpi-trend"><span class="trend-down">● Pending</span><span class="kpi-sub">actions</span></div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Audit Score</div>
+          <div class="kpi-value" id="kpi-audit-score">88<span>/ 100</span></div>
+          <div class="kpi-trend"><span class="trend-up">↑ Live</span><span class="kpi-sub">review logs</span></div>
+        </div>
+      </div>
+
+      <!-- MID ROW -->
+      <div class="mid-row">
+        <!-- Bar Chart -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Defects by Department</div>
+              <div class="card-sub">Non-conformances raised · Aug 2026</div>
+            </div>
+          </div>
+          <div class="bar-chart" id="department-bar-chart">
+            <!-- Dynamic department bars -->
+          </div>
+        </div>
+
+        <!-- Donut -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Defect Categories</div>
+              <div class="card-sub">NCR category split</div>
+            </div>
+          </div>
+          <div class="donut-wrap" id="donut-chart-container">
+            <!-- Dynamic SVG Donut and Legend -->
+          </div>
+        </div>
+
+        <!-- OQI Gauge -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Overall Quality Index</div>
+              <div class="card-sub">Composite performance index</div>
+            </div>
+          </div>
+          <div class="gauge-wrap" id="gauge-container">
+            <!-- Dynamic Gauge SVG -->
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="bottom-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Active Non-Conformance Reports</div>
+              <div class="card-sub">Current NCR entries</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>NCR ID</th><th>Description</th><th>Dept/Location</th><th>Severity</th><th>Owner</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="ncr-dashboard-tbody">
+                <!-- Paginated Dashboard NCR table -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CAPA -->
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">CAPA Pipeline</div>
+              <div class="card-sub">Corrective &amp; Preventive Actions</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px" id="capa-pipeline-stats">
+            <!-- Dynamic CAPA summary statistics -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE MONITOR VIEW -->
+    <div id="view-monitor" class="view-section">
+      <div class="chart-card" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Live Quality Activity Feed</div>
+            <div class="card-sub">Audit trail of NCRs, Inspections, and CAPA actions</div>
+          </div>
+        </div>
+        <div id="feed-container" style="padding-top: 10px;">
+          <!-- Timeline feed -->
+        </div>
+      </div>
+    </div>
+
+    <!-- NCR REGISTRY VIEW -->
+    <div id="view-ncr" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">NCR Registry Database</div>
+            <div class="card-sub" id="ncr-sub-count">Showing all NCR entries</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>NCR ID</th><th>Project</th><th>Raised By</th><th>Date</th><th>Severity</th><th>Type</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ncr-registry-tbody">
+              <!-- Paginated NCR entries -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAPA TRACKING VIEW -->
+    <div id="view-capa" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Corrective &amp; Preventive Actions (CAPA)</div>
+            <div class="card-sub">Action plans tracker</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Action ID</th><th>Type</th><th>Review / Action</th><th>Goal</th><th>Procedure</th><th>Date</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="capa-tbody">
+              <!-- Paginated CAPA actions -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT SCHEDULE VIEW -->
+    <div id="view-audit" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Audit Schedule &amp; Reviews</div>
+            <div class="card-sub">Review logs database</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Audit ID</th><th>Goal</th><th>Procedure</th><th>Date</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody">
+              <!-- Paginated audits -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSPECTIONS VIEW -->
+    <div id="view-inspections" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Quality Inspections Monitor</div>
+            <div class="card-sub">Submissions from site and incoming inspections</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Inspection ID</th><th>Report Date</th><th>Item Code</th><th>Inspection Type</th><th>Inspected By</th><th>Verified By</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="inspections-tbody">
+              <!-- Paginated inspections -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS VIEW -->
+    <div id="view-analytics" class="view-section">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="chart-card">
+          <div class="card-header"><div class="card-title">Department performance index</div></div>
+          <div class="bar-chart" id="analytics-dept-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-header"><div class="card-title">Project breakdown chart</div></div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Project Name</th><th>Total NCRs</th><th>Open NCRs</th>
+                </tr>
+              </thead>
+              <tbody id="analytics-project-tbody">
+                <!-- Paginated project breakdown -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT VIEW -->
+    <div id="view-export" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Export Quality Records</div>
+            <div class="card-sub">Select files to print or download reports</div>
+          </div>
+          <button class="btn" onclick="triggerExport()">Export Selected (PDF)</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px;"><input type="checkbox" id="check-all-export"></th>
+                <th>Record ID</th><th>Type / Description</th><th>Date</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="export-tbody">
+              <!-- Checkbox entries -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+let cachedQualityData = null;
+let currentSearchTerm = "";
+
+const paginationState = {
+    ncr_dashboard: { currentPage: 1, pageSize: 5 },
+    ncr: { currentPage: 1, pageSize: 10 },
+    capa: { currentPage: 1, pageSize: 10 },
+    audit: { currentPage: 1, pageSize: 10 },
+    inspections: { currentPage: 1, pageSize: 10 },
+    project_breakdown: { currentPage: 1, pageSize: 10 },
+    export: { currentPage: 1, pageSize: 10 }
+};
+
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Sidebar tab switching
+    document.querySelectorAll(".nav-item").forEach(item => {
+        item.addEventListener("click", function() {
+            const view = this.getAttribute("data-view");
+            if (!view) return;
+
+            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+            this.classList.add("active");
+
+            document.querySelectorAll(".view-section").forEach(s => s.classList.remove("active"));
+            const activeSec = document.getElementById("view-" + view);
+            if (activeSec) activeSec.classList.add("active");
+
+            // Update title
+            const titleMap = {
+                dashboard: "Dashboard Overview",
+                monitor: "Live Quality Activity Monitor",
+                ncr: "NCR Registry Database",
+                capa: "CAPA Tracking & Actions",
+                audit: "Audit Schedules & Reviews",
+                inspections: "Quality Inspections Monitor",
+                analytics: "Analytics & Projects Breakdown",
+                export: "Export Quality Records"
+            };
+            document.getElementById("page-title-text").textContent = titleMap[view] || "Quality Management";
+
+            if (cachedQualityData) {
+                renderDashboardSubViews(view, cachedQualityData);
+            }
+            applySearchFilter();
+        });
+    });
+
+    // 2. Custom Project dropdown initialization
+    const dropdownContainer = document.getElementById('project-dropdown-container');
+    const dropdownTrigger = document.getElementById('project-dropdown-trigger');
+    const searchInput = document.getElementById('project-search-input');
+    
+    if (dropdownTrigger && dropdownContainer) {
+        dropdownTrigger.onclick = function(e) {
+            e.stopPropagation();
+            dropdownContainer.classList.toggle('open');
+            if (dropdownContainer.classList.contains('open') && searchInput) {
+                searchInput.focus();
+                searchInput.value = "";
+                filterDropdownOptions("");
+            }
+        };
+    }
+    
+    // Close on clicking outside
+    document.addEventListener("click", function() {
+        if (dropdownContainer) {
+            dropdownContainer.classList.remove('open');
+        }
+    });
+    
+    // Stop propagation inside dropdown menu
+    const menuDiv = document.getElementById('project-dropdown-menu');
+    if (menuDiv) {
+        menuDiv.onclick = function(e) {
+            e.stopPropagation();
+        };
+    }
+    
+    // Bind search input filter
+    if (searchInput) {
+        searchInput.oninput = function() {
+            filterDropdownOptions(this.value);
+        };
+    }
+
+    // 3. Search input listener
+    const searchBox = document.getElementById("quality-search");
+    if (searchBox) {
+        searchBox.addEventListener("input", function(e) {
+            currentSearchTerm = e.target.value;
+            applySearchFilter();
+        });
+    }
+
+    // 4. Create NCR Redirect
+    const btnCreate = document.getElementById("btn-create-ncr");
+    if (btnCreate) {
+        btnCreate.onclick = function() {
+            redirectToRecord("NCR", "new");
+        };
+    }
+
+    // 5. Sidebar profile dropdown click handler
+    const trigger = document.getElementById("profile-trigger");
+    const menu = document.getElementById("profile-dropdown-menu");
+    if (trigger && menu) {
+        trigger.addEventListener("click", function(e) {
+            e.stopPropagation();
+            menu.classList.toggle("show");
+        });
+        document.addEventListener("click", function() {
+            menu.classList.remove("show");
+        });
+    }
+
+    // 6. Initial Data Fetch
+    fetchQualityData("");
+});
+
+function redirectToRecord(doctype, name) {
+    if (!name) return;
+    const kebabDoctype = doctype.toLowerCase().replace(/\s+/g, '-');
+    
+    // 1. Try parent window's frappe object (inside iframe in Desk)
+    try {
+        if (window.parent && window.parent !== window && window.parent.frappe) {
+            if (name === "new") {
+                try {
+                    window.parent.frappe.new_doc(doctype);
+                    return;
+                } catch (err) {
+                    try {
+                        window.parent.frappe.set_route("Form", doctype, "new");
+                        return;
+                    } catch (err2) {}
+                }
+            } else {
+                window.parent.frappe.set_route("Form", doctype, name);
+                return;
+            }
+        }
+    } catch (e) {
+        // Cross-origin or parent access failed
+    }
+
+    // 2. Try current window's frappe object
+    try {
+        if (window.frappe) {
+            if (name === "new") {
+                try {
+                    window.frappe.new_doc(doctype);
+                    return;
+                } catch (err) {
+                    try {
+                        window.frappe.set_route("Form", doctype, "new");
+                        return;
+                    } catch (err2) {}
+                }
+            } else {
+                window.frappe.set_route("Form", doctype, name);
+                return;
+            }
+        }
+    } catch (e) {
+        // local frappe access failed
+    }
+
+    // 3. Fallback to URL-based navigation
+    const url = name === "new" ? `/app/${kebabDoctype}/new` : `/app/${kebabDoctype}/${name}`;
+    try {
+        if (window.parent && window.parent !== window) {
+            window.parent.location.href = url;
+        } else {
+            window.location.href = url;
+        }
+    } catch (e) {
+        window.location.href = url;
+    }
+}
+
+function filterDropdownOptions(term) {
+    const optionsList = document.getElementById('project-options-list');
+    if (!optionsList) return;
+    const lower = term.toLowerCase();
+    optionsList.querySelectorAll('.dropdown-option').forEach(opt => {
+        const text = opt.textContent.toLowerCase();
+        if (text.includes(lower)) {
+            opt.style.display = "";
+        } else {
+            opt.style.display = "none";
+        }
+    });
+}
+
+function bindDropdownOptionClicks() {
+    const optionsList = document.getElementById('project-options-list');
+    if (!optionsList) return;
+    optionsList.querySelectorAll('.dropdown-option').forEach(opt => {
+        opt.onclick = function(e) {
+            e.stopPropagation();
+            const val = this.getAttribute('data-value');
+            const text = this.textContent;
+            
+            optionsList.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            document.getElementById('selected-project-label').textContent = text;
+            document.getElementById('project-dropdown-container').classList.remove('open');
+            
+            fetchQualityData(val);
+        };
+    });
+}
+
+function getFilteredData(array, searchFields) {
+    if (!array) return [];
+    if (!currentSearchTerm) return array;
+    const term = currentSearchTerm.toLowerCase();
+    return array.filter(item => {
+        return searchFields.some(field => {
+            const val = item[field];
+            return val && String(val).toLowerCase().includes(term);
+        });
+    });
+}
+
+function updatePaginationControls(tableElement, stateKey, totalItems, onPageChange) {
+    const state = paginationState[stateKey];
+    if (!state) return;
+    const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+    
+    if (state.currentPage > totalPages) {
+        state.currentPage = totalPages;
+    }
+    
+    let pagContainer = tableElement.nextElementSibling;
+    if (!pagContainer || !pagContainer.classList.contains('pagination-container')) {
+        pagContainer = document.createElement('div');
+        pagContainer.className = 'pagination-container';
+        tableElement.parentNode.insertBefore(pagContainer, tableElement.nextSibling);
+    }
+    
+    pagContainer.innerHTML = `
+        <button class="btn-page" ${state.currentPage === 1 ? 'disabled' : ''}>Prev</button>
+        <span class="page-info">Page ${state.currentPage} of ${totalPages} (Total ${totalItems})</span>
+        <button class="btn-page" ${state.currentPage === totalPages ? 'disabled' : ''}>Next</button>
+    `;
+    
+    const buttons = pagContainer.querySelectorAll('button');
+    buttons[0].onclick = (e) => {
+        e.preventDefault();
+        if (state.currentPage > 1) {
+            state.currentPage--;
+            onPageChange();
+        }
+    };
+    buttons[1].onclick = (e) => {
+        e.preventDefault();
+        if (state.currentPage < totalPages) {
+            state.currentPage++;
+            onPageChange();
+        }
+    };
+}
+
+function updateDepartmentChartFromData(ncrs) {
+    const dept_labels = ["Fab", "Weld", "Assembly", "Paint", "QC", "Pack"];
+    const dept_map = {};
+    dept_labels.forEach(lbl => dept_map[lbl] = 0);
+    ncrs.forEach(n => {
+        const loc = n.location;
+        if (dept_map[loc] !== undefined) {
+            dept_map[loc]++;
+        } else {
+            dept_map["QC"]++;
+        }
+    });
+    const byDepartment = [];
+    const max_dept_count = Math.max(...Object.values(dept_map), 1);
+    dept_labels.forEach(dept => {
+        const count = dept_map[dept];
+        const pct = Math.round((count / max_dept_count) * 100);
+        byDepartment.push({ department: dept, count: count, pct: pct });
+    });
+    updateDepartmentChart(byDepartment);
+}
+
+function updateDonutChartFromData(ncrs) {
+    const cat_labels = ["Dimensional", "Surface", "Material", "Other"];
+    const cat_map = {};
+    cat_labels.forEach(lbl => cat_map[lbl] = 0);
+    ncrs.forEach(n => {
+        const t = n.ncr_type || "Other";
+        if (cat_map[t] !== undefined) {
+            cat_map[t]++;
+        } else {
+            cat_map["Other"]++;
+        }
+    });
+    const total_cats = Object.values(cat_map).reduce((sum, item) => sum + item, 0) || 1;
+    const byCategory = [];
+    const colors = ["#7ab800", "#d97706", "#2563eb", "#dc2626"];
+    cat_labels.forEach((cat, idx) => {
+        const count = cat_map[cat];
+        const pct = Math.round((count / total_cats) * 100);
+        byCategory.push({ name: cat, count: count, pct: pct, color: colors[idx] });
+    });
+    updateDonutChart(byCategory);
+}
+
+function applySearchFilter() {
+    const activeSection = document.querySelector(".view-section.active");
+    if (!activeSection) return;
+
+    const activeViewName = activeSection.id.replace("view-", "");
+
+    // Reset active pagination page to 1
+    if (paginationState[activeViewName]) {
+        paginationState[activeViewName].currentPage = 1;
+    } else if (activeViewName === "dashboard") {
+        paginationState.ncr_dashboard.currentPage = 1;
+    }
+
+    if (cachedQualityData) {
+        if (activeViewName === "dashboard") {
+            const filtered_ncrs = getFilteredData(cachedQualityData.all_ncrs, ['name', 'description', 'location', 'severity', 'status', 'ncr_type', 'raised_by']);
+            const filtered_capas = getFilteredData(cachedQualityData.all_capas, ['name', 'corrective_preventive', 'review', 'goal', 'procedure', 'status']);
+            const filtered_inspections = getFilteredData(cachedQualityData.all_inspections, ['name', 'item_code', 'inspection_type', 'inspected_by', 'verified_by', 'status']);
+            const filtered_audits = getFilteredData(cachedQualityData.all_audits, ['name', 'goal', 'procedure', 'status']);
+
+            const totalInspections = filtered_inspections.length;
+            const passedInspections = filtered_inspections.filter(i => i.status === 'Accepted').length;
+            const fpy = totalInspections > 0 ? parseFloat(((passedInspections / totalInspections) * 100).toFixed(1)) : 97.4;
+            const openNcrs = filtered_ncrs.filter(n => n.status === 'Open').length;
+            const capaOverdue = filtered_capas.filter(c => c.status === 'Open').length;
+            const completedAudits = filtered_audits.filter(a => a.status === 'Completed' || a.status === 'Passed').length;
+            const auditScore = filtered_audits.length > 0 ? Math.round((completedAudits / filtered_audits.length) * 100) : 88;
+
+            document.getElementById("kpi-fpy").innerHTML = `${fpy}<span>%</span>`;
+            document.getElementById("kpi-open-ncrs").textContent = openNcrs;
+            document.getElementById("kpi-capa-overdue").textContent = capaOverdue;
+            document.getElementById("kpi-audit-score").innerHTML = `${auditScore}<span>/ 100</span>`;
+
+            updateDepartmentChartFromData(filtered_ncrs);
+            updateDonutChartFromData(filtered_ncrs);
+            const compScore = Math.round((fpy + (100 - (capaOverdue * 5)) + auditScore) / 3);
+            updateGaugeChart(compScore, fpy, (100 - (capaOverdue * 5)), auditScore, openNcrs);
+        }
+        renderDashboardSubViews(activeViewName, cachedQualityData);
+    }
+}
+
+function fetchQualityData(project) {
+    if (window.frappe && window.frappe.call) {
+        frappe.call({
+            method: "quantbit_construction_management.api.quality_management.get_quality_dashboard_data",
+            type: "GET",
+            args: { project: project },
+            callback: function(r) {
+                if (r.message) {
+                    cachedQualityData = r.message;
+                    renderDashboard(r.message);
+                    if (currentSearchTerm) {
+                        applySearchFilter();
+                    }
+                }
+            }
+        });
+    } else {
+        const url = `/api/method/quantbit_construction_management.api.quality_management.get_quality_dashboard_data${project ? '?project=' + encodeURIComponent(project) : ''}`;
+        fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Frappe-CSRF-Token': window.csrf_token || ''
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                cachedQualityData = data.message;
+                renderDashboard(data.message);
+                if (currentSearchTerm) {
+                    applySearchFilter();
+                }
+            }
+        })
+        .catch(err => console.error('Error fetching quality dashboard data:', err));
+    }
+}
+
+function renderDashboard(data) {
+    // 0. Dynamic user profile
+    if (data.logged_in_user) {
+        const fullName = data.logged_in_user.full_name || "Administrator";
+        document.getElementById("user-fullname").textContent = fullName;
+        const initials = fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+        document.getElementById("user-avatar").textContent = initials;
+        document.getElementById("user-role-label").textContent = data.logged_in_user.role || "Quality Manager";
+    }
+
+    // 1. KPIs
+    document.getElementById("kpi-fpy").innerHTML = `${data.kpis.fpy}<span>%</span>`;
+    document.getElementById("kpi-open-ncrs").textContent = data.kpis.open_ncrs;
+    document.getElementById("kpi-capa-overdue").textContent = data.kpis.capa_overdue;
+    document.getElementById("kpi-audit-score").innerHTML = `${data.kpis.audit_score}<span>/ 100</span>`;
+
+    // 2. Charts
+    updateDepartmentChart(data.by_department);
+    updateDonutChart(data.by_category);
+    
+    const compScore = Math.round((data.kpis.fpy + (100 - (data.kpis.capa_overdue * 5)) + data.kpis.audit_score) / 3);
+    updateGaugeChart(compScore, data.kpis.fpy, (100 - (data.kpis.capa_overdue * 5)), data.kpis.audit_score, data.kpis.open_ncrs);
+
+    // 3. Custom Projects dropdown setup
+    const optionsList = document.getElementById('project-options-list');
+    if (optionsList && optionsList.children.length <= 1) {
+        data.projects.forEach(p => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'dropdown-option';
+            optDiv.setAttribute('data-value', p.name);
+            optDiv.textContent = p.project_name || p.name;
+            optionsList.appendChild(optDiv);
+        });
+        bindDropdownOptionClicks();
+    }
+    
+    const selectedProj = data.selected_project || "";
+    if (optionsList) {
+        let selectedFound = false;
+        optionsList.querySelectorAll('.dropdown-option').forEach(opt => {
+            if (opt.getAttribute('data-value') === selectedProj) {
+                opt.classList.add('selected');
+                document.getElementById('selected-project-label').textContent = opt.textContent;
+                selectedFound = true;
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+        if (!selectedFound) {
+            document.getElementById('selected-project-label').textContent = "All Projects";
+        }
+    }
+
+    // 4. Render active subview
+    const activeSection = document.querySelector(".view-section.active");
+    if (activeSection) {
+        const activeViewName = activeSection.id.replace("view-", "");
+        renderDashboardSubViews(activeViewName, data);
+    }
+}
+
+function updateDepartmentChart(byDepartment) {
+    const container1 = document.getElementById("department-bar-chart");
+    const container2 = document.getElementById("analytics-dept-chart");
+    
+    [container1, container2].forEach(c => {
+        if (!c) return;
+        c.innerHTML = "";
+        byDepartment.forEach(item => {
+            const col = document.createElement("div");
+            col.className = "bar-col";
+            col.innerHTML = `
+                <div class="bar-val">${item.count}</div>
+                <div class="bar" style="height:${item.pct}%;background:linear-gradient(180deg,#a8d520,#7ab800)"></div>
+                <div class="bar-label">${item.department}</div>
+            `;
+            c.appendChild(col);
+        });
+    });
+}
+
+function updateDonutChart(byCategory) {
+    const wrap = document.getElementById("donut-chart-container");
+    if (!wrap) return;
+    
+    const totalCount = byCategory.reduce((sum, item) => sum + item.count, 0);
+    const circumference = 326.7;
+    let accumulatedOffset = 0;
+    
+    let svgContent = `
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle cx="65" cy="65" r="52" fill="none" stroke="#e2e6ea" stroke-width="18"/>
+    `;
+    
+    byCategory.forEach(item => {
+        const pct = totalCount > 0 ? (item.count / totalCount) : 0;
+        const dashArrayVal = pct * circumference;
+        const dashOffsetVal = -accumulatedOffset;
+        
+        svgContent += `
+          <circle cx="65" cy="65" r="52" fill="none" stroke="${item.color}" stroke-width="18" 
+                  stroke-dasharray="${dashArrayVal} ${circumference - dashArrayVal}" 
+                  stroke-dashoffset="${dashOffsetVal}" transform="rotate(-90 65 65)"/>
+        `;
+        accumulatedOffset += dashArrayVal;
+    });
+    
+    svgContent += `
+        <text x="65" y="60" text-anchor="middle" fill="#1a1d23" font-size="18" font-family="Space Grotesk" font-weight="700">${totalCount}</text>
+        <text x="65" y="76" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter">NCRs</text>
+      </svg>
+    `;
+    
+    let legendContent = `<div class="donut-legend">`;
+    byCategory.forEach(item => {
+        legendContent += `
+          <div class="legend-item">
+            <div class="legend-dot" style="background:${item.color}"></div>
+            <span class="legend-name">${item.name}</span>
+            <span class="legend-pct">${item.pct}%</span>
+          </div>
+        `;
+    });
+    legendContent += `</div>`;
+    
+    wrap.innerHTML = svgContent + legendContent;
+}
+
+function updateGaugeChart(score, fpy, capaClose, auditScore, openNcrs) {
+    const container = document.getElementById("gauge-container");
+    if (!container) return;
+    
+    const circumference = 251.3;
+    const offset = circumference * (1 - score / 100);
+    
+    container.innerHTML = `
+      <svg width="200" height="120" viewBox="0 0 200 120">
+        <path d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#e2e6ea" stroke-width="16" stroke-linecap="round"/>
+        <path d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="#7ab800" stroke-width="16" stroke-linecap="round" 
+              stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+        <text x="100" y="95" text-anchor="middle" fill="#1a1d23" font-size="28" font-family="Space Grotesk" font-weight="700">${score}</text>
+        <text x="100" y="112" text-anchor="middle" fill="#6b7280" font-size="10" font-family="Inter">of 100</text>
+      </svg>
+      <div class="gauge-label">Quality Performance Score</div>
+      <div class="gauge-tiers">
+        <div class="gauge-tier">
+          <div class="gauge-tier-val" style="color:var(--green)">${fpy}%</div>
+          <div class="gauge-tier-label">FPY Rate</div>
+        </div>
+        <div class="gauge-tier">
+          <div class="gauge-tier-val" style="color:var(--amber)">${capaClose}%</div>
+          <div class="gauge-tier-label">CAPA Close</div>
+        </div>
+        <div class="gauge-tier">
+          <div class="gauge-tier-val" style="color:var(--lime)">${auditScore}</div>
+          <div class="gauge-tier-label">Audit Score</div>
+        </div>
+        <div class="gauge-tier">
+          <div class="gauge-tier-val" style="color:var(--red)">${openNcrs}</div>
+          <div class="gauge-tier-label">Open NCRs</div>
+        </div>
+      </div>
+    `;
+}
+
+function getStatusChipClass(status) {
+    if (['Closed', 'Accepted', 'Completed'].includes(status)) return 's-closed';
+    if (['Open', 'Rejected', 'Overdue'].includes(status)) return 's-open';
+    if (['In Review', 'In Preparation', 'Pending'].includes(status)) return 's-review';
+    return 's-review';
+}
+
+function getSeverityClass(sev) {
+    if (!sev) return 'sev-low';
+    const s = sev.toLowerCase();
+    if (s.includes('crit')) return 'sev-crit';
+    if (s.includes('high')) return 'sev-high';
+    if (s.includes('med')) return 'sev-med';
+    return 'sev-low';
+}
+
+function renderDashboardSubViews(viewName, data) {
+    if (viewName === "dashboard") {
+        // Render Recent Dashboard NCRs
+        const tbody = document.getElementById("ncr-dashboard-tbody");
+        const table = tbody.closest('table');
+        tbody.innerHTML = "";
+        
+        const filtered = getFilteredData(data.all_ncrs, ['name', 'description', 'location', 'severity', 'status']);
+        const totalItems = filtered.length;
+        const state = paginationState.ncr_dashboard;
+        const start = (state.currentPage - 1) * state.pageSize;
+        const paginated = filtered.slice(start, start + state.pageSize);
+
+        if (paginated.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No active NCRs found</td></tr>`;
+        } else {
+            paginated.forEach(n => {
+                const tr = document.createElement("tr");
+                tr.style.cursor = "pointer";
+                tr.onclick = function() {
+                    redirectToRecord("NCR", n.name);
+                };
+                tr.innerHTML = `
+                    <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">${n.name}</td>
+                    <td>${n.description || ''}</td>
+                    <td>${n.location || 'Site'}</td>
+                    <td><span class="severity ${getSeverityClass(n.severity)}"></span>${n.severity || 'Minor'}</td>
+                    <td>${n.raised_by || 'Inspector'}</td>
+                    <td><span class="status-chip ${getStatusChipClass(n.status)}">${n.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        updatePaginationControls(table, 'ncr_dashboard', totalItems, () => renderDashboardSubViews("dashboard", data));
+
+        // CAPA pipeline statistics rendering
+        const pipelineStats = document.getElementById("capa-pipeline-stats");
+        if (pipelineStats) {
+            const rootCauseCount = data.all_ncrs.length;
+            const actionAssigned = data.all_capas.filter(c => c.status === "Open").length;
+            const completedCount = data.all_capas.filter(c => c.status === "Closed").length;
+            const closureRate = data.all_capas.length > 0 ? Math.round((completedCount / data.all_capas.length) * 100) : 91;
+
+            pipelineStats.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-size:12px;font-weight:500;color:var(--text)">Root Cause Analysis</div>
+                    <div style="font-size:10px;color:var(--muted);margin-top:2px">${rootCauseCount} items logged</div>
+                  </div>
+                  <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--amber)">${rootCauseCount}</div>
+                </div>
+                <div style="height:1px;background:var(--border)"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-size:12px;font-weight:500;color:var(--text)">Action Assigned</div>
+                    <div style="font-size:10px;color:var(--muted);margin-top:2px">${actionAssigned} active actions</div>
+                  </div>
+                  <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--red)">${actionAssigned}</div>
+                </div>
+                <div style="height:1px;background:var(--border)"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-size:12px;font-weight:500;color:var(--text)">Verification / Closed</div>
+                    <div style="font-size:10px;color:var(--muted);margin-top:2px">${completedCount} completed actions</div>
+                  </div>
+                  <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--green)">${completedCount}</div>
+                </div>
+                <div style="height:1px;background:var(--border)"></div>
+                <div style="margin-top:10px">
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">CAPA Closure Rate</div>
+                  <div style="background:var(--card2);border-radius:4px;height:8px;overflow:hidden;border:1px solid var(--border)">
+                    <div style="width:${closureRate}%;height:100%;background:linear-gradient(90deg,var(--lime),#a8d520);border-radius:4px"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;margin-top:4px">
+                    <span style="font-size:10px;color:var(--muted)">Target: 85%</span>
+                    <span style="font-size:10px;color:var(--lime);font-weight:700">${closureRate}% ✓</span>
+                  </div>
+                </div>
+            `;
+          }
+      }
+      else if (viewName === "monitor") {
+          const container = document.getElementById("feed-container");
+          if (!container) return;
+          container.innerHTML = "";
+
+          if (data.feed.length === 0) {
+              container.innerHTML = `<div style="text-align:center;color:var(--muted);padding:20px 0;">No recent quality activities</div>`;
+          } else {
+              data.feed.forEach(act => {
+                  const feedItem = document.createElement("div");
+                  feedItem.className = "feed-item";
+                  
+                  let redirectDocType = "NCR";
+                  if (act.type === 'capa') redirectDocType = "Quality Action";
+                  if (act.type === 'inspection') redirectDocType = "Quality Inspection";
+
+                  const feedText = `<span class="feed-user">${act.user}</span> ${act.detail} (<span class="feed-doc" style="cursor:pointer;text-decoration:underline;" onclick="redirectToRecord('${redirectDocType}', '${act.name}')">${act.doc}</span>)`;
+
+                  feedItem.innerHTML = `
+                      <div class="feed-dot" style="background:${act.dot_color}"></div>
+                      <div>
+                          <div class="feed-text">${feedText}</div>
+                          <div class="feed-meta">${act.timestamp}</div>
+                      </div>
+                  `;
+                  container.appendChild(feedItem);
+              });
+          }
+      }
+      else if (viewName === "ncr") {
+          const tbody = document.getElementById("ncr-registry-tbody");
+          const table = tbody.closest('table');
+          tbody.innerHTML = "";
+
+          const filtered = getFilteredData(data.all_ncrs, ['name', 'project', 'raised_by', 'severity', 'ncr_type', 'status']);
+          document.getElementById("ncr-sub-count").textContent = `Showing all ${filtered.length} NCR entries`;
+          
+          const totalItems = filtered.length;
+          const state = paginationState.ncr;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+
+          if (paginated.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No NCR records found</td></tr>`;
+          } else {
+              paginated.forEach(n => {
+                  const tr = document.createElement("tr");
+                  tr.style.cursor = "pointer";
+                  tr.onclick = function() {
+                      redirectToRecord("NCR", n.name);
+                  };
+                  tr.innerHTML = `
+                      <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">${n.name}</td>
+                      <td>${n.project}</td>
+                      <td>${n.raised_by || 'Inspector'}</td>
+                      <td>${n.raised_date_formatted || ''}</td>
+                      <td><span class="severity ${getSeverityClass(n.severity)}"></span>${n.severity || 'Minor'}</td>
+                      <td>${n.ncr_type || 'Other'}</td>
+                      <td><span class="status-chip ${getStatusChipClass(n.status)}">${n.status}</span></td>
+                  `;
+                  tbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'ncr', totalItems, () => renderDashboardSubViews("ncr", data));
+      }
+      else if (viewName === "capa") {
+          const tbody = document.getElementById("capa-tbody");
+          const table = tbody.closest('table');
+          tbody.innerHTML = "";
+
+          const filtered = getFilteredData(data.all_capas, ['name', 'corrective_preventive', 'review', 'goal', 'procedure', 'status']);
+          const totalItems = filtered.length;
+          const state = paginationState.capa;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+
+          if (paginated.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No CAPA actions registered</td></tr>`;
+          } else {
+              paginated.forEach(c => {
+                  const tr = document.createElement("tr");
+                  tr.style.cursor = "pointer";
+                  tr.onclick = function() {
+                      redirectToRecord("Quality Action", c.name);
+                  };
+                  tr.innerHTML = `
+                      <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">${c.name}</td>
+                      <td><strong>${c.corrective_preventive || 'Corrective'}</strong></td>
+                      <td>${c.review || ''}</td>
+                      <td>${c.goal || ''}</td>
+                      <td>${c.procedure || ''}</td>
+                      <td>${c.date_formatted || ''}</td>
+                      <td><span class="status-chip ${getStatusChipClass(c.status)}">${c.status}</span></td>
+                  `;
+                  tbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'capa', totalItems, () => renderDashboardSubViews("capa", data));
+      }
+      else if (viewName === "audit") {
+          const tbody = document.getElementById("audit-tbody");
+          const table = tbody.closest('table');
+          tbody.innerHTML = "";
+
+          const filtered = getFilteredData(data.all_audits, ['name', 'goal', 'procedure', 'status']);
+          const totalItems = filtered.length;
+          const state = paginationState.audit;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+
+          if (paginated.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No audits found</td></tr>`;
+          } else {
+              paginated.forEach(a => {
+                  const tr = document.createElement("tr");
+                  tr.style.cursor = "pointer";
+                  tr.onclick = function() {
+                      redirectToRecord("Quality Review", a.name);
+                  };
+                  tr.innerHTML = `
+                      <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">${a.name}</td>
+                      <td>${a.goal || ''}</td>
+                      <td>${a.procedure || ''}</td>
+                      <td>${a.date_formatted || ''}</td>
+                      <td><span class="status-chip ${getStatusChipClass(a.status)}">${a.status}</span></td>
+                  `;
+                  tbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'audit', totalItems, () => renderDashboardSubViews("audit", data));
+      }
+      else if (viewName === "inspections") {
+          const tbody = document.getElementById("inspections-tbody");
+          const table = tbody.closest('table');
+          tbody.innerHTML = "";
+
+          const filtered = getFilteredData(data.all_inspections, ['name', 'item_code', 'inspection_type', 'inspected_by', 'verified_by', 'status']);
+          const totalItems = filtered.length;
+          const state = paginationState.inspections;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+
+          if (paginated.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No quality inspections found</td></tr>`;
+          } else {
+              paginated.forEach(i => {
+                  const tr = document.createElement("tr");
+                  tr.style.cursor = "pointer";
+                  tr.onclick = function() {
+                      redirectToRecord("Quality Inspection", i.name);
+                  };
+                  tr.innerHTML = `
+                      <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">${i.name}</td>
+                      <td>${i.report_date_formatted || ''}</td>
+                      <td><span class="mono">${i.item_code}</span></td>
+                      <td>${i.inspection_type || ''}</td>
+                      <td>${i.inspected_by || ''}</td>
+                      <td>${i.verified_by || ''}</td>
+                      <td><span class="status-chip ${getStatusChipClass(i.status)}">${i.status}</span></td>
+                  `;
+                  tbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'inspections', totalItems, () => renderDashboardSubViews("inspections", data));
+      }
+      else if (viewName === "analytics") {
+          const tbody = document.getElementById("analytics-project-tbody");
+          const table = tbody.closest('table');
+          tbody.innerHTML = "";
+
+          const filtered = getFilteredData(data.project_breakdown, ['name', 'project_name']);
+          const totalItems = filtered.length;
+          const state = paginationState.project_breakdown;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+
+          paginated.forEach(p => {
+              const tr = document.createElement("tr");
+              tr.style.cursor = "pointer";
+              tr.onclick = function() {
+                  const optionsList = document.getElementById('project-options-list');
+                  if (optionsList) {
+                      let selectedOpt = null;
+                      optionsList.querySelectorAll('.dropdown-option').forEach(opt => {
+                          if (opt.getAttribute('data-value') === p.name) {
+                              opt.classList.add('selected');
+                              selectedOpt = opt;
+                          } else {
+                              opt.classList.remove('selected');
+                          }
+                      });
+                      if (selectedOpt) {
+                          document.getElementById('selected-project-label').textContent = selectedOpt.textContent;
+                      } else {
+                          document.getElementById('selected-project-label').textContent = p.project_name || p.name;
+                      }
+                  }
+                  fetchQualityData(p.name);
+                  const dashTab = document.querySelector('[data-view="dashboard"]');
+                  if (dashTab) {
+                      dashTab.click();
+                  }
+              };
+              tr.innerHTML = `
+                  <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">${p.project_name}</td>
+                  <td><span class="status-chip s-review">${p.total_ncrs}</span></td>
+                  <td><span class="status-chip s-open">${p.open_ncrs}</span></td>
+              `;
+              tbody.appendChild(tr);
+          });
+          updatePaginationControls(table, 'project_breakdown', totalItems, () => renderDashboardSubViews("analytics", data));
+      }
+      else if (viewName === "export") {
+          const tbody = document.getElementById("export-tbody");
+          const table = tbody.closest('table');
+          tbody.innerHTML = "";
+
+          const filtered = getFilteredData(data.all_ncrs, ['name', 'description', 'status']);
+          const totalItems = filtered.length;
+          const state = paginationState.export;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+
+          paginated.forEach(n => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                  <td><input type="checkbox" class="export-check" value="${n.name}"></td>
+                  <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600;text-decoration:underline;cursor:pointer;" onclick="redirectToRecord('NCR', '${n.name}')">${n.name}</td>
+                  <td>${n.description || 'Non Conformance Report'}</td>
+                  <td>${n.raised_date_formatted || ''}</td>
+                  <td><span class="status-chip ${getStatusChipClass(n.status)}">${n.status}</span></td>
+              `;
+              tbody.appendChild(tr);
+          });
+          updatePaginationControls(table, 'export', totalItems, () => renderDashboardSubViews("export", data));
+      }
+  }
+
+  function triggerExport() {
+      const checkedBoxes = document.querySelectorAll(".export-check:checked");
+      if (checkedBoxes.length === 0) {
+          alert("Please select at least one record to export.");
+          return;
+      }
+      
+      const selected = Array.from(checkedBoxes).map(cb => cb.value);
+      const recordsToExport = cachedQualityData.all_ncrs.filter(n => selected.includes(n.name));
+      
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "NCR ID,Project,Description,Raised Date,Severity,Type,Status\n";
+      
+      recordsToExport.forEach(n => {
+          const row = `"${n.name}","${n.project}","${n.description || ''}","${n.raised_date_formatted || ''}","${n.severity || 'Minor'}","${n.ncr_type || 'Other'}","${n.status}"`;
+          csvContent += row + "\n";
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `ncr_export_${new Date().toISOString().substring(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+</script>
+</body>
+</html>

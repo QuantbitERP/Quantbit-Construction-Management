@@ -1,0 +1,22 @@
+{
+ "app": "quantbit_construction_management",
+ "bg_color": "blue",
+ "creation": "2026-08-20 16:38:55.378293",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon_type": "Link",
+ "idx": 0,
+ "label": "Drawing",
+ "link_to": "Drawing",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-08-20 16:47:38.799229",
+ "modified_by": "Administrator",
+ "name": "Drawing",
+ "owner": "Administrator",
+ "parent_icon": "CMS",
+ "restrict_removal": 0,
+ "roles": [],
+ "sidebar": "Drawing",
+ "standard": 1
+}

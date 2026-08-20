@@ -6,7 +6,7 @@ from frappe.model.document import Document
 from quantbit_construction_management.document_control.doctype.drawing_register.drawing_register import sync_revision_to_main
 
 class TransmittalAcknowledgement(Document):
-	def on_submit(self):
+	def before_submit(self):
 		drawing_no = getattr(self, "drawing_no", None)
 		if drawing_no:
 			try:

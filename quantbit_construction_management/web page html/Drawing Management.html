@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 · Engineering Drawing Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* Hide default Frappe headers and footers to look like a full-screen standalone application */
+  header, .navbar, footer, .web-footer, .breadcrumb, .page-breadcrumbs, .navbar-default, #website-navbar {
+      display: none !important;
+  }
+  body {
+      padding-top: 0 !important;
+  }
+  /* Force full screen container layout in Frappe website renderer */
+  .page-container, .web-page, #body, .main-section {
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+  }
+
+  :root {
+    --lime: #7ab800;
+    --lime-light: #eef6d6;
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --card2: #f4f6f9;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --border: #e2e6ea;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; }
+
+  .sidebar { width: 220px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,.04); }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .tag { font-size: 10px; letter-spacing: 3px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+  .sidebar-logo .name { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin-top: 4px; }
+  .nav { padding: 16px 0; flex: 1; }
+  .nav-section { padding: 8px 20px 4px; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--muted); cursor: pointer; border-left: 3px solid transparent; transition: all .15s; font-size: 13px; }
+  .nav-item:hover { color: var(--text); background: var(--lime-light); }
+  .nav-item.active { color: var(--lime); border-left-color: var(--lime); background: var(--lime-light); font-weight: 600; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); position: relative; }
+  .user-chip { display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .user-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .user-role { font-size: 10px; color: var(--muted); }
+
+  /* Custom Sidebar Profile Dropdown Menu styling */
+  .profile-dropdown {
+      display: none;
+      position: absolute;
+      bottom: 45px;
+      left: 0;
+      width: 180px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 1000;
+      padding: 6px 0;
+  }
+  .profile-dropdown.show {
+      display: block;
+  }
+  .profile-dropdown a {
+      display: block;
+      padding: 8px 16px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.15s;
+  }
+  .profile-dropdown a:hover {
+      background: var(--lime-light);
+      color: var(--lime);
+  }
+
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .page-tag { font-size: 10px; letter-spacing: 2px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+  .page-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .search-box { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 7px 14px; font-size: 12px; color: var(--text); width: 240px; font-family: 'Inter', sans-serif; }
+  .search-box::placeholder { color: var(--muted); }
+  .btn { background: var(--lime); color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; font-size: 12px; cursor: pointer; }
+
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* KPI */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; border-top: 3px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .kpi.lime { border-top-color: var(--lime); }
+  .kpi.blue { border-top-color: var(--blue); }
+  .kpi.amber { border-top-color: var(--amber); }
+  .kpi.red { border-top-color: var(--red); }
+  .kpi.purple { border-top-color: var(--purple); }
+  .kpi-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-val { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; color: var(--text); margin: 4px 0; }
+  .kpi-sub { font-size: 11px; color: var(--muted); }
+
+  .mid-row { display: grid; grid-template-columns: 1fr 1fr 300px; gap: 16px; margin-bottom: 20px; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.04); margin-bottom: 20px; }
+  .chart-card:last-child { margin-bottom: 0; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .pill { background: var(--card2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--muted); cursor: pointer; }
+  .pill.active { background: var(--lime-light); color: var(--lime); border-color: #c8e87a; font-weight: 600; }
+
+  /* DISCIPLINE BARS */
+  .disc-list { display: flex; flex-direction: column; gap: 11px; }
+  .disc-row { display: grid; grid-template-columns: 90px 1fr 60px; align-items: center; gap: 10px; }
+  .disc-name { font-size: 11px; color: var(--text); }
+  .disc-track { background: var(--card2); border-radius: 3px; height: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .disc-fill { height: 100%; border-radius: 3px; }
+  .disc-count { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; text-align: right; color: var(--muted); }
+
+  /* PIPELINE */
+  .pipeline { display: flex; flex-direction: column; }
+  .pipe-stage { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .pipe-stage:last-child { border-bottom: none; }
+  .pipe-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .pipe-info { flex: 1; }
+  .pipe-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .pipe-detail { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .pipe-count { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; }
+
+  /* TABLE */
+  .bottom-row { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .rev-chip { border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono'; }
+  .rev-a { background: var(--lime-light); color: var(--lime); }
+  .rev-b { background: var(--blue-light); color: var(--blue); }
+  .rev-c { background: var(--amber-light); color: var(--amber); }
+  .rev-d { background: var(--purple-light); color: var(--purple); }
+  .status-chip { border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .s-issued { background: var(--green-light); color: var(--green); }
+  .s-review { background: var(--amber-light); color: var(--amber); }
+  .s-draft { background: var(--blue-light); color: var(--blue); }
+  .s-superseded { background: #f3f4f6; color: var(--muted); }
+  .s-pending { background: var(--purple-light); color: var(--purple); }
+  .type-icon { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--card2); color: var(--muted); font-family: 'JetBrains Mono'; border: 1px solid var(--border); }
+
+  /* FEED */
+  .feed { display: flex; flex-direction: column; }
+  .feed-item { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 12px; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .feed-text { font-size: 11px; line-height: 1.5; color: var(--text); }
+  .feed-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .feed-user { color: var(--lime); font-weight: 600; }
+  .feed-doc { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--blue); }
+
+  /* VIEW SECTIONS */
+  .view-section { display: none; }
+  .view-section.active { display: block; }
+
+  /* Pagination Styling */
+  .pagination-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+  }
+  .btn-page {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+  }
+  .btn-page:hover:not(:disabled) {
+      background: var(--lime-light);
+      color: var(--lime);
+      border-color: var(--lime);
+  }
+  .btn-page:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+  }
+  .page-info {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+  }
+
+  /* Custom Modal Popups */
+  .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+  }
+  .modal-overlay.show {
+      display: flex;
+  }
+  .custom-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 450px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      animation: modalSlide 0.2s ease-out;
+  }
+  @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+  }
+  .form-group {
+      margin-bottom: 14px;
+  }
+  .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+  }
+  .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+  }
+  .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="tag">Module 03</div>
+    <div class="name">DrawingVault</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-view="dashboard"><span>◈</span> Dashboard</div>
+    <div class="nav-item" data-view="register"><span>⊟</span> Drawing Register</div>
+    <div class="nav-section">Workflow</div>
+    <div class="nav-item" data-view="revisions"><span>◷</span> Revision Control</div>
+    <div class="nav-item" data-view="transmittals"><span>⊕</span> Transmittals</div>
+    <div class="nav-item" data-view="approvals"><span>◫</span> Approvals</div>
+    <div class="nav-item" data-view="rfi"><span>⚑</span> RFI / Markups</div>
+    <div class="nav-section">Library</div>
+    <div class="nav-item" data-view="discipline"><span>⊞</span> By Discipline</div>
+    <div class="nav-item" data-view="project"><span>↗</span> By Project</div>
+    <div class="nav-item" data-view="asbuilt"><span>◉</span> As-Built Set</div>
+    <div class="nav-section">Admin</div>
+    <div class="nav-item" data-view="export"><span>⤓</span> Export / Print</div>
+    <div class="nav-item" data-view="permissions"><span>⚙</span> Permissions</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip" id="profile-trigger">
+      <div class="avatar" id="user-avatar">AD</div>
+      <div>
+        <div class="user-name" id="user-fullname">Administrator</div>
+        <div class="user-role" id="user-role-label">System Administrator</div>
+      </div>
+      <!-- Profile Menu Dropdown -->
+      <div class="profile-dropdown" id="profile-dropdown-menu">
+        <a href="/me" target="_blank">👤 My Account</a>
+        <a href="/app" target="_blank">💻 Switch to Desk</a>
+        <a href="/apps" target="_blank">🧩 Apps</a>
+        <hr style="border:none;border-top:1px solid var(--border);margin:4px 0;">
+        <a href="/logout" style="color:var(--red);">🚪 Log out</a>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-tag" id="page-tag-label">03 · Engineering Drawing Management</div>
+      <div class="page-title" id="page-title-label">Drawing Register</div>
+    </div>
+    <div class="topbar-right">
+      <select id="project-filter" class="search-box" style="width: 200px; margin-right: 8px;">
+        <option value="">All Projects</option>
+      </select>
+      <input class="search-box" placeholder="Search drawing no., title, discipline…" type="text" id="drawing-search">
+      <button class="btn-ghost" onclick="exportActiveTabCSV()">⤓ Export</button>
+      <button class="btn" onclick="handleUploadButtonClick()">+ Upload Drawing</button>
+    </div>
+  </div>
+
+  <div class="content">
+    
+    <!-- 1. DASHBOARD VIEW (Visible by default) -->
+    <div id="view-dashboard" class="view-section active">
+      <!-- KPI -->
+      <div class="kpi-row">
+        <div class="kpi lime">
+          <div class="kpi-label">Total Drawings</div>
+          <div class="kpi-val" id="kpi-total-drawings">-</div>
+          <div class="kpi-sub">Across all disciplines</div>
+        </div>
+        <div class="kpi blue">
+          <div class="kpi-label">Current Revision</div>
+          <div class="kpi-val" id="kpi-current-rev">-</div>
+          <div class="kpi-sub">IFC / Issued for Construction</div>
+        </div>
+        <div class="kpi amber">
+          <div class="kpi-label">Pending Approval</div>
+          <div class="kpi-val" id="kpi-pending-approval">-</div>
+          <div class="kpi-sub">Awaiting sign-off</div>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-label">Superseded</div>
+          <div class="kpi-val" id="kpi-superseded">-</div>
+          <div class="kpi-sub">Archived versions</div>
+        </div>
+        <div class="kpi purple">
+          <div class="kpi-label">Transmittals</div>
+          <div class="kpi-val" id="kpi-transmittals">-</div>
+          <div class="kpi-sub">Sent this month</div>
+        </div>
+      </div>
+
+      <!-- MID ROW -->
+      <div class="mid-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Drawings by Discipline</div>
+              <div class="card-sub" id="discipline-subtext">0 total documents</div>
+            </div>
+            <div class="pill active">Current Rev</div>
+          </div>
+          <div class="disc-list" id="disc-list-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Revision Status Breakdown</div>
+              <div class="card-sub">All documents by status</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px" id="status-breakdown-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Approval Pipeline</div>
+              <div class="card-sub">Active revision workflow</div>
+            </div>
+          </div>
+          <div class="pipeline" id="pipeline-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM -->
+      <div class="bottom-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Drawing Register — Recent Activity</div>
+              <div class="card-sub">Latest revisions &amp; transmittals</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <div class="pill active">All</div>
+            </div>
+          </div>
+          <table id="drawing-register-table">
+            <thead>
+              <tr><th>Drawing No.</th><th>Title</th><th>Type</th><th>Rev</th><th>Discipline</th><th>Date</th><th>Status</th></tr>
+            </thead>
+            <tbody id="drawing-register-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recent Activity</div>
+              <div class="card-sub">Drawing actions log</div>
+            </div>
+          </div>
+          <div class="feed" id="feed-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. DRAWING REGISTER VIEW -->
+    <div id="view-register" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">All Drawing Registers</div>
+            <div class="card-sub" id="register-sub-count">Showing all documents</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Drawing No.</th><th>Title</th><th>Type</th><th>Rev</th><th>Discipline</th><th>Date</th><th>Status</th></tr>
+          </thead>
+          <tbody id="all-register-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. REVISION CONTROL VIEW -->
+    <div id="view-revisions" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Revision History Control</div>
+            <div class="card-sub">History log of drawing revisions</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Drawing No.</th><th>Title</th><th>Latest Rev</th><th>Discipline</th><th>Revision Log Flow</th><th>Last Modified</th></tr>
+          </thead>
+          <tbody id="revisions-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4. TRANSMITTALS VIEW -->
+    <div id="view-transmittals" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Transmittal Records History</div>
+            <div class="card-sub">All transmittals sent to clients</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Transmittal No</th><th>Project</th><th>Sent By</th><th>Date Sent</th><th>Drawings Sent</th><th>Status</th></tr>
+          </thead>
+          <tbody id="transmittals-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5. APPROVALS VIEW -->
+    <div id="view-approvals" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Awaiting Technical Approvals</div>
+            <div class="card-sub">Drawings in queue for discipline review</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Drawing No.</th><th>Title</th><th>Type</th><th>Discipline</th><th>Modified By</th><th>Current Status</th></tr>
+          </thead>
+          <tbody id="approvals-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 6. RFI / MARKUPS VIEW -->
+    <div id="view-rfi" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">RFI Records Index</div>
+            <div class="card-sub" id="rfi-sub-count">Showing all RFIs</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>RFI Number</th><th>Subject</th><th>Drawing</th><th>Discipline</th><th>Raised By</th><th>Raised Date</th><th>Priority</th><th>Status</th></tr>
+          </thead>
+          <tbody id="rfi-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 7. BY DISCIPLINE VIEW -->
+    <div id="view-discipline" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Drawings by Discipline Catalog</div>
+            <div class="card-sub">Browse document registers by engineering discipline</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;" id="discipline-catalog-cards">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. BY PROJECT VIEW -->
+    <div id="view-project" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Project Drawing Volumes</div>
+            <div class="card-sub">Aggregated drawing &amp; RFI counts per project</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Project Code</th><th>Project Name</th><th>Total Drawings</th><th>IFC Drawings</th><th>Open RFIs</th></tr>
+          </thead>
+          <tbody id="project-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 9. AS-BUILT SET VIEW -->
+    <div id="view-asbuilt" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">As-Built Drawing Set</div>
+            <div class="card-sub" id="asbuilt-sub-count">Certified final drawings</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Drawing No.</th><th>Title</th><th>Type</th><th>Rev</th><th>Discipline</th><th>Date</th><th>Status</th></tr>
+          </thead>
+          <tbody id="asbuilt-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 10. EXPORT & PRINT VIEW -->
+    <div id="view-export" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Bulk Export &amp; Printing Tools</div>
+            <div class="card-sub">Generate manifests, download lists or print documents</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-ghost" onclick="toggleSelectAllExports(true)">Select All</button>
+            <button class="btn-ghost" onclick="toggleSelectAllExports(false)">Deselect All</button>
+            <button class="btn" onclick="exportSelectedCSV()">Export Selected (CSV)</button>
+            <button class="btn" style="background:var(--blue)" onclick="window.print()">Print Manifest</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th style="width:40px;">Select</th><th>Drawing No.</th><th>Title</th><th>Type</th><th>Rev</th><th>Discipline</th><th>Status</th></tr>
+          </thead>
+          <tbody id="export-tbody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 11. PERMISSIONS VIEW -->
+    <div id="view-permissions" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Document Security &amp; Access Matrix</div>
+            <div class="card-sub">Configured role permissions for drawing register files</div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Role</th><th>Read</th><th>Write</th><th>Create</th><th>Delete</th><th>Submit</th><th>Amend</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Lead Engineer</strong></td><td>✓ Yes</td><td>✓ Yes</td><td>✓ Yes</td><td>✗ No</td><td>✓ Yes</td><td>✓ Yes</td></tr>
+            <tr><td><strong>Drawing Approver</strong></td><td>✓ Yes</td><td>✓ Yes</td><td>✗ No</td><td>✗ No</td><td>✓ Yes</td><td>✗ No</td></tr>
+            <tr><td><strong>Drawing Checker</strong></td><td>✓ Yes</td><td>✓ Yes</td><td>✗ No</td><td>✗ No</td><td>✗ No</td><td>✗ No</td></tr>
+            <tr><td><strong>Drafter / Designer</strong></td><td>✓ Yes</td><td>✓ Yes</td><td>✓ Yes</td><td>✗ No</td><td>✗ No</td><td>✗ No</td></tr>
+            <tr><td><strong>Client Representative</strong></td><td>✓ Yes</td><td>✗ No</td><td>✗ No</td><td>✗ No</td><td>✗ No</td><td>✗ No</td></tr>
+            <tr><td><strong>System Administrator</strong></td><td>✓ Yes</td><td>✓ Yes</td><td>✓ Yes</td><td>✓ Yes</td><td>✓ Yes</td><td>✓ Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- CUSTOM MOCK UPLOAD MODAL -->
+<div class="modal-overlay" id="upload-modal-overlay">
+  <div class="custom-modal">
+    <div class="modal-title">Upload New Drawing Register</div>
+    
+    <div class="form-group">
+      <label class="form-label">Drawing Number</label>
+      <input type="text" class="form-control" id="form-drawing-no" placeholder="e.g. SGP-CIV-C-0003">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Drawing Title</label>
+      <input type="text" class="form-control" id="form-title" placeholder="e.g. Main Plant Layout">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Project</label>
+      <select class="form-control" id="form-project">
+        <!-- Populated dynamically -->
+      </select>
+    </div>
+    <div class="form-group" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div>
+        <label class="form-label">Discipline</label>
+        <select class="form-control" id="form-discipline">
+          <option value="Structural">Structural</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Process">Process</option>
+          <option value="Civil">Civil</option>
+          <option value="I&C">I&C</option>
+          <option value="Architectural">Architectural</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Drawing Type</label>
+        <select class="form-control" id="form-drawing-type">
+          <option value="Construction Drawing">Construction Drawing</option>
+          <option value="Detail Drawing">Detail Drawing</option>
+          <option value="General Arrangement">General Arrangement</option>
+          <option value="Isometric">Isometric</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-control" id="form-status">
+        <option value="In Preparation">In Preparation</option>
+        <option value="Under Review">Under Review</option>
+        <option value="IFA">IFA (For Approval)</option>
+        <option value="IFR">IFR (For Review)</option>
+        <option value="IFC">IFC (For Construction)</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeMockUploadModal()">Cancel</button>
+      <button class="btn" onclick="submitMockUpload()">Save Drawing</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let cachedDashboardData = null;
+  let currentSearchTerm = "";
+
+  function redirectToRecord(doctype, name) {
+      if (!name) return;
+      const kebabDoctype = doctype.toLowerCase().replace(/\s+/g, '-');
+      if (window.frappe) {
+          window.location.href = `/app/${kebabDoctype}/${name}`;
+      } else {
+          alert(`Redirecting (Mock Offline) to: /app/${kebabDoctype}/${name}`);
+      }
+  }
+
+  const paginationState = {
+      recent_drawings: { currentPage: 1, pageSize: 5 },
+      register: { currentPage: 1, pageSize: 10 },
+      revisions: { currentPage: 1, pageSize: 10 },
+      transmittals: { currentPage: 1, pageSize: 10 },
+      approvals: { currentPage: 1, pageSize: 10 },
+      rfi: { currentPage: 1, pageSize: 10 },
+      project: { currentPage: 1, pageSize: 10 },
+      asbuilt: { currentPage: 1, pageSize: 10 },
+      export: { currentPage: 1, pageSize: 10 }
+  };
+
+  function getFilteredData(array, searchFields) {
+      if (!array) return [];
+      if (!currentSearchTerm) return array;
+      const term = currentSearchTerm.toLowerCase();
+      return array.filter(item => {
+          return searchFields.some(field => {
+              const val = item[field];
+              return val && String(val).toLowerCase().includes(term);
+          });
+      });
+  }
+
+  function updatePaginationControls(tableElement, stateKey, totalItems, onPageChange) {
+      const state = paginationState[stateKey];
+      const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+      
+      if (state.currentPage > totalPages) {
+          state.currentPage = totalPages;
+      }
+      
+      let pagContainer = tableElement.nextElementSibling;
+      if (!pagContainer || !pagContainer.classList.contains('pagination-container')) {
+          pagContainer = document.createElement('div');
+          pagContainer.className = 'pagination-container';
+          tableElement.parentNode.insertBefore(pagContainer, tableElement.nextSibling);
+      }
+      
+      pagContainer.innerHTML = `
+          <button class="btn-page" ${state.currentPage === 1 ? 'disabled' : ''}>Prev</button>
+          <span class="page-info">Page ${state.currentPage} of ${totalPages} (Total ${totalItems})</span>
+          <button class="btn-page" ${state.currentPage === totalPages ? 'disabled' : ''}>Next</button>
+      `;
+      
+      const buttons = pagContainer.querySelectorAll('button');
+      buttons[0].onclick = (e) => {
+          e.preventDefault();
+          if (state.currentPage > 1) {
+              state.currentPage--;
+              onPageChange();
+          }
+      };
+      buttons[1].onclick = (e) => {
+          e.preventDefault();
+          if (state.currentPage < totalPages) {
+              state.currentPage++;
+              onPageChange();
+          }
+      };
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+      // 1. Initial Fetch
+      fetchDashboardData("");
+
+      // 2. Tab Switching Navigation
+      document.querySelectorAll(".nav-item").forEach(item => {
+          item.addEventListener("click", function() {
+              const view = this.getAttribute("data-view");
+              if (!view) return;
+
+              // Toggle Sidebar active status
+              document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+              this.classList.add("active");
+
+              // Switch view container
+              switchView(view);
+          });
+      });
+
+      // 3. Bind Project Filter change
+      const projFilter = document.getElementById("project-filter");
+      if (projFilter) {
+          projFilter.addEventListener("change", function() {
+              fetchDashboardData(this.value);
+          });
+      }
+
+      // 4. Bind Search bar
+      const searchBox = document.getElementById("drawing-search");
+      if (searchBox) {
+          searchBox.addEventListener("input", function(e) {
+              currentSearchTerm = e.target.value.toLowerCase();
+              applySearchFilter();
+          });
+      }
+
+      // 5. Sidebar profile dropdown click handler
+      const trigger = document.getElementById("profile-trigger");
+      const menu = document.getElementById("profile-dropdown-menu");
+      if (trigger && menu) {
+          trigger.addEventListener("click", function(e) {
+              e.stopPropagation();
+              menu.classList.toggle("show");
+          });
+          document.addEventListener("click", function() {
+              menu.classList.remove("show");
+          });
+      }
+  });
+
+  function switchView(viewName) {
+      // Toggle CSS active class
+      document.querySelectorAll(".view-section").forEach(sec => {
+          sec.classList.remove("active");
+      });
+
+      const activeView = document.getElementById(`view-${viewName}`);
+      if (activeView) {
+          activeView.classList.add("active");
+      }
+
+      // Update titles dynamically
+      const titleLabel = document.getElementById("page-title-label");
+      const titles = {
+          "dashboard": "Drawing Register",
+          "register": "Drawing Register Index",
+          "revisions": "Revision History Control",
+          "transmittals": "Outbound Transmittal Logs",
+          "approvals": "Pending Approvals Queue",
+          "rfi": "RFI Records Index",
+          "discipline": "Drawings by Discipline",
+          "project": "Project Drawing Volumes",
+          "asbuilt": "As-Built Drawing Set",
+          "export": "Bulk Export &amp; Printing Tools",
+          "permissions": "Security &amp; Access Matrix"
+      };
+      if (titleLabel && titles[viewName]) {
+          titleLabel.innerHTML = titles[viewName];
+      }
+
+      // Re-render sub views from cache if switching tabs
+      if (cachedDashboardData) {
+          renderDashboardSubViews(viewName, cachedDashboardData);
+      }
+
+      // Re-apply search filter to active tab
+      applySearchFilter();
+  }
+
+  function applySearchFilter() {
+      const activeSection = document.querySelector(".view-section.active");
+      if (!activeSection) return;
+
+      const activeViewName = activeSection.id.replace("view-", "");
+
+      // Reset the page for the active view to 1
+      if (paginationState[activeViewName]) {
+          paginationState[activeViewName].currentPage = 1;
+      } else if (activeViewName === "dashboard") {
+          paginationState.recent_drawings.currentPage = 1;
+      }
+
+      if (activeViewName === "dashboard" && cachedDashboardData) {
+          const filtered = getFilteredData(cachedDashboardData.all_drawings, ['drawing_no', 'title', 'discipline', 'status', 'drawing_type']);
+          updateDashboardCharts(filtered, cachedDashboardData);
+          renderDashboard(cachedDashboardData);
+      } else if (cachedDashboardData) {
+          renderDashboardSubViews(activeViewName, cachedDashboardData);
+      }
+  }
+
+  function fetchDashboardData(project) {
+      if (window.frappe && window.frappe.call) {
+          frappe.call({
+              method: "quantbit_construction_management.api.drawing_dashboard.get_dashboard_data",
+              type: "GET",
+              args: { project: project },
+              callback: function(r) {
+                  if (r.message) {
+                      cachedDashboardData = r.message;
+                      renderDashboard(r.message);
+                  }
+              }
+          });
+      } else {
+          const url = `/api/method/quantbit_construction_management.api.drawing_dashboard.get_dashboard_data${project ? '?project=' + encodeURIComponent(project) : ''}`;
+          fetch(url, {
+              headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                  'X-Frappe-CSRF-Token': window.csrf_token || ''
+              }
+          })
+          .then(res => res.json())
+          .then(data => {
+              if (data.message) {
+                  cachedDashboardData = data.message;
+                  renderDashboard(data.message);
+              }
+          })
+          .catch(err => console.error('Error fetching dashboard data:', err));
+      }
+  }
+
+  function updateDashboardCharts(drawings, data) {
+      if (!data) data = cachedDashboardData;
+      if (!data) return;
+
+      // 1. Calculate KPIs
+      const totalDrawings = drawings.length;
+      const ifcDrawings = drawings.filter(d => d.status === 'IFC' || d.status === 'As-Built').length;
+      const pendingApproval = drawings.filter(d => ['Under Review', 'IFA', 'IFR'].includes(d.status)).length;
+      const superseded = drawings.filter(d => ['Superseded', 'Void'].includes(d.status)).length;
+      const transmittals = data.kpis ? data.kpis.transmittals_this_month : 0;
+
+      document.getElementById('kpi-total-drawings').textContent = totalDrawings.toLocaleString();
+      document.getElementById('kpi-current-rev').textContent = ifcDrawings.toLocaleString();
+      document.getElementById('kpi-pending-approval').textContent = pendingApproval.toLocaleString();
+      document.getElementById('kpi-superseded').textContent = superseded.toLocaleString();
+      document.getElementById('kpi-transmittals').textContent = transmittals.toLocaleString();
+
+      document.getElementById('discipline-subtext').textContent = `${totalDrawings.toLocaleString()} total documents`;
+
+      // 2. Render Discipline List
+      const discContainer = document.getElementById('disc-list-container');
+      discContainer.innerHTML = '';
+      
+      const disciplineList = [
+          "Structural", "Mechanical", "Electrical", "Process", 
+          "Civil", "I&C", "Architectural", "Piping", 
+          "Plumbing", "Firefighting", "Landscape", "Survey"
+      ];
+      
+      const discMap = {};
+      disciplineList.forEach(d => discMap[d] = 0);
+      drawings.forEach(d => {
+          if (d.discipline && discMap[d.discipline] !== undefined) {
+              discMap[d.discipline]++;
+          }
+      });
+      
+      const maxDiscCount = Math.max(...Object.values(discMap), 1);
+      const byDiscipline = disciplineList.map(disc => ({
+          discipline: disc,
+          count: discMap[disc],
+          pct: Math.round((discMap[disc] / maxDiscCount) * 100)
+      })).sort((a, b) => b.count - a.count);
+
+      const discColors = {
+          'Structural': 'var(--lime)',
+          'Mechanical': 'var(--blue)',
+          'Electrical': 'var(--purple)',
+          'Process': 'var(--amber)',
+          'Civil': '#059669',
+          'I&C': 'var(--green)',
+          'Architectural': 'var(--red)',
+          'Piping': 'var(--purple)',
+          'Plumbing': 'var(--blue)',
+          'Firefighting': 'var(--red)',
+          'Landscape': '#059669',
+          'Survey': 'var(--muted)'
+      };
+
+      byDiscipline.forEach(item => {
+          if (item.count > 0) {
+              const color = discColors[item.discipline] || 'var(--muted)';
+              const row = document.createElement('div');
+              row.className = 'disc-row';
+              row.innerHTML = `
+                  <div class="disc-name">${item.discipline}</div>
+                  <div class="disc-track">
+                      <div class="disc-fill" style="width:${item.pct}%;background:${color}"></div>
+                  </div>
+                  <div class="disc-count">${item.count}</div>
+              `;
+              discContainer.appendChild(row);
+          }
+      });
+      if (discContainer.children.length === 0) {
+          discContainer.innerHTML = '<div style="text-align:center;color:var(--muted);padding:10px;">No drawings found</div>';
+      }
+
+      // 3. Render Status Breakdown
+      const statusContainer = document.getElementById('status-breakdown-container');
+      statusContainer.innerHTML = '';
+      
+      const statusBreakdown = {
+          "IFC": {"count": 0, "label": "Issued for Construction (IFC)", "color": "var(--green)"},
+          "IFA": {"count": 0, "label": "Pending Client Approval", "color": "var(--amber)"},
+          "Under Review": {"count": 0, "label": "In Review / Markup", "color": "var(--blue)"},
+          "In Preparation": {"count": 0, "label": "Draft (Not Issued)", "color": "var(--purple)"},
+          "Superseded": {"count": 0, "label": "Superseded / Void", "color": "var(--muted)"}
+      };
+
+      drawings.forEach(d => {
+          const status = d.status;
+          if (["IFC", "As-Built"].includes(status)) {
+              statusBreakdown["IFC"].count++;
+          } else if (status === "IFA") {
+              statusBreakdown["IFA"].count++;
+          } else if (["Under Review", "IFR"].includes(status)) {
+              statusBreakdown["Under Review"].count++;
+          } else if (status === "In Preparation") {
+              statusBreakdown["In Preparation"].count++;
+          } else if (["Superseded", "Void"].includes(status)) {
+              statusBreakdown["Superseded"].count++;
+          }
+      });
+
+      const totalForBreakdown = Object.values(statusBreakdown).reduce((sum, item) => sum + item.count, 0) || 1;
+      const statusBreakdownList = Object.keys(statusBreakdown).map(key => {
+          const item = statusBreakdown[key];
+          return {
+              ...item,
+              pct: Math.round((item.count / totalForBreakdown) * 100),
+              key: key
+          };
+      }).sort((a, b) => b.count - a.count);
+
+      statusBreakdownList.forEach(item => {
+          const statusDiv = document.createElement('div');
+          statusDiv.innerHTML = `
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <div style="display:flex;align-items:center;gap:8px">
+                      <div style="width:8px;height:8px;border-radius:50%;background:${item.color}"></div>
+                      <span style="font-size:12px;color:var(--text)">${item.label}</span>
+                  </div>
+                  <span style="font-size:12px;font-weight:700;font-family:'Space Grotesk';color:${item.color}">${item.count.toLocaleString()}</span>
+              </div>
+              <div style="background:var(--card2);border-radius:4px;height:7px;border:1px solid var(--border)">
+                  <div style="width:${item.pct}%;height:100%;background:${item.color};border-radius:4px"></div>
+              </div>
+          `;
+          statusContainer.appendChild(statusDiv);
+      });
+
+      // 4. Render Approval Pipeline
+      const pipelineContainer = document.getElementById('pipeline-container');
+      pipelineContainer.innerHTML = '';
+      
+      const stage1_count = drawings.filter(d => d.status === "In Preparation").length;
+      const stage2_count = drawings.filter(d => d.status === "IFR").length;
+      const stage3_count = drawings.filter(d => d.status === "Under Review").length;
+      const stage4_count = drawings.filter(d => d.status === "IFA").length;
+      
+      const today = new Date();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      
+      const stage5_count = drawings.filter(d => {
+          if (d.status !== "IFC" && d.status !== "As-Built") return false;
+          if (!d.modified) return true;
+          return new Date(d.modified) >= sevenDaysAgo;
+      }).length;
+
+      const pipelineStages = [
+          {"stage": 1, "name": "Drafter / Design", "detail": "Initial markup → PDF", "count": stage1_count, "color": "var(--blue)", "bg": "var(--blue-light)"},
+          {"stage": 2, "name": "Checker Review", "detail": "Technical + calc check", "count": stage2_count, "color": "var(--purple)", "bg": "var(--purple-light)"},
+          {"stage": 3, "name": "Lead Eng. Approval", "detail": "Discipline sign-off", "count": stage3_count, "color": "var(--amber)", "bg": "var(--amber-light)"},
+          {"stage": 4, "name": "Client Approval", "detail": "Awaiting return", "count": stage4_count, "color": "var(--red)", "bg": "var(--red-light)"},
+          {"stage": 5, "name": "Issued (IFC)", "detail": "This week", "count": stage5_count, "color": "var(--green)", "bg": "var(--green-light)", "is_check": true}
+      ];
+
+      pipelineStages.forEach(stage => {
+          const pipeStage = document.createElement('div');
+          pipeStage.className = 'pipe-stage';
+          pipeStage.innerHTML = `
+              <div class="pipe-circle" style="background:${stage.bg};color:${stage.color}">${stage.is_check ? '✓' : stage.stage}</div>
+              <div class="pipe-info">
+                  <div class="pipe-name">${stage.name}</div>
+                  <div class="pipe-detail">${stage.detail}</div>
+              </div>
+              <div class="pipe-count" style="color:${stage.color}">${stage.count}</div>
+          `;
+          pipelineContainer.appendChild(pipeStage);
+      });
+  }
+
+  function renderDashboard(data) {
+      // 0. Update User Profile dynamically from backend session info
+      if (data.logged_in_user) {
+          const fullName = data.logged_in_user.full_name || "Administrator";
+          document.getElementById("user-fullname").textContent = fullName;
+          const initials = fullName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+          document.getElementById("user-avatar").textContent = initials;
+          document.getElementById("user-role-label").textContent = data.logged_in_user.role || "Lead Engineer";
+      }
+
+      // Update KPI core elements and all charts dynamically
+      updateDashboardCharts(data.all_drawings, data);
+
+      // 4. Render Recent Drawings Table
+      const tbody = document.getElementById('drawing-register-tbody');
+      const table = tbody.closest('table');
+      tbody.innerHTML = '';
+      
+      const filteredRecent = getFilteredData(data.recent_drawings, ['drawing_no', 'title', 'discipline', 'status', 'drawing_type']);
+      const totalItems = filteredRecent.length;
+      const state = paginationState.recent_drawings;
+      const start = (state.currentPage - 1) * state.pageSize;
+      const paginatedRecent = filteredRecent.slice(start, start + state.pageSize);
+      
+      if (paginatedRecent.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No drawings found</td></tr>`;
+      } else {
+          paginatedRecent.forEach(drg => {
+              const tr = document.createElement('tr');
+              tr.style.cursor = 'pointer';
+              tr.onclick = function() {
+                  redirectToRecord('Drawing Register', drg.name || drg.drawing_no);
+              };
+              tr.innerHTML = `
+                  <td><span class="mono" style="color:var(--lime);font-weight:600">${drg.drawing_no}</span></td>
+                  <td>${drg.title}</td>
+                  <td><span class="type-icon">${getTypeAbbreviation(drg.drawing_type)}</span></td>
+                  <td><span class="rev-chip ${getRevChipClass(drg.current_rev)}">${drg.current_rev || 'A'}</span></td>
+                  <td>${drg.discipline}</td>
+                  <td>${drg.issue_date_formatted || ''}</td>
+                  <td><span class="status-chip ${getStatusChipClass(drg.status)}">${drg.status}</span></td>
+              `;
+              tbody.appendChild(tr);
+          });
+      }
+      updatePaginationControls(table, 'recent_drawings', totalItems, () => renderDashboard(data));
+
+      // 5. Render Recent Activity Feed
+      const feedContainer = document.getElementById('feed-container');
+      feedContainer.innerHTML = '';
+      if (data.feed.length === 0) {
+          feedContainer.innerHTML = `<div style="text-align:center;color:var(--muted);padding:20px 0;">No recent activity</div>`;
+      } else {
+          data.feed.forEach(act => {
+              const feedItem = document.createElement('div');
+              feedItem.className = 'feed-item';
+              
+              let feedText = '';
+              if (act.type === 'drawing') {
+                  feedText = `<span class="feed-user">${act.user}</span> ${act.detail} of <span class="feed-doc" style="cursor:pointer;text-decoration:underline;" onclick="redirectToRecord('Drawing Register', '${act.name || act.doc}')">${act.doc}</span>`;
+              } else if (act.type === 'transmittal') {
+                  feedText = `<span class="feed-user">${act.user}</span> ${act.detail}: <span class="feed-doc" style="cursor:pointer;text-decoration:underline;" onclick="redirectToRecord('Transmittal', '${act.name || act.doc}')">${act.doc}</span>`;
+              } else if (act.type === 'review') {
+                  feedText = `<span class="feed-user">${act.user}</span> reviewed <span class="feed-doc" style="cursor:pointer;text-decoration:underline;" onclick="redirectToRecord('Drawing Register', '${act.name || act.doc}')">${act.doc}</span> (${act.detail})`;
+              }
+
+              feedItem.innerHTML = `
+                  <div class="feed-dot" style="background:${act.dot_color}"></div>
+                  <div>
+                      <div class="feed-text">${feedText}</div>
+                      <div class="feed-meta">${act.timestamp}</div>
+                  </div>
+              `;
+              feedContainer.appendChild(feedItem);
+          });
+      }
+
+      // 6. Populate Projects filter dropdown
+      const projSelect = document.getElementById('project-filter');
+      if (projSelect && projSelect.children.length <= 1) {
+          data.projects.forEach(p => {
+              const opt = document.createElement('option');
+              opt.value = p.name;
+              opt.textContent = p.project_name || p.name;
+              projSelect.appendChild(opt);
+          });
+      }
+
+      // Render the active tab view specifically
+      const activeSection = document.querySelector(".view-section.active");
+      if (activeSection) {
+          const activeViewName = activeSection.id.replace("view-", "");
+          renderDashboardSubViews(activeViewName, data);
+      }
+  }
+
+  function renderDashboardSubViews(viewName, data) {
+      if (viewName === "register") {
+          // Render All Drawing Registers
+          const allRegTbody = document.getElementById("all-register-tbody");
+          const table = allRegTbody.closest('table');
+          allRegTbody.innerHTML = '';
+          
+          const filtered = getFilteredData(data.all_drawings, ['drawing_no', 'title', 'discipline', 'status', 'drawing_type']);
+          document.getElementById("register-sub-count").textContent = `Showing all ${filtered.length} documents`;
+          
+          const totalItems = filtered.length;
+          const state = paginationState.register;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          if (paginated.length === 0) {
+              allRegTbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No drawings found</td></tr>`;
+          } else {
+              paginated.forEach(drg => {
+                  const tr = document.createElement('tr');
+                  tr.style.cursor = 'pointer';
+                  tr.onclick = function() {
+                      redirectToRecord('Drawing Register', drg.name || drg.drawing_no);
+                  };
+                  tr.innerHTML = `
+                      <td><span class="mono" style="color:var(--lime);font-weight:600">${drg.drawing_no}</span></td>
+                      <td>${drg.title}</td>
+                      <td><span class="type-icon">${getTypeAbbreviation(drg.drawing_type)}</span></td>
+                      <td><span class="rev-chip ${getRevChipClass(drg.current_rev)}">${drg.current_rev || 'A'}</span></td>
+                      <td>${drg.discipline}</td>
+                      <td>${drg.issue_date_formatted || ''}</td>
+                      <td><span class="status-chip ${getStatusChipClass(drg.status)}">${drg.status}</span></td>
+                  `;
+                  allRegTbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'register', totalItems, () => renderDashboardSubViews("register", data));
+      } 
+      else if (viewName === "revisions") {
+          // Render Revision History Control
+          const revTbody = document.getElementById("revisions-tbody");
+          const table = revTbody.closest('table');
+          revTbody.innerHTML = '';
+          
+          const filtered = getFilteredData(data.all_drawings, ['drawing_no', 'title', 'discipline', 'status', 'drawing_type']);
+          const totalItems = filtered.length;
+          const state = paginationState.revisions;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          if (paginated.length === 0) {
+              revTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No revisions recorded</td></tr>`;
+          } else {
+              paginated.forEach(drg => {
+                  const tr = document.createElement('tr');
+                  tr.style.cursor = 'pointer';
+                  tr.onclick = function() {
+                      redirectToRecord('Drawing Register', drg.name || drg.drawing_no);
+                  };
+                  let revItems = drg.revisions.map(r => `<span class="rev-chip ${getRevChipClass(r.revision)}" title="${r.description || ''}">${r.revision}</span>`).join(' → ');
+                  if (!revItems) {
+                      revItems = `<span class="rev-chip rev-a">Main</span>`;
+                  }
+                  tr.innerHTML = `
+                      <td><span class="mono" style="color:var(--lime);font-weight:600">${drg.drawing_no}</span></td>
+                      <td>${drg.title}</td>
+                      <td><span class="rev-chip ${getRevChipClass(drg.current_rev)}">${drg.current_rev || 'Main'}</span></td>
+                      <td>${drg.discipline}</td>
+                      <td><div style="display:flex;align-items:center;gap:6px">${revItems}</div></td>
+                      <td>${drg.issue_date_formatted || ''}</td>
+                  `;
+                  revTbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'revisions', totalItems, () => renderDashboardSubViews("revisions", data));
+      }
+      else if (viewName === "transmittals") {
+          // Render Outbound Transmittals
+          const transTbody = document.getElementById("transmittals-tbody");
+          const table = transTbody.closest('table');
+          transTbody.innerHTML = '';
+          
+          const filtered = getFilteredData(data.all_transmittals, ['name', 'transmittal_no', 'project', 'status']);
+          const totalItems = filtered.length;
+          const state = paginationState.transmittals;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          if (paginated.length === 0) {
+              transTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No transmittal records found</td></tr>`;
+          } else {
+              paginated.forEach(t => {
+                  const tr = document.createElement('tr');
+                  tr.style.cursor = 'pointer';
+                  tr.onclick = function() {
+                      redirectToRecord('Transmittal', t.name);
+                  };
+                  tr.innerHTML = `
+                      <td><span class="mono" style="color:var(--blue);font-weight:600">${t.transmittal_no || t.name}</span></td>
+                      <td>${t.project}</td>
+                      <td>${t.modified_by}</td>
+                      <td>${t.modified_formatted || ''}</td>
+                      <td><span class="type-icon">${t.drawing_count} drawings</span></td>
+                      <td><span class="status-chip s-issued">${t.status}</span></td>
+                  `;
+                  transTbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'transmittals', totalItems, () => renderDashboardSubViews("transmittals", data));
+      }
+      else if (viewName === "approvals") {
+          // Render Approvals Queue (Drawings under review / awaiting approval)
+          const appTbody = document.getElementById("approvals-tbody");
+          const table = appTbody.closest('table');
+          appTbody.innerHTML = '';
+          
+          const pending = data.all_drawings.filter(drg => ['Under Review', 'IFA', 'IFR'].includes(drg.status));
+          const filtered = getFilteredData(pending, ['drawing_no', 'title', 'discipline', 'status', 'drawing_type']);
+          const totalItems = filtered.length;
+          const state = paginationState.approvals;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          if (paginated.length === 0) {
+              appTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No drawings pending approval</td></tr>`;
+          } else {
+              paginated.forEach(drg => {
+                  const tr = document.createElement('tr');
+                  tr.style.cursor = 'pointer';
+                  tr.onclick = function() {
+                      redirectToRecord('Drawing Register', drg.name || drg.drawing_no);
+                  };
+                  tr.innerHTML = `
+                      <td><span class="mono" style="color:var(--lime);font-weight:600">${drg.drawing_no}</span></td>
+                      <td>${drg.title}</td>
+                      <td><span class="type-icon">${getTypeAbbreviation(drg.drawing_type)}</span></td>
+                      <td>${drg.discipline}</td>
+                      <td>${drg.modified_by || 'System'}</td>
+                      <td><span class="status-chip ${getStatusChipClass(drg.status)}">${drg.status}</span></td>
+                  `;
+                  appTbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'approvals', totalItems, () => renderDashboardSubViews("approvals", data));
+      }
+      else if (viewName === "rfi") {
+          // Render RFIs
+          const rfiTbody = document.getElementById("rfi-tbody");
+          const table = rfiTbody.closest('table');
+          rfiTbody.innerHTML = '';
+          
+          const filtered = getFilteredData(data.all_rfis, ['name', 'rfi_number', 'subject', 'related_drawing', 'discipline', 'priority', 'status']);
+          document.getElementById("rfi-sub-count").textContent = `Showing all ${filtered.length} RFIs`;
+          
+          const totalItems = filtered.length;
+          const state = paginationState.rfi;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          if (paginated.length === 0) {
+              rfiTbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No RFI records found</td></tr>`;
+          } else {
+              paginated.forEach(rfi => {
+                  const tr = document.createElement('tr');
+                  tr.style.cursor = 'pointer';
+                  tr.onclick = function() {
+                      redirectToRecord('RFI', rfi.name);
+                  };
+                  tr.innerHTML = `
+                      <td><span class="mono" style="color:var(--lime);font-weight:600">${rfi.rfi_number || rfi.name}</span></td>
+                      <td>${rfi.subject}</td>
+                      <td><span class="mono">${rfi.related_drawing || ''}</span></td>
+                      <td>${rfi.discipline}</td>
+                      <td>${rfi.raised_by}</td>
+                      <td>${rfi.raised_date_formatted || ''}</td>
+                      <td><span class="type-icon">${rfi.priority}</span></td>
+                      <td><span class="status-chip ${rfi.status === 'Responded' ? 's-issued' : 's-review'}">${rfi.status}</span></td>
+                  `;
+                  rfiTbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'rfi', totalItems, () => renderDashboardSubViews("rfi", data));
+      }
+      else if (viewName === "discipline") {
+          // Render Drawings by Discipline catalog
+          const catalog = document.getElementById("discipline-catalog-cards");
+          catalog.innerHTML = '';
+          
+          const discDrawings = {};
+          data.all_drawings.forEach(drg => {
+              if (!discDrawings[drg.discipline]) {
+                  discDrawings[drg.discipline] = [];
+              }
+              discDrawings[drg.discipline].push(drg);
+          });
+
+          Object.keys(discDrawings).forEach(disc => {
+              const count = discDrawings[disc].length;
+              const card = document.createElement('div');
+              card.className = 'chart-card';
+              card.style.margin = '0';
+              card.style.cursor = 'pointer';
+              card.innerHTML = `
+                  <div style="font-size:24px;margin-bottom:10px;">📂</div>
+                  <div class="card-title" style="font-size:15px;">${disc}</div>
+                  <div class="card-sub" style="font-size:12px;color:var(--lime);font-weight:600;margin-top:4px;">${count} drawings</div>
+              `;
+              card.onclick = function() {
+                  const searchBox = document.getElementById("drawing-search");
+                  if (searchBox) {
+                      searchBox.value = disc;
+                      searchBox.dispatchEvent(new Event('input'));
+                      document.querySelector('[data-view="register"]').click();
+                  }
+              };
+              catalog.appendChild(card);
+          });
+      }
+      else if (viewName === "project") {
+          // Render Project breakdown
+          const projTbody = document.getElementById("project-tbody");
+          const table = projTbody.closest('table');
+          projTbody.innerHTML = '';
+          
+          const filtered = getFilteredData(data.project_breakdown, ['name', 'project_name']);
+          const totalItems = filtered.length;
+          const state = paginationState.project;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          paginated.forEach(pb => {
+              const tr = document.createElement('tr');
+              tr.style.cursor = 'pointer';
+              tr.onclick = function() {
+                  // Set project filter dropdown
+                  const filter = document.getElementById("project-filter");
+                  if (filter) {
+                      filter.value = pb.name;
+                      filter.dispatchEvent(new Event('change'));
+                      document.querySelector('[data-view="dashboard"]').click();
+                  }
+              };
+              tr.innerHTML = `
+                  <td><span class="mono" style="color:var(--blue);font-weight:600">${pb.name}</span></td>
+                  <td><strong>${pb.project_name}</strong></td>
+                  <td><span class="rev-chip rev-b">${pb.total_drawings}</span></td>
+                  <td><span class="rev-chip rev-a">${pb.ifc_drawings}</span></td>
+                  <td><span class="rev-chip rev-c">${pb.open_rfis}</span></td>
+              `;
+              projTbody.appendChild(tr);
+          });
+          updatePaginationControls(table, 'project', totalItems, () => renderDashboardSubViews("project", data));
+      }
+      else if (viewName === "asbuilt") {
+          // Render As-Builts
+          const abTbody = document.getElementById("asbuilt-tbody");
+          const table = abTbody.closest('table');
+          abTbody.innerHTML = '';
+          
+          const asbuilts = data.all_drawings.filter(drg => ['As-Built'].includes(drg.status));
+          const filtered = getFilteredData(asbuilts, ['drawing_no', 'title', 'discipline', 'status', 'drawing_type']);
+          document.getElementById("asbuilt-sub-count").textContent = `Certified final drawings (${filtered.length})`;
+          
+          const totalItems = filtered.length;
+          const state = paginationState.asbuilt;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          if (paginated.length === 0) {
+              abTbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No certified As-Built drawings in this project set</td></tr>`;
+          } else {
+              paginated.forEach(drg => {
+                  const tr = document.createElement('tr');
+                  tr.style.cursor = 'pointer';
+                  tr.onclick = function() {
+                      redirectToRecord('Drawing Register', drg.name || drg.drawing_no);
+                  };
+                  tr.innerHTML = `
+                      <td><span class="mono" style="color:var(--lime);font-weight:600">${drg.drawing_no}</span></td>
+                      <td>${drg.title}</td>
+                      <td><span class="type-icon">${getTypeAbbreviation(drg.drawing_type)}</span></td>
+                      <td><span class="rev-chip ${getRevChipClass(drg.current_rev)}">${drg.current_rev || 'A'}</span></td>
+                      <td>${drg.discipline}</td>
+                      <td>${drg.issue_date_formatted || ''}</td>
+                      <td><span class="status-chip s-issued">${drg.status}</span></td>
+                  `;
+                  abTbody.appendChild(tr);
+              });
+          }
+          updatePaginationControls(table, 'asbuilt', totalItems, () => renderDashboardSubViews("asbuilt", data));
+      }
+      else if (viewName === "export") {
+          // Render Export view checkboxes
+          const expTbody = document.getElementById("export-tbody");
+          const table = expTbody.closest('table');
+          expTbody.innerHTML = '';
+          
+          const filtered = getFilteredData(data.all_drawings, ['drawing_no', 'title', 'discipline', 'status', 'drawing_type']);
+          const totalItems = filtered.length;
+          const state = paginationState.export;
+          const start = (state.currentPage - 1) * state.pageSize;
+          const paginated = filtered.slice(start, start + state.pageSize);
+          
+          paginated.forEach(drg => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                  <td><input type="checkbox" class="export-check" value="${drg.drawing_no}"></td>
+                  <td><span class="mono" style="color:var(--lime);font-weight:600;cursor:pointer;text-decoration:underline;" onclick="redirectToRecord('Drawing Register', '${drg.name || drg.drawing_no}')">${drg.drawing_no}</span></td>
+                  <td>${drg.title}</td>
+                  <td><span class="type-icon">${getTypeAbbreviation(drg.drawing_type)}</span></td>
+                  <td><span class="rev-chip ${getRevChipClass(drg.current_rev)}">${drg.current_rev || 'A'}</span></td>
+                  <td>${drg.discipline}</td>
+                  <td><span class="status-chip ${getStatusChipClass(drg.status)}">${drg.status}</span></td>
+              `;
+              expTbody.appendChild(tr);
+          });
+          updatePaginationControls(table, 'export', totalItems, () => renderDashboardSubViews("export", data));
+      }
+  }
+
+  // Helpers
+  const getRevChipClass = (rev) => {
+      if (!rev) return 'rev-a';
+      const r = rev.toLowerCase();
+      if (r.includes('a') || r.includes('main')) return 'rev-a';
+      if (r.includes('b')) return 'rev-b';
+      if (r.includes('c')) return 'rev-c';
+      if (r.includes('d')) return 'rev-d';
+      return 'rev-b';
+  };
+
+  const getStatusChipClass = (status) => {
+      if (['IFC', 'As-Built'].includes(status)) return 's-issued';
+      if (['Under Review', 'IFR'].includes(status)) return 's-review';
+      if (['In Preparation'].includes(status)) return 's-draft';
+      if (['Superseded', 'Void'].includes(status)) return 's-superseded';
+      if (['IFA'].includes(status)) return 's-pending';
+      return 's-review';
+  };
+
+  const getTypeAbbreviation = (type) => {
+      if (!type) return 'DRG';
+      const t = type.toUpperCase();
+      if (t.includes('CONSTRUCTION')) return 'CON';
+      if (t.includes('DETAIL')) return 'DET';
+      if (t.includes('LAYOUT')) return 'LAY';
+      if (t.includes('ELEVATION')) return 'ELV';
+      if (t.includes('GENERAL ARRANGEMENT') || t === 'GA') return 'GA';
+      if (t.includes('ISOMETRIC') || t === 'ISO') return 'ISO';
+      if (t.includes('P&ID') || t.includes('PROCESS')) return 'P&ID';
+      if (t.includes('SLD') || t.includes('SINGLE LINE')) return 'SLD';
+      return type.substring(0, 3).toUpperCase();
+  };
+
+  // Export functions
+  function toggleSelectAllExports(status) {
+      document.querySelectorAll(".export-check").forEach(chk => {
+          chk.checked = status;
+      });
+  }
+
+  function exportSelectedCSV() {
+      const selected = [];
+      document.querySelectorAll(".export-check:checked").forEach(chk => {
+          selected.push(chk.value);
+      });
+      if (selected.length === 0) {
+          alert("Please select at least one drawing register to export.");
+          return;
+      }
+      
+      const drawingsToExport = cachedDashboardData.all_drawings.filter(d => selected.includes(d.drawing_no));
+      
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Drawing No,Title,Type,Revision,Discipline,Status\n";
+      
+      drawingsToExport.forEach(d => {
+          const row = `"${d.drawing_no}","${d.title}","${d.drawing_type}","${d.current_rev || 'Main'}","${d.discipline}","${d.status}"`;
+          csvContent += row + "\n";
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `drawing_manifest_${new Date().toISOString().substring(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+  function exportActiveTabCSV() {
+      const activeSection = document.querySelector(".view-section.active");
+      if (!activeSection) return;
+      
+      const activeId = activeSection.id;
+      if (activeId === "view-export") {
+          exportSelectedCSV();
+          return;
+      }
+
+      const table = activeSection.querySelector("table");
+      if (!table) {
+          alert("No table data found to export on this tab.");
+          return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      const headers = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.textContent.trim()}"`).join(",");
+      csvContent += headers + "\n";
+      
+      const rows = Array.from(table.querySelectorAll("tbody tr"));
+      rows.forEach(row => {
+          if (row.style.display !== "none") {
+              const cols = Array.from(row.querySelectorAll("td")).map(td => `"${td.textContent.trim().replace(/'/g, '').replace(/"/g, '""')}"`).join(",");
+              csvContent += cols + "\n";
+          }
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `${activeId.replace("view-", "")}_export_${new Date().toISOString().substring(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  }
+
+  // Upload/New Drawing logic
+  function handleUploadButtonClick() {
+      if (window.frappe) {
+          window.location.href = "/app/drawing-register";
+      } else {
+          openMockUploadModal();
+      }
+  }
+
+  function openMockUploadModal() {
+      const overlay = document.getElementById("upload-modal-overlay");
+      if (overlay) {
+          const projSel = document.getElementById("form-project");
+          if (projSel && cachedDashboardData && cachedDashboardData.projects) {
+              projSel.innerHTML = '';
+              cachedDashboardData.projects.forEach(p => {
+                  const opt = document.createElement("option");
+                  opt.value = p.name;
+                  opt.textContent = p.project_name || p.name;
+                  projSel.appendChild(opt);
+              });
+          }
+          overlay.classList.add("show");
+      }
+  }
+  
+  function closeMockUploadModal() {
+      const overlay = document.getElementById("upload-modal-overlay");
+      if (overlay) {
+          overlay.classList.remove("show");
+      }
+  }
+
+  function submitMockUpload() {
+      const drawing_no = document.getElementById("form-drawing-no").value.trim();
+      const title = document.getElementById("form-title").value.trim();
+      const project = document.getElementById("form-project").value;
+      const discipline = document.getElementById("form-discipline").value;
+      const drawing_type = document.getElementById("form-drawing-type").value;
+      const status = document.getElementById("form-status").value;
+
+      if (!drawing_no || !title) {
+          alert("Drawing Number and Title are required.");
+          return;
+      }
+
+      if (window.frappe && window.frappe.call) {
+          frappe.call({
+              method: "frappe.client.insert",
+              args: {
+                  doc: {
+                      doctype: "Drawing Register",
+                      drawing_no: drawing_no,
+                      title: title,
+                      project: project,
+                      discipline: discipline,
+                      drawing_type: drawing_type,
+                      status: status,
+                      from_entity_type: "Supplier",
+                      from_entity: "Vedika Patil",
+                      to_entity_type: "Company",
+                      to_entity: "Kolkata Builders"
+                  }
+              },
+              callback: function(r) {
+                  if (!r.exc) {
+                      closeMockUploadModal();
+                      frappe.show_alert({message: "Drawing saved successfully!", indicator: "green"});
+                      fetchDashboardData(document.getElementById("project-filter").value);
+                  }
+              }
+          });
+      } else {
+          const mockDrg = {
+              drawing_no: drawing_no,
+              title: title,
+              project: project,
+              discipline: discipline,
+              drawing_type: drawing_type,
+              status: status,
+              current_rev: "A",
+              revisions: [{revision: "A", description: "First upload"}],
+              issue_date_formatted: new Date().toLocaleDateString("en-GB", {day: "numeric", month: "short", year: "numeric"}),
+              modified_by: "Administrator"
+          };
+          
+          cachedDashboardData.all_drawings.unshift(mockDrg);
+          cachedDashboardData.recent_drawings.unshift(mockDrg);
+          cachedDashboardData.kpis.total_drawings += 1;
+          if (status === "IFC") cachedDashboardData.kpis.ifc_drawings += 1;
+          
+          closeMockUploadModal();
+          renderDashboard(cachedDashboardData);
+          alert("Drawing added successfully (Local Mock Cache)!");
+      }
+  }
+</script>
+</body>
+</html>

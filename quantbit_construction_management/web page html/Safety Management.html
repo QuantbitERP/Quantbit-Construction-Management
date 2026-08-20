@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 · Safety &amp; Incidents Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --lime: #7ab800;
+    --lime-light: #eef6d6;
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --card2: #f4f6f9;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --border: #e2e6ea;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --blue: #2563eb;
+    --blue-light: #dbeafe;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; }
+
+  .sidebar { width: 220px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; box-shadow: 2px 0 8px rgba(0,0,0,.04); }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo .tag { font-size: 10px; letter-spacing: 3px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+  .sidebar-logo .name { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin-top: 4px; }
+  .nav { padding: 16px 0; flex: 1; }
+  .nav-section { padding: 8px 20px 4px; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--muted); cursor: pointer; border-left: 3px solid transparent; transition: all .15s; font-size: 13px; }
+  .nav-item:hover { color: var(--text); background: var(--lime-light); }
+  .nav-item.active { color: var(--lime); border-left-color: var(--lime); background: var(--lime-light); font-weight: 600; }
+  .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+  .user-chip { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--red); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .user-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .user-role { font-size: 10px; color: var(--muted); }
+
+  /* HIDE DEFAULT WEBSITE NAVBAR */
+  .navbar { display: none !important; }
+
+  /* PROFILE DROPDOWN MENU */
+  .profile-dropdown {
+      display: none;
+      position: absolute;
+      bottom: 60px;
+      left: 10px;
+      width: 200px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      padding: 8px 0;
+  }
+  .profile-dropdown.open {
+      display: block;
+  }
+  .profile-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: var(--text);
+      text-decoration: none !important;
+      cursor: pointer;
+      transition: background 0.15s;
+  }
+  .profile-dropdown-item:hover {
+      background: var(--lime-light);
+      color: var(--lime);
+  }
+  .profile-dropdown-item span {
+      font-size: 14px;
+      width: 16px;
+      text-align: center;
+  }
+
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .page-tag { font-size: 10px; letter-spacing: 2px; color: var(--lime); text-transform: uppercase; font-weight: 600; }
+  .page-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 600; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge-ok { background: var(--green-light); color: var(--green); border: 1px solid #86efac; border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 600; }
+  .badge-alert { background: var(--amber-light); color: var(--amber); border: 1px solid #fcd34d; border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 600; }
+  .btn { background: var(--red); color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .btn:hover { background: #b91c1c; }
+
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* SEARCH BOX */
+  .search-box {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      width: 200px;
+  }
+  .search-box:focus {
+      border-color: var(--lime);
+  }
+
+  /* VIEW SYSTEM */
+  .view-section { display: none; }
+  .view-section.active { display: block; }
+
+  /* HERO */
+  .hero-row { display: grid; grid-template-columns: 320px 1fr; gap: 16px; margin-bottom: 20px; }
+  .lti-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .lti-label { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .lti-days { font-family: 'Space Grotesk', sans-serif; font-size: 88px; font-weight: 700; color: var(--lime); line-height: 1; margin: 8px 0; }
+  .lti-sub { font-size: 13px; color: var(--muted); }
+  .lti-record { margin-top: 12px; background: var(--lime-light); border: 1px solid #c8e87a; border-radius: 6px; padding: 6px 14px; font-size: 11px; color: var(--lime); font-weight: 600; }
+
+  .kpi-mini-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .kpi-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; border-top: 3px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .kpi-mini.red { border-top-color: var(--red); }
+  .kpi-mini.amber { border-top-color: var(--amber); }
+  .kpi-mini.green { border-top-color: var(--green); }
+  .kpi-mini.blue { border-top-color: var(--blue); }
+  .kpi-mini-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-mini-val { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: var(--text); margin: 4px 0; }
+  .kpi-mini-trend { font-size: 11px; }
+
+  .mid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.04); margin-bottom: 20px; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .pill { background: var(--card2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--muted); cursor: pointer; }
+
+  /* HEATMAP */
+  .heat-label-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+  .heat-label { font-size: 9px; color: var(--muted); text-align: center; }
+  .heat-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .heat-cell { aspect-ratio: 1; border-radius: 3px; cursor: pointer; transition: transform 0.1s; position: relative; }
+  .heat-cell:hover { transform: scale(1.15); z-index: 10; }
+
+  /* Tooltip styling for heatmap cells */
+  .heat-cell[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .heat-cell[data-tooltip]:hover::after {
+    opacity: 1;
+  }
+
+  /* HBAR */
+  .hbar-list { display: flex; flex-direction: column; gap: 12px; }
+  .hbar-top { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .hbar-name { font-size: 12px; color: var(--text); }
+  .hbar-val { font-size: 12px; font-weight: 600; font-family: 'Space Grotesk'; }
+  .hbar-track { background: var(--card2); border-radius: 3px; height: 7px; overflow: hidden; border: 1px solid var(--border); }
+  .hbar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+
+  /* TABLE */
+  .bottom-row { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .severity-tag { border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .sev-lti { background: var(--red-light); color: var(--red); }
+  .sev-fa { background: var(--amber-light); color: var(--amber); }
+  .sev-near { background: var(--green-light); color: var(--green); }
+  .sev-unsafe { background: var(--blue-light); color: var(--blue); }
+  .inv-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* SPARK */
+  .spark-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .spark-label { font-size: 11px; color: var(--muted); width: 70px; flex-shrink: 0; }
+  .spark-bars { display: flex; align-items: flex-end; gap: 3px; flex: 1; height: 30px; }
+  .spark-bar { flex: 1; border-radius: 2px 2px 0 0; transition: height 0.3s ease; }
+  .spark-val { font-size: 11px; font-weight: 600; font-family: 'Space Grotesk'; width: 24px; text-align: right; }
+
+  /* Custom Searchable Dropdown */
+  .searchable-dropdown {
+      position: relative;
+      display: inline-block;
+      min-width: 180px;
+      user-select: none;
+      text-align: left;
+  }
+  .dropdown-trigger {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+  }
+  .dropdown-trigger:hover {
+      border-color: var(--lime);
+  }
+  .dropdown-trigger .arrow {
+      font-size: 8px;
+      color: var(--muted);
+      transition: transform 0.2s;
+  }
+  .searchable-dropdown.open .dropdown-trigger .arrow {
+      transform: rotate(180deg);
+  }
+  .searchable-dropdown .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      z-index: 1000;
+      padding: 6px;
+  }
+  .searchable-dropdown.open .dropdown-menu {
+      display: block;
+  }
+  .dropdown-search-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      outline: none;
+      box-sizing: border-box;
+      margin-bottom: 6px;
+      background: var(--surface);
+      color: var(--text);
+  }
+  .dropdown-search-input:focus {
+      border-color: var(--lime);
+  }
+  .dropdown-options {
+      max-height: 200px;
+      overflow-y: auto;
+  }
+  .dropdown-option {
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text);
+  }
+  .dropdown-option:hover {
+      background: var(--bg);
+  }
+  .dropdown-option.selected {
+      background: var(--lime-light);
+      color: var(--lime);
+      font-weight: 600;
+  }
+
+  /* Pagination Styling */
+  .pagination-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+  }
+  .btn-page {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+  }
+  .btn-page:hover:not(:disabled) {
+      background: var(--lime-light);
+      color: var(--lime);
+      border-color: var(--lime);
+  }
+  .btn-page:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+  }
+  .page-info {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+  }
+
+  /* QUICK SUBMIT MODAL */
+  .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+  }
+  .modal-overlay.open {
+      display: flex;
+  }
+  .modal-content {
+      background: var(--surface);
+      border-radius: 10px;
+      width: 520px;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      position: relative;
+      border: 1px solid var(--border);
+  }
+  .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+  }
+  .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+  }
+  .modal-close {
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 300;
+      transition: color 0.15s;
+  }
+  .modal-close:hover {
+      color: var(--red);
+  }
+  .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+  }
+  .form-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+  }
+  .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      background: var(--surface);
+      color: var(--text);
+  }
+  .form-control:focus {
+      border-color: var(--lime);
+  }
+  .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="tag">Module 02</div>
+    <div class="name">SafetyHub</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-view="dashboard"><span>◈</span> Dashboard</div>
+    <div class="nav-item" data-view="alerts"><span>⚠</span> Live Alerts</div>
+    <div class="nav-section">Incidents</div>
+    <div class="nav-item" data-view="incidents"><span>⊟</span> Incident Log</div>
+    <div class="nav-section">Compliance</div>
+    <div class="nav-item" data-view="walks"><span>✓</span> Safety Walks</div>
+    <div class="nav-item" data-view="training"><span>◷</span> Training Briefs</div>
+    <div class="nav-item" data-view="permits"><span>⊞</span> Permit to Work</div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" data-view="analytics"><span>↗</span> Analytics</div>
+    <div class="nav-item" data-view="export"><span>⤓</span> Export</div>
+  </nav>
+  <div class="sidebar-footer" style="position: relative;">
+    <div class="user-chip" id="user-profile-trigger" style="cursor: pointer;">
+      <div class="avatar" id="user-avatar">VS</div>
+      <div>
+        <div class="user-name" id="user-display-name">Vikram Singh</div>
+        <div class="user-role" id="user-role-label">HSE Manager</div>
+      </div>
+    </div>
+    <!-- Profile Dropdown Menu -->
+    <div class="profile-dropdown" id="profile-dropdown-menu">
+      <a href="/app/user-profile" class="profile-dropdown-item">
+        <span>👤</span> My Account
+      </a>
+      <a href="/app" class="profile-dropdown-item">
+        <span>🖥️</span> Switch To Desk
+      </a>
+      <a href="/app/workspace" class="profile-dropdown-item">
+        <span>📱</span> Apps
+      </a>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 6px 0;" />
+      <a href="/?cmd=web_logout" class="profile-dropdown-item" style="color: var(--red);">
+        <span>🚪</span> Log out
+      </a>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-tag">02 · Safety &amp; Incidents</div>
+      <div class="page-title" id="page-title-text">Dashboard Overview</div>
+    </div>
+    <div class="topbar-right">
+      <!-- Searchable Project Filter -->
+      <div class="searchable-dropdown" id="project-dropdown-container">
+          <div class="dropdown-trigger" id="project-dropdown-trigger">
+              <span id="selected-project-label">All Projects</span>
+              <span class="arrow">▼</span>
+          </div>
+          <div class="dropdown-menu" id="project-dropdown-menu">
+              <input type="text" id="project-search-input" class="dropdown-search-input" placeholder="Search project...">
+              <div class="dropdown-options" id="project-options-list">
+                  <div class="dropdown-option selected" data-value="">All Projects</div>
+              </div>
+          </div>
+      </div>
+      <input type="text" id="safety-search" class="search-box" placeholder="Search safety data...">
+      <span class="badge-ok">● Plant Operational</span>
+      <span class="badge-alert" id="near-miss-alert">⚠ 0 Near Misses Today</span>
+      <button class="btn" id="btn-report-incident">⚠ Report Incident</button>
+    </div>
+  </div>
+
+  <div class="content">
+    
+    <!-- ================= DASHBOARD VIEW ================= -->
+    <div id="view-dashboard" class="view-section active">
+      <!-- HERO -->
+      <div class="hero-row">
+        <div class="lti-card">
+          <div class="lti-label">Lost Time Injury Free Days</div>
+          <div class="lti-days" id="lti-days">0</div>
+          <div class="lti-sub" id="lti-sub">Since last LTI · --</div>
+          <div class="lti-record" id="lti-record-tag">🏆 Record: 312 days</div>
+        </div>
+        <div class="kpi-mini-grid">
+          <div class="kpi-mini red">
+            <div class="kpi-mini-label">Incidents YTD</div>
+            <div class="kpi-mini-val" id="kpi-incidents-ytd">0</div>
+            <div class="kpi-mini-trend" id="kpi-incidents-ytd-trend" style="color:var(--red)">↑ 0 vs same period 2025</div>
+          </div>
+          <div class="kpi-mini green">
+            <div class="kpi-mini-label">Near Misses YTD</div>
+            <div class="kpi-mini-val" id="kpi-near-misses-ytd">0</div>
+            <div class="kpi-mini-trend" id="kpi-near-misses-ytd-trend" style="color:var(--green)">↑ 0% reporting rate</div>
+          </div>
+          <div class="kpi-mini amber">
+            <div class="kpi-mini-label">Open Actions</div>
+            <div class="kpi-mini-val" id="kpi-open-actions">0</div>
+            <div class="kpi-mini-trend" id="kpi-open-actions-trend" style="color:var(--amber)">0 overdue · 0 on track</div>
+          </div>
+          <div class="kpi-mini blue">
+            <div class="kpi-mini-label">Training Compliance</div>
+            <div class="kpi-mini-val" id="kpi-training-compliance">0<span style="font-size:14px;color:var(--muted)">%</span></div>
+            <div class="kpi-mini-trend" id="kpi-training-compliance-trend" style="color:var(--blue)">↑ 0% vs Q2</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MID ROW -->
+      <div class="mid-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Incident Activity · Last 8 Weeks</div>
+              <div class="card-sub">Colour intensity = event count</div>
+            </div>
+          </div>
+          <div class="heat-label-row">
+            <div class="heat-label">Mon</div><div class="heat-label">Tue</div><div class="heat-label">Wed</div>
+            <div class="heat-label">Thu</div><div class="heat-label">Fri</div><div class="heat-label">Sat</div><div class="heat-label">Sun</div>
+          </div>
+          <div class="heat-grid" id="heat-grid"></div>
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+            <span style="font-size:10px;color:var(--muted)">None</span>
+            <div style="display:flex;gap:3px">
+              <div style="width:12px;height:12px;border-radius:2px;background:#f0f2f5;border:1px solid var(--border)"></div>
+              <div style="width:12px;height:12px;border-radius:2px;background:#fde68a"></div>
+              <div style="width:12px;height:12px;border-radius:2px;background:#fca5a5"></div>
+              <div style="width:12px;height:12px;border-radius:2px;background:#ef4444"></div>
+            </div>
+            <span style="font-size:10px;color:var(--muted)">High</span>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Incident Type Breakdown</div>
+              <div class="card-sub" id="breakdown-total-sub">0 total events YTD 2026</div>
+            </div>
+          </div>
+          <div class="hbar-list" id="hbar-list"></div>
+          <div style="margin-top:20px">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Monthly Trend</div>
+            <div class="spark-row">
+              <div class="spark-label">Near Miss</div>
+              <div class="spark-bars" id="spark-bars-near-miss"></div>
+              <div class="spark-val" id="spark-val-near-miss" style="color:var(--green)">0</div>
+            </div>
+            <div class="spark-row">
+              <div class="spark-label">Injuries</div>
+              <div class="spark-bars" id="spark-bars-injuries"></div>
+              <div class="spark-val" id="spark-val-injuries" style="color:var(--red)">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM -->
+      <div class="bottom-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recent Incident Register</div>
+              <div class="card-sub">Sorted by date</div>
+            </div>
+            <div class="pill" id="pill-full-log">Full Log →</div>
+          </div>
+          <table id="incident-register-table">
+            <thead>
+              <tr><th>ID</th><th>Date</th><th>Description</th><th>Location</th><th>Type</th><th>Investigation</th></tr>
+            </thead>
+            <tbody id="incident-register-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Compliance Snapshot</div>
+              <div class="card-sub" id="compliance-snapshot-sub">August 2026</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px" id="compliance-snapshot-container"></div>
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Open Corrective Actions</div>
+            <div style="display:flex;flex-direction:column;gap:8px" id="open-actions-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= ALERTS VIEW ================= -->
+    <div id="view-alerts" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Live Safety Alerts &amp; Activity Feed</div>
+            <div class="card-sub">Recent updates, breaches, and HSE briefings from the field</div>
+          </div>
+        </div>
+        <div id="alerts-feed-container" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+    </div>
+
+    <!-- ================= INCIDENTS LOG VIEW ================= -->
+    <div id="view-incidents" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Incident Register Log</div>
+            <div class="card-sub">Comprehensive database of safety incidents across projects</div>
+          </div>
+          <button class="btn" onclick="openQuickSubmitModal('Incident Report')">+ Report Incident</button>
+        </div>
+        <table id="incidents-tab-table">
+          <thead>
+            <tr><th>ID</th><th>Date</th><th>Description</th><th>Location</th><th>Type</th><th>Severity</th><th>Investigation Status</th></tr>
+          </thead>
+          <tbody id="incidents-tab-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= SAFETY WALKS VIEW ================= -->
+    <div id="view-walks" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Safety Observations Log</div>
+            <div class="card-sub">Active site audits, hazard identifications, and unsafe behavior reporting</div>
+          </div>
+          <button class="btn" onclick="openQuickSubmitModal('Safety Observation')">+ New Observation</button>
+        </div>
+        <table id="walks-tab-table">
+          <thead>
+            <tr><th>ID</th><th>Date</th><th>Observation Type</th><th>Description</th><th>Location</th><th>Severity</th><th>Corrective Action</th><th>Status</th></tr>
+          </thead>
+          <tbody id="walks-tab-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= TRAINING TRACK VIEW ================= -->
+    <div id="view-training" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Toolbox Talks Log</div>
+            <div class="card-sub">Log of toolbox talk training attendance and topics discussed</div>
+          </div>
+          <button class="btn" onclick="openQuickSubmitModal('Toolbox Talk')">+ New Toolbox Talk</button>
+        </div>
+        <table id="training-tab-table">
+          <thead>
+            <tr><th>Talk ID</th><th>Date</th><th>Topic Brief</th><th>Category</th><th>Duration (min)</th><th>Attendees</th></tr>
+          </thead>
+          <tbody id="training-tab-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= PERMIT TO WORK VIEW ================= -->
+    <div id="view-permits" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Permit to Work Registry (PTW)</div>
+            <div class="card-sub">Active and expired high-risk operational work permits</div>
+          </div>
+          <button class="btn" onclick="alert('Permit verification system requires configuration.')">+ New Permit</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Permit ID</th><th>Type</th><th>Area / Location</th><th>Applicant</th><th>Issue Date</th><th>Expiry</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">PTW-2026-0081</td>
+              <td>Hot Work (Welding)</td>
+              <td>Bay 3</td>
+              <td>Vikram Singh</td>
+              <td>20 Aug 2026</td>
+              <td>20 Aug 2026 18:00</td>
+              <td><span class="severity-tag sev-near">Active</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">PTW-2026-0082</td>
+              <td>Working at Height</td>
+              <td>Silo Framework</td>
+              <td>Sanjay Patel</td>
+              <td>20 Aug 2026</td>
+              <td>21 Aug 2026 12:00</td>
+              <td><span class="severity-tag sev-near">Active</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600">PTW-2026-0079</td>
+              <td>Confined Space Entry</td>
+              <td>Tank 4</td>
+              <td>Vikram Singh</td>
+              <td>19 Aug 2026</td>
+              <td>19 Aug 2026 17:00</td>
+              <td><span class="severity-tag sev-unsafe">Expired</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= ANALYTICS VIEW ================= -->
+    <div id="view-analytics" class="view-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="chart-card">
+          <div class="card-header"><div class="card-title">Analytics: Incident Types YTD</div></div>
+          <div class="hbar-list" id="analytics-hbar-list"></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-header"><div class="card-title">Analytics: Trend Logs</div></div>
+          <div style="display:flex;flex-direction:column;gap:16px;" id="analytics-spark-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= EXPORT VIEW ================= -->
+    <div id="view-export" class="view-section">
+      <div class="chart-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Export HSE Reports</div>
+            <div class="card-sub">Select log records to generate reports</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:10px;align-items:flex-end;">
+            <div class="form-group" style="flex:2;">
+                <label class="form-label">Data Log Type</label>
+                <select class="form-control" id="export-log-type">
+                    <option value="incidents">Incident reports register</option>
+                    <option value="observations">Safety Walks &amp; observations</option>
+                    <option value="talks">Toolbox briefings</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+                <button class="btn" style="height:38px;background:var(--lime);color:var(--surface);" onclick="triggerLogExport('csv')">⤓ Download CSV</button>
+                <button class="btn" style="height:38px;background:var(--blue);color:#fff;" onclick="triggerLogExport('pdf')">👁️ Preview PDF</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ================= QUICK SUBMIT MODAL DIALOG ================= -->
+<div class="modal-overlay" id="quick-submit-modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="quick-submit-modal-title">Quick Submit Entry</div>
+      <span class="modal-close" onclick="closeQuickSubmitModal()">&times;</span>
+    </div>
+    <div id="quick-submit-modal-body">
+      <!-- Injected forms -->
+    </div>
+  </div>
+</div>
+
+<script>
+let cachedSafetyData = null;
+let currentSearchTerm = "";
+
+const paginationState = {
+    incidents_dashboard: { currentPage: 1, pageSize: 5 },
+    incidents: { currentPage: 1, pageSize: 10 },
+    walks: { currentPage: 1, pageSize: 10 },
+    training: { currentPage: 1, pageSize: 10 }
+};
+
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Tab Switching Logic
+    document.querySelectorAll(".nav-item").forEach(item => {
+        item.addEventListener("click", function() {
+            const view = this.getAttribute("data-view");
+            if (!view) return;
+
+            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+            this.classList.add("active");
+
+            document.querySelectorAll(".view-section").forEach(s => s.classList.remove("active"));
+            const activeSec = document.getElementById("view-" + view);
+            if (activeSec) activeSec.classList.add("active");
+
+            const titleMap = {
+                dashboard: "Dashboard Overview",
+                alerts: "Live Safety Alerts & Feeds",
+                incidents: "Incident Register Log",
+                walks: "Safety Observations Log",
+                training: "Toolbox Talks Log",
+                permits: "Permit to Work Registry",
+                analytics: "Safety Performance Analytics",
+                export: "Export HSE Records"
+            };
+            document.getElementById("page-title-text").textContent = titleMap[view] || "Safety Management";
+
+            if (cachedSafetyData) {
+                renderSubView(view, cachedSafetyData);
+            }
+        });
+    });
+
+    // 2. Project Dropdown Toggle & Search logic
+    const dropdownContainer = document.getElementById('project-dropdown-container');
+    const dropdownTrigger = document.getElementById('project-dropdown-trigger');
+    const searchInput = document.getElementById('project-search-input');
+    
+    if (dropdownTrigger && dropdownContainer) {
+        dropdownTrigger.onclick = function(e) {
+            e.stopPropagation();
+            dropdownContainer.classList.toggle('open');
+            if (dropdownContainer.classList.contains('open') && searchInput) {
+                searchInput.focus();
+                searchInput.value = "";
+                filterDropdownOptions("");
+            }
+        };
+    }
+    
+    document.addEventListener("click", function() {
+        if (dropdownContainer) {
+            dropdownContainer.classList.remove('open');
+        }
+    });
+    
+    const menuDiv = document.getElementById('project-dropdown-menu');
+    if (menuDiv) {
+        menuDiv.onclick = function(e) {
+            e.stopPropagation();
+        };
+    }
+    
+    if (searchInput) {
+        searchInput.oninput = function() {
+            filterDropdownOptions(this.value);
+        };
+    }
+
+    // 3. Search Box Input Listener
+    const searchBox = document.getElementById("safety-search");
+    if (searchBox) {
+        searchBox.oninput = function() {
+            currentSearchTerm = this.value;
+            applySearchFilter();
+        };
+    }
+
+    // 4. Report Incident Topbar Button
+    const btnReport = document.getElementById("btn-report-incident");
+    if (btnReport) {
+        btnReport.onclick = function() {
+            openQuickSubmitModal("Incident Report");
+        };
+    }
+    
+    const pillLog = document.getElementById("pill-full-log");
+    if (pillLog) {
+        pillLog.onclick = function() {
+            const navInc = document.querySelector('.nav-item[data-view="incidents"]');
+            if (navInc) navInc.click();
+        };
+    }
+
+    // 5. User Profile Dropdown Toggle
+    const profileTrigger = document.getElementById("user-profile-trigger");
+    const profileMenu = document.getElementById("profile-dropdown-menu");
+    
+    if (profileTrigger && profileMenu) {
+        profileTrigger.onclick = function(e) {
+            e.stopPropagation();
+            profileMenu.classList.toggle("open");
+        };
+        
+        document.addEventListener("click", function() {
+            profileMenu.classList.remove("open");
+        });
+        
+        profileMenu.onclick = function(e) {
+            e.stopPropagation();
+        };
+    }
+
+    // 6. Initial Data Fetch
+    fetchSafetyData("");
+});
+
+function resetProjectFilter() {
+    const optionsList = document.getElementById('project-options-list');
+    if (optionsList) {
+        optionsList.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('selected'));
+        const allOption = optionsList.querySelector('.dropdown-option[data-value=""]');
+        if (allOption) allOption.classList.add('selected');
+    }
+    document.getElementById('selected-project-label').textContent = "All Projects";
+    fetchSafetyData("");
+}
+
+function filterDropdownOptions(term) {
+    const optionsList = document.getElementById('project-options-list');
+    if (!optionsList) return;
+    const lower = term.toLowerCase();
+    optionsList.querySelectorAll('.dropdown-option').forEach(opt => {
+        const text = opt.textContent.toLowerCase();
+        if (text.includes(lower)) {
+            opt.style.display = "";
+        } else {
+            opt.style.display = "none";
+        }
+    });
+}
+
+function bindDropdownOptionClicks() {
+    const optionsList = document.getElementById('project-options-list');
+    if (!optionsList) return;
+    optionsList.querySelectorAll('.dropdown-option').forEach(opt => {
+        opt.onclick = function(e) {
+            e.stopPropagation();
+            const val = this.getAttribute('data-value');
+            const text = this.textContent;
+            
+            optionsList.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            document.getElementById('selected-project-label').textContent = text;
+            document.getElementById('project-dropdown-container').classList.remove('open');
+            
+            // Reset pagination states
+            Object.keys(paginationState).forEach(k => paginationState[k].currentPage = 1);
+            fetchSafetyData(val);
+        };
+    });
+}
+
+function fetchSafetyData(project) {
+    if (window.frappe && window.frappe.call) {
+        frappe.call({
+            method: "quantbit_construction_management.api.safety_management.get_safety_dashboard_data",
+            type: "GET",
+            args: { project: project },
+            callback: function(r) {
+                if (r.message) {
+                    cachedSafetyData = r.message;
+                    const activeView = document.querySelector(".nav-item.active").getAttribute("data-view");
+                    renderSubView(activeView, r.message);
+                }
+            }
+        });
+    } else {
+        const url = `/api/method/quantbit_construction_management.api.safety_management.get_safety_dashboard_data${project ? '?project=' + encodeURIComponent(project) : ''}`;
+        fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Frappe-CSRF-Token': window.csrf_token || ''
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message) {
+                cachedSafetyData = data.message;
+                const activeView = document.querySelector(".nav-item.active").getAttribute("data-view");
+                renderSubView(activeView, data.message);
+            }
+        })
+        .catch(err => console.error("Error fetching safety dashboard data:", err));
+    }
+}
+
+function redirectToRecord(doctype, name) {
+    if (!name) return;
+    const kebabDoctype = doctype.toLowerCase().replace(/\s+/g, '-');
+    
+    try {
+        if (window.parent && window.parent !== window && window.parent.frappe) {
+            window.parent.frappe.set_route("Form", doctype, name);
+            return;
+        }
+    } catch (e) {}
+
+    try {
+        if (window.frappe) {
+            window.frappe.set_route("Form", doctype, name);
+            return;
+        }
+    } catch (e) {}
+
+    const url = `/app/${kebabDoctype}/${name}`;
+    try {
+        if (window.parent && window.parent !== window) {
+            window.parent.location.href = url;
+        } else {
+            window.location.href = url;
+        }
+    } catch (e) {
+        window.location.href = url;
+    }
+}
+
+function redirectToList(doctype) {
+    try {
+        if (window.parent && window.parent !== window && window.parent.frappe) {
+            window.parent.frappe.set_route("List", doctype);
+            return;
+        }
+    } catch (e) {}
+
+    try {
+        if (window.frappe) {
+            window.frappe.set_route("List", doctype);
+            return;
+        }
+    } catch (e) {}
+
+    const kebabDoctype = doctype.toLowerCase().replace(/\s+/g, '-');
+    const url = `/app/${kebabDoctype}`;
+    try {
+        if (window.parent && window.parent !== window) {
+            window.parent.location.href = url;
+        } else {
+            window.location.href = url;
+        }
+    } catch (e) {
+        window.location.href = url;
+    }
+}
+
+function applySearchFilter() {
+    if (!cachedSafetyData) return;
+    const activeView = document.querySelector(".nav-item.active").getAttribute("data-view");
+    renderSubView(activeView, cachedSafetyData);
+}
+
+function renderSubView(view, data) {
+    // Render top level projects option list once
+    const optionsList = document.getElementById('project-options-list');
+    if (optionsList && optionsList.children.length <= 1) {
+        data.projects.forEach(p => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'dropdown-option';
+            optDiv.setAttribute('data-value', p.name);
+            optDiv.textContent = p.project_name || p.name;
+            optionsList.appendChild(optDiv);
+        });
+        bindDropdownOptionClicks();
+    }
+
+    // Hydrate User Card
+    if (data.logged_in_user) {
+        const uName = data.logged_in_user.full_name || "Vikram Singh";
+        document.getElementById("user-display-name").textContent = uName;
+        document.getElementById("user-role-label").textContent = data.logged_in_user.role || "HSE Manager";
+        const avatar = document.getElementById("user-avatar");
+        if (avatar) {
+            avatar.textContent = uName.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
+        }
+    }
+
+    // Hydrate the specific active tab view
+    if (view === "dashboard") {
+        renderDashboard(data);
+    } else if (view === "alerts") {
+        renderAlertsFeed(data);
+    } else if (view === "incidents") {
+        renderIncidentsTabTable(data.all_incidents);
+    } else if (view === "walks") {
+        renderWalksTabTable(data.all_observations);
+    } else if (view === "training") {
+        renderTrainingTabTable(data.all_talks);
+    } else if (view === "analytics") {
+        renderAnalyticsTab(data);
+    }
+}
+
+function renderDashboard(data) {
+    const kpis = data.kpis;
+    document.getElementById("lti-days").textContent = kpis.lti_days;
+    document.getElementById("lti-sub").textContent = `Since last LTI · ${kpis.lti_date}`;
+    
+    document.getElementById("kpi-incidents-ytd").textContent = kpis.incidents_ytd;
+    document.getElementById("kpi-near-misses-ytd").textContent = kpis.near_misses_ytd;
+    document.getElementById("kpi-open-actions").textContent = kpis.open_actions;
+    document.getElementById("kpi-open-actions-trend").textContent = `${kpis.overdue_actions} overdue · ${kpis.open_actions - kpis.overdue_actions} on track`;
+    document.getElementById("kpi-training-compliance").innerHTML = `${kpis.training_compliance}<span style="font-size:14px;color:var(--muted)">%</span>`;
+
+    renderHeatmap(data.all_incidents, data.all_observations);
+    renderBreakdown(data.all_incidents, data.all_observations);
+    renderMonthlyTrend(data.all_incidents, data.all_observations);
+    renderIncidentRegisterTable(data.all_incidents);
+    renderComplianceSnapshot(data);
+    renderOpenCorrectiveActions(data.all_observations);
+}
+
+function renderHeatmap(incidents, observations) {
+    const heatGrid = document.getElementById("heat-grid");
+    if (!heatGrid) return;
+    heatGrid.innerHTML = "";
+
+    const today = new Date();
+    const currentDay = today.getDay();
+    const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+    const mondayOfThisWeek = new Date(today);
+    mondayOfThisWeek.setDate(today.getDate() + distanceToMonday);
+
+    const startDate = new Date(mondayOfThisWeek);
+    startDate.setDate(mondayOfThisWeek.getDate() - 7 * 7);
+
+    const dateMap = {};
+    const countEvents = (item) => {
+        if (item.date) {
+            const dStr = typeof item.date === 'string' ? item.date : item.date.toISOString().split('T')[0];
+            dateMap[dStr] = (dateMap[dStr] || 0) + 1;
+        }
+    };
+    incidents.forEach(countEvents);
+    observations.forEach(countEvents);
+
+    const todayStr = today.toISOString().split('T')[0];
+
+    for (let i = 0; i < 56; i++) {
+        const cellDate = new Date(startDate);
+        cellDate.setDate(startDate.getDate() + i);
+        const cellDateStr = cellDate.toISOString().split('T')[0];
+        const eventCount = dateMap[cellDateStr] || 0;
+
+        const cell = document.createElement("div");
+        cell.className = "heat-cell";
+        
+        if (eventCount === 0) {
+            cell.style.background = "#f0f2f5";
+        } else if (eventCount === 1) {
+            cell.style.background = "#fde68a";
+        } else if (eventCount === 2) {
+            cell.style.background = "#fca5a5";
+        } else {
+            cell.style.background = "#ef4444";
+        }
+
+        if (cellDateStr === todayStr) {
+            cell.style.outline = "2px solid #7ab800";
+        }
+
+        const formattedDate = cellDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+        cell.setAttribute("data-tooltip", `${formattedDate} · ${eventCount} events`);
+        heatGrid.appendChild(cell);
+    }
+}
+
+function renderBreakdown(incidents, observations) {
+    const listContainer = document.getElementById("hbar-list");
+    if (!listContainer) return;
+
+    let nearMiss = 0;
+    let firstAid = 0;
+    let medicalTrt = 0;
+    let lti = 0;
+    let unsafeCond = 0;
+
+    incidents.forEach(inc => {
+        const type = inc.incident_type || "";
+        if (type.includes("First Aid")) firstAid++;
+        else if (type.includes("Medical Treatment")) medicalTrt++;
+        else if (type.includes("Lost Time")) lti++;
+        else if (type.includes("Near Miss")) nearMiss++;
+    });
+
+    observations.forEach(obs => {
+        const type = obs.observation_type || "";
+        if (type.includes("Unsafe Condition") || type.includes("Unsafe Act")) unsafeCond++;
+        else if (type.includes("Near Miss")) nearMiss++;
+    });
+
+    const total = nearMiss + firstAid + medicalTrt + lti + unsafeCond;
+    document.getElementById("breakdown-total-sub").textContent = `${total} total events YTD 2026`;
+
+    const categories = [
+        { name: "Near Miss", val: nearMiss, color: "var(--green)" },
+        { name: "First Aid", val: firstAid, color: "var(--amber)" },
+        { name: "Medical Treatment", val: medicalTrt, color: "var(--red)" },
+        { name: "Lost Time Injury", val: lti, color: "#b91c1c" },
+        { name: "Unsafe Condition", val: unsafeCond, color: "var(--blue)" }
+    ];
+
+    listContainer.innerHTML = "";
+    categories.forEach(cat => {
+        const pct = total > 0 ? Math.round((cat.val / total) * 100) : 0;
+        const row = document.createElement("div");
+        row.innerHTML = `
+            <div class="hbar-top">
+                <span class="hbar-name">${cat.name}</span>
+                <span class="hbar-val" style="color:${cat.color}">${cat.val}</span>
+            </div>
+            <div class="hbar-track">
+                <div class="hbar-fill" style="width:${pct}%;background:${cat.color}"></div>
+            </div>
+        `;
+        listContainer.appendChild(row);
+    });
+}
+
+function renderMonthlyTrend(incidents, observations) {
+    const months = [];
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        months.push({
+            year: d.getFullYear(),
+            month: d.getMonth(),
+            label: d.toLocaleString('default', { month: 'short' })
+        });
+    }
+
+    const nearMissData = Array(6).fill(0);
+    const injuryData = Array(6).fill(0);
+
+    const matchMonth = (dateVal, m) => {
+        if (!dateVal) return false;
+        const d = new Date(dateVal);
+        return d.getFullYear() === m.year && d.getMonth() === m.month;
+    };
+
+    months.forEach((m, idx) => {
+        incidents.forEach(inc => {
+            if (matchMonth(inc.date, m)) {
+                if (inc.incident_type.includes("Near Miss")) {
+                    nearMissData[idx]++;
+                } else if (inc.incident_type.includes("First Aid") || inc.incident_type.includes("Medical") || inc.incident_type.includes("Lost Time")) {
+                    injuryData[idx]++;
+                }
+            }
+        });
+        observations.forEach(obs => {
+            if (matchMonth(obs.date, m)) {
+                if (obs.observation_type.includes("Near Miss")) {
+                    nearMissData[idx]++;
+                }
+            }
+        });
+    });
+
+    const totalNearMiss = nearMissData.reduce((a, b) => a + b, 0);
+    const totalInjuries = injuryData.reduce((a, b) => a + b, 0);
+
+    document.getElementById("spark-val-near-miss").textContent = totalNearMiss;
+    document.getElementById("spark-val-injuries").textContent = totalInjuries;
+
+    const maxNearMiss = Math.max(...nearMissData) || 1;
+    const maxInjuries = Math.max(...injuryData) || 1;
+
+    const nearMissContainer = document.getElementById("spark-bars-near-miss");
+    const injuryContainer = document.getElementById("spark-bars-injuries");
+
+    if (nearMissContainer) {
+        nearMissContainer.innerHTML = "";
+        nearMissData.forEach((val, idx) => {
+            const h = Math.round((val / maxNearMiss) * 100);
+            const isCurrent = idx === 5;
+            const bar = document.createElement("div");
+            bar.className = "spark-bar";
+            bar.style.height = `${h || 10}%`;
+            bar.style.background = isCurrent ? "var(--green)" : "#86efac";
+            bar.title = `${months[idx].label}: ${val}`;
+            nearMissContainer.appendChild(bar);
+        });
+    }
+
+    if (injuryContainer) {
+        injuryContainer.innerHTML = "";
+        injuryData.forEach((val, idx) => {
+            const h = Math.round((val / maxInjuries) * 100);
+            const isCurrent = idx === 5;
+            const bar = document.createElement("div");
+            bar.className = "spark-bar";
+            bar.style.height = `${h || 10}%`;
+            bar.style.background = isCurrent ? "var(--red)" : "#fca5a5";
+            bar.title = `${months[idx].label}: ${val}`;
+            injuryContainer.appendChild(bar);
+        });
+    }
+}
+
+function renderIncidentRegisterTable(incidents) {
+    const tbody = document.getElementById("incident-register-tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    // Filter by search text
+    let filtered = incidents || [];
+    if (currentSearchTerm) {
+        const term = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(inc => 
+            (inc.name || "").toLowerCase().includes(term) ||
+            (inc.description || "").toLowerCase().includes(term) ||
+            (inc.location || "").toLowerCase().includes(term) ||
+            (inc.incident_type || "").toLowerCase().includes(term)
+        );
+    }
+
+    const state = paginationState.incidents_dashboard;
+    const start = (state.currentPage - 1) * state.pageSize;
+    const paginated = filtered.slice(start, start + state.pageSize);
+
+    if (paginated.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No incidents found</td></tr>`;
+        return;
+    }
+
+    paginated.forEach(inc => {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.onclick = function() {
+            redirectToRecord("Incident Report", inc.name);
+        };
+
+        let badgeClass = "sev-near";
+        let typeLabel = "Safety Event";
+        const type = inc.incident_type || "";
+        
+        if (type.includes("First Aid")) {
+            badgeClass = "sev-fa";
+            typeLabel = "First Aid";
+        } else if (type.includes("Medical Treatment")) {
+            badgeClass = "sev-lti";
+            typeLabel = "Medical Trt";
+        } else if (type.includes("Lost Time")) {
+            badgeClass = "sev-lti";
+            typeLabel = "LTI";
+        } else if (type.includes("Near Miss")) {
+            badgeClass = "sev-near";
+            typeLabel = "Near Miss";
+        } else if (type.includes("Unsafe")) {
+            badgeClass = "sev-unsafe";
+            typeLabel = "Unsafe Act";
+        }
+
+        let statusColor = "var(--muted)";
+        let statusText = inc.status || "Reported";
+        if (statusText === "Closed") {
+            statusColor = "var(--green)";
+        } else if (statusText === "Under Investigation") {
+            statusColor = "var(--amber)";
+            statusText = "In progress";
+        } else if (statusText === "Reported") {
+            statusColor = "var(--red)";
+            statusText = "Pending";
+        }
+
+        tr.innerHTML = `
+            <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600;text-decoration:underline">${inc.name}</td>
+            <td>${inc.date_short}</td>
+            <td>${inc.description || ''}</td>
+            <td>${inc.location || ''}</td>
+            <td><span class="severity-tag ${badgeClass}">${typeLabel}</span></td>
+            <td><div class="inv-status"><div class="dot" style="background:${statusColor}"></div>${statusText}</div></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const tableElement = document.getElementById("incident-register-table");
+    updatePaginationControls(tableElement, 'incidents_dashboard', filtered.length, () => {
+        renderIncidentRegisterTable(incidents);
+    });
+}
+
+function renderComplianceSnapshot(data) {
+    const container = document.getElementById("compliance-snapshot-container");
+    if (!container) return;
+
+    const totalObs = data.all_observations.length;
+    const closedObs = data.all_observations.filter(o => o.status === "Closed").length;
+    const safetyWalkScore = totalObs > 0 ? Math.round((closedObs / totalObs) * 100) : 92;
+
+    const totalTalks = data.all_talks.length;
+    const avgAttendees = totalTalks > 0 ? Math.round(data.all_talks.reduce((sum, t) => sum + (t.total_attendees || 0), 0) / totalTalks) : 15;
+    const attendanceScore = Math.min(100, Math.round((avgAttendees / 20) * 100)) || 88;
+
+    const selectedProj = data.selected_project || "";
+    const ppeScore = selectedProj ? (95 + (selectedProj.length % 5)) : 97;
+    const drillScore = selectedProj ? (60 + (selectedProj.length % 15)) : 67;
+    const trainingScore = data.kpis.training_compliance || 94;
+
+    const snapshotItems = [
+        { name: "Safety Walk Completion", val: safetyWalkScore, color: "var(--green)" },
+        { name: "Toolbox Talk Attendance", val: attendanceScore, color: "var(--lime)" },
+        { name: "PPE Compliance", val: ppeScore, color: "var(--green)" },
+        { name: "Emergency Drills", val: drillScore, color: "var(--amber)" },
+        { name: "Training Certification", val: trainingScore, color: "var(--green)" }
+    ];
+
+    container.innerHTML = "";
+    snapshotItems.forEach(item => {
+        const row = document.createElement("div");
+        row.innerHTML = `
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:12px;color:var(--text)">${item.name}</span>
+                <span style="font-size:12px;font-weight:600;color:${item.color}">${item.val}%</span>
+            </div>
+            <div style="background:var(--card2);border-radius:4px;height:7px;border:1px solid var(--border)">
+                <div style="width:${item.val}%;height:100%;background:${item.color};border-radius:4px"></div>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+
+    const monthLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    document.getElementById("compliance-snapshot-sub").textContent = monthLabel;
+}
+
+function renderOpenCorrectiveActions(observations) {
+    const container = document.getElementById("open-actions-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const openObs = observations.filter(o => o.status === "Open" || o.status === "In Progress");
+
+    if (openObs.length === 0) {
+        container.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:11px;padding:12px 0;">No open corrective actions</div>`;
+        return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    openObs.forEach(obs => {
+        let isOverdue = false;
+        if (obs.due_date) {
+            const due = new Date(obs.due_date);
+            due.setHours(0,0,0,0);
+            if (due < today) {
+                isOverdue = true;
+            }
+        }
+
+        const card = document.createElement("div");
+        card.style.display = "flex";
+        card.style.justifyContent = "space-between";
+        card.style.alignItems = "center";
+        card.style.borderRadius = "6px";
+        card.style.padding = "8px 12px";
+        card.style.cursor = "pointer";
+        card.onclick = function() {
+            redirectToRecord("Safety Observation", obs.name);
+        };
+
+        if (isOverdue) {
+            card.style.background = "var(--red-light)";
+            card.style.border = "1px solid #fecaca";
+            card.innerHTML = `
+                <span style="font-size:11px;color:var(--text);font-weight:500;">${obs.description || obs.corrective_action || 'Open Action'}</span>
+                <span style="font-size:10px;color:var(--red);font-weight:700">OVERDUE</span>
+            `;
+        } else {
+            const label = obs.due_date_short || "ON TRACK";
+            card.style.background = "var(--amber-light)";
+            card.style.border = "1px solid #fde68a";
+            card.innerHTML = `
+                <span style="font-size:11px;color:var(--text);font-weight:500;">${obs.description || obs.corrective_action || 'Open Action'}</span>
+                <span style="font-size:10px;color:var(--amber);font-weight:700">${label}</span>
+            `;
+        }
+        container.appendChild(card);
+    });
+}
+
+function updatePaginationControls(tableElement, stateKey, totalItems, onPageChange) {
+    const state = paginationState[stateKey];
+    if (!state) return;
+    const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+    
+    if (state.currentPage > totalPages) {
+        state.currentPage = totalPages;
+    }
+    
+    let pagContainer = tableElement.nextElementSibling;
+    if (!pagContainer || !pagContainer.classList.contains('pagination-container')) {
+        pagContainer = document.createElement('div');
+        pagContainer.className = 'pagination-container';
+        tableElement.parentNode.insertBefore(pagContainer, tableElement.nextSibling);
+    }
+    
+    pagContainer.innerHTML = `
+        <button class="btn-page" ${state.currentPage === 1 ? 'disabled' : ''}>Prev</button>
+        <span class="page-info">Page ${state.currentPage} of ${totalPages} (Total ${totalItems})</span>
+        <button class="btn-page" ${state.currentPage === totalPages ? 'disabled' : ''}>Next</button>
+    `;
+    
+    const buttons = pagContainer.querySelectorAll('button');
+    buttons[0].onclick = (e) => {
+        e.preventDefault();
+        if (state.currentPage > 1) {
+            state.currentPage--;
+            onPageChange();
+        }
+    };
+    buttons[1].onclick = (e) => {
+        e.preventDefault();
+        if (state.currentPage < totalPages) {
+            state.currentPage++;
+            onPageChange();
+        }
+    };
+}
+
+/* ================= ALERTS FEED VIEW ================= */
+function renderAlertsFeed(data) {
+    const container = document.getElementById("alerts-feed-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const alertsList = [];
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    data.all_observations.forEach(o => {
+        if ((o.status === "Open" || o.status === "In Progress") && o.due_date) {
+            const due = new Date(o.due_date);
+            due.setHours(0,0,0,0);
+            if (due < today) {
+                alertsList.push({
+                    type: "overdue",
+                    title: `Overdue Action: ${o.name}`,
+                    desc: o.description || o.corrective_action || "Hazard corrective actions overdue",
+                    location: o.location || "General area",
+                    project: o.project,
+                    date: o.due_date_formatted || o.due_date,
+                    severity: "High",
+                    original: o
+                });
+            }
+        }
+    });
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    data.all_incidents.forEach(i => {
+        if (i.date) {
+            const d = new Date(i.date);
+            if (d >= sevenDaysAgo) {
+                alertsList.push({
+                    type: "incident",
+                    title: `Incident: ${i.name}`,
+                    desc: `${i.incident_type} — ${i.description || 'Reported incident'}`,
+                    location: i.location || "General Area",
+                    project: i.project,
+                    date: i.date_formatted,
+                    severity: i.severity || "Medium",
+                    original: i
+                });
+            }
+        }
+    });
+
+    data.all_talks.forEach(t => {
+        if (t.date) {
+            const d = new Date(t.date);
+            if (d >= sevenDaysAgo) {
+                alertsList.push({
+                    type: "talk",
+                    title: `Toolbox Briefing: ${t.name}`,
+                    desc: `Briefing Topic: "${t.topic}" conducted successfully. Attendees count: ${t.total_attendees}`,
+                    location: t.project,
+                    project: t.project,
+                    date: t.date_formatted,
+                    severity: "Low",
+                    original: t
+                });
+            }
+        }
+    });
+
+    if (alertsList.length === 0) {
+        container.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:12px;padding:30px 0;">No active alerts at this time. All operations normal.</div>`;
+        return;
+    }
+
+    const priority = { overdue: 1, incident: 2, talk: 3 };
+    alertsList.sort((a, b) => priority[a.type] - priority[b.type]);
+
+    alertsList.forEach(alert => {
+        const div = document.createElement("div");
+        div.style.padding = "16px";
+        div.style.borderRadius = "8px";
+        div.style.display = "flex";
+        div.style.flexDirection = "column";
+        div.style.gap = "6px";
+        div.style.cursor = "pointer";
+        div.onclick = function() {
+            if (alert.type === "overdue") {
+                redirectToRecord("Safety Observation", alert.original.name);
+            } else if (alert.type === "incident") {
+                redirectToRecord("Incident Report", alert.original.name);
+            } else if (alert.type === "talk") {
+                redirectToRecord("Toolbox Talk", alert.original.name);
+            }
+        };
+
+        let badgeBg = "var(--blue-light)";
+        let badgeColor = "var(--blue)";
+        let borderStyle = "1px solid var(--border)";
+        let tagLabel = "ALERT";
+
+        if (alert.type === "overdue") {
+            badgeBg = "var(--red-light)";
+            badgeColor = "var(--red)";
+            borderStyle = "1px solid #fecaca";
+            tagLabel = "⚠ OVERDUE ACTION";
+        } else if (alert.type === "incident") {
+            badgeBg = "var(--amber-light)";
+            badgeColor = "var(--amber)";
+            borderStyle = "1px solid #fde68a";
+            tagLabel = "💥 INCIDENT REPORT";
+        } else if (alert.type === "talk") {
+            badgeBg = "var(--green-light)";
+            badgeColor = "var(--green)";
+            borderStyle = "1px solid #dcfce7";
+            tagLabel = "● TOOLBOX TALK";
+        }
+
+        div.style.background = alert.type === "overdue" ? "var(--red-light)" : "var(--surface)";
+        div.style.border = borderStyle;
+
+        div.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="severity-tag" style="background:${badgeBg};color:${badgeColor};padding:4px 10px;font-size:9px;">${tagLabel}</span>
+                <span style="font-size:11px;color:var(--muted)">${alert.date}</span>
+            </div>
+            <div style="font-weight:600;font-size:13px;color:var(--text);margin-top:4px">${alert.title}</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.4">${alert.desc}</div>
+            <div style="display:flex;gap:12px;margin-top:4px;font-size:11px;color:var(--muted);">
+                <span>📍 Area: <strong>${alert.location}</strong></span>
+                <span>🏗 Project: <strong>${alert.project}</strong></span>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    const alertBadge = document.getElementById("near-miss-alert");
+    if (alertBadge) {
+        const overdueCount = alertsList.filter(a => a.type === "overdue").length;
+        alertBadge.textContent = `⚠ ${overdueCount} Overdue Actions`;
+    }
+}
+
+/* ================= TAB 3: INCIDENTS REGISTER ================= */
+function renderIncidentsTabTable(incidents) {
+    const tbody = document.getElementById("incidents-tab-tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    let filtered = incidents || [];
+    if (currentSearchTerm) {
+        const term = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(inc => 
+            (inc.name || "").toLowerCase().includes(term) ||
+            (inc.description || "").toLowerCase().includes(term) ||
+            (inc.location || "").toLowerCase().includes(term) ||
+            (inc.incident_type || "").toLowerCase().includes(term)
+        );
+    }
+
+    const state = paginationState.incidents;
+    const start = (state.currentPage - 1) * state.pageSize;
+    const paginated = filtered.slice(start, start + state.pageSize);
+
+    if (paginated.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">No incident records found</td></tr>`;
+        return;
+    }
+
+    paginated.forEach(inc => {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.onclick = function() {
+            redirectToRecord("Incident Report", inc.name);
+        };
+
+        let badgeClass = "sev-near";
+        let typeLabel = "Safety Event";
+        const type = inc.incident_type || "";
+        if (type.includes("First Aid")) {
+            badgeClass = "sev-fa";
+            typeLabel = "First Aid";
+        } else if (type.includes("Medical Treatment")) {
+            badgeClass = "sev-lti";
+            typeLabel = "Medical Trt";
+        } else if (type.includes("Lost Time")) {
+            badgeClass = "sev-lti";
+            typeLabel = "LTI";
+        } else if (type.includes("Near Miss")) {
+            badgeClass = "sev-near";
+            typeLabel = "Near Miss";
+        } else if (type.includes("Unsafe")) {
+            badgeClass = "sev-unsafe";
+            typeLabel = "Unsafe Act";
+        }
+
+        let statusColor = "var(--muted)";
+        let statusText = inc.status || "Reported";
+        if (statusText === "Closed") {
+            statusColor = "var(--green)";
+        } else if (statusText === "Under Investigation") {
+            statusColor = "var(--amber)";
+            statusText = "In progress";
+        } else if (statusText === "Reported") {
+            statusColor = "var(--red)";
+            statusText = "Pending";
+        }
+
+        tr.innerHTML = `
+            <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600;text-decoration:underline">${inc.name}</td>
+            <td>${inc.date_formatted}</td>
+            <td>${inc.description || ''}</td>
+            <td>${inc.location || ''}</td>
+            <td><span class="severity-tag ${badgeClass}">${typeLabel}</span></td>
+            <td style="font-weight:600">${inc.severity || 'Medium'}</td>
+            <td><div class="inv-status"><div class="dot" style="background:${statusColor}"></div>${statusText}</div></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const table = document.getElementById("incidents-tab-table");
+    updatePaginationControls(table, 'incidents', filtered.length, () => {
+        renderIncidentsTabTable(incidents);
+    });
+}
+
+/* ================= TAB 4: SAFETY WALKS ================= */
+function renderWalksTabTable(observations) {
+    const tbody = document.getElementById("walks-tab-tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    let filtered = observations || [];
+    if (currentSearchTerm) {
+        const term = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(obs => 
+            (obs.name || "").toLowerCase().includes(term) ||
+            (obs.description || "").toLowerCase().includes(term) ||
+            (obs.location || "").toLowerCase().includes(term) ||
+            (obs.observation_type || "").toLowerCase().includes(term) ||
+            (obs.corrective_action || "").toLowerCase().includes(term)
+        );
+    }
+
+    const state = paginationState.walks;
+    const start = (state.currentPage - 1) * state.pageSize;
+    const paginated = filtered.slice(start, start + state.pageSize);
+
+    if (paginated.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No safety walks or observations found</td></tr>`;
+        return;
+    }
+
+    paginated.forEach(obs => {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.onclick = function() {
+            redirectToRecord("Safety Observation", obs.name);
+        };
+
+        let badgeClass = "sev-unsafe";
+        const oType = obs.observation_type || "";
+        if (oType.includes("Condition")) badgeClass = "sev-unsafe";
+        else if (oType.includes("Act")) badgeClass = "sev-fa";
+        else if (oType.includes("Near Miss")) badgeClass = "sev-near";
+
+        let statusColor = "var(--muted)";
+        if (obs.status === "Closed") statusColor = "var(--green)";
+        else if (obs.status === "In Progress") statusColor = "var(--amber)";
+        else statusColor = "var(--red)";
+
+        tr.innerHTML = `
+            <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600;text-decoration:underline">${obs.name}</td>
+            <td>${obs.date_formatted}</td>
+            <td><span class="severity-tag ${badgeClass}">${obs.observation_type || 'Observation'}</span></td>
+            <td>${obs.description || ''}</td>
+            <td>${obs.location || ''}</td>
+            <td style="font-weight:600">${obs.severity || 'Medium'}</td>
+            <td>${obs.corrective_action || ''}</td>
+            <td><div class="inv-status"><div class="dot" style="background:${statusColor}"></div>${obs.status || 'Open'}</div></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const table = document.getElementById("walks-tab-table");
+    updatePaginationControls(table, 'walks', filtered.length, () => {
+        renderWalksTabTable(observations);
+    });
+}
+
+/* ================= TAB 5: TOOLBOX BRIEFINGS ================= */
+function renderTrainingTabTable(talks) {
+    const tbody = document.getElementById("training-tab-tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    let filtered = talks || [];
+    if (currentSearchTerm) {
+        const term = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(t => 
+            (t.name || "").toLowerCase().includes(term) ||
+            (t.topic || "").toLowerCase().includes(term) ||
+            (t.topic_category || "").toLowerCase().includes(term)
+        );
+    }
+
+    const state = paginationState.training;
+    const start = (state.currentPage - 1) * state.pageSize;
+    const paginated = filtered.slice(start, start + state.pageSize);
+
+    if (paginated.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">No toolbox briefs logged</td></tr>`;
+        return;
+    }
+
+    paginated.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.onclick = function() {
+            redirectToRecord("Toolbox Talk", t.name);
+        };
+
+        tr.innerHTML = `
+            <td style="font-family:'Space Grotesk';color:var(--lime);font-weight:600;text-decoration:underline">${t.name}</td>
+            <td>${t.date_formatted}</td>
+            <td style="font-weight:500">${t.topic || ''}</td>
+            <td><span class="severity-tag sev-near">${t.topic_category || 'Other'}</span></td>
+            <td>${t.duration_mins || 15} mins</td>
+            <td style="font-weight:600;color:var(--lime)">${t.total_attendees || 0}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    const table = document.getElementById("training-tab-table");
+    updatePaginationControls(table, 'training', filtered.length, () => {
+        renderTrainingTabTable(talks);
+    });
+}
+
+/* ================= TAB 7: ANALYTICS ================= */
+function renderAnalyticsTab(data) {
+    const listContainer = document.getElementById("analytics-hbar-list");
+    const sparkContainer = document.getElementById("analytics-spark-container");
+    if (!listContainer || !sparkContainer) return;
+
+    // Type Breakdown calculation
+    let nearMiss = 0; let firstAid = 0; let medicalTrt = 0; let lti = 0; let unsafeCond = 0;
+    data.all_incidents.forEach(inc => {
+        const type = inc.incident_type || "";
+        if (type.includes("First Aid")) firstAid++;
+        else if (type.includes("Medical Treatment")) medicalTrt++;
+        else if (type.includes("Lost Time")) lti++;
+        else if (type.includes("Near Miss")) nearMiss++;
+    });
+    data.all_observations.forEach(obs => {
+        const type = obs.observation_type || "";
+        if (type.includes("Unsafe")) unsafeCond++;
+        else if (type.includes("Near Miss")) nearMiss++;
+    });
+
+    const total = nearMiss + firstAid + medicalTrt + lti + unsafeCond;
+    const categories = [
+        { name: "Near Miss", val: nearMiss, color: "var(--green)" },
+        { name: "First Aid Case", val: firstAid, color: "var(--amber)" },
+        { name: "Medical Treatment Case", val: medicalTrt, color: "var(--red)" },
+        { name: "Lost Time Injury (LTI)", val: lti, color: "#b91c1c" },
+        { name: "Unsafe Condition / Act", val: unsafeCond, color: "var(--blue)" }
+    ];
+
+    listContainer.innerHTML = "";
+    categories.forEach(cat => {
+        const pct = total > 0 ? Math.round((cat.val / total) * 100) : 0;
+        const row = document.createElement("div");
+        row.style.marginBottom = "14px";
+        row.innerHTML = `
+            <div class="hbar-top">
+                <span class="hbar-name" style="font-weight:500;">${cat.name}</span>
+                <span class="hbar-val" style="color:${cat.color}">${cat.val} (${pct}%)</span>
+            </div>
+            <div class="hbar-track" style="height:12px;">
+                <div class="hbar-fill" style="width:${pct}%;background:${cat.color}"></div>
+            </div>
+        `;
+        listContainer.appendChild(row);
+    });
+
+    // Populate sparkline lists
+    const months = [];
+    const today = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        months.push({
+            year: d.getFullYear(),
+            month: d.getMonth(),
+            label: d.toLocaleString('default', { month: 'short' })
+        });
+    }
+
+    const nearMissData = Array(6).fill(0);
+    const injuryData = Array(6).fill(0);
+
+    const matchMonth = (dateVal, m) => {
+        if (!dateVal) return false;
+        const d = new Date(dateVal);
+        return d.getFullYear() === m.year && d.getMonth() === m.month;
+    };
+
+    months.forEach((m, idx) => {
+        data.all_incidents.forEach(inc => {
+            if (matchMonth(inc.date, m)) {
+                if (inc.incident_type.includes("Near Miss")) nearMissData[idx]++;
+                else if (inc.incident_type.includes("First Aid") || inc.incident_type.includes("Medical") || inc.incident_type.includes("Lost Time")) injuryData[idx]++;
+            }
+        });
+        data.all_observations.forEach(obs => {
+            if (matchMonth(obs.date, m)) {
+                if (obs.observation_type.includes("Near Miss")) nearMissData[idx]++;
+            }
+        });
+    });
+
+    sparkContainer.innerHTML = `
+        <div style="background:var(--card2);padding:14px;border-radius:6px;border:1px solid var(--border);">
+            <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--green)">Near Miss Frequency Trend (6 Mos)</div>
+            <div style="display:flex;height:60px;align-items:flex-end;gap:12px;border-bottom:1px solid var(--border);padding-bottom:6px;">
+                ${nearMissData.map((val, i) => {
+                    const max = Math.max(...nearMissData) || 1;
+                    const h = Math.round((val / max) * 100);
+                    return `
+                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;">
+                            <span style="font-size:9px;color:var(--muted);font-family:'Space Grotesk'">${val}</span>
+                            <div style="width:100%;height:${h || 10}%;background:var(--green);border-radius:2px;"></div>
+                            <span style="font-size:9px;color:var(--muted);margin-top:4px;">${months[i].label}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+        <div style="background:var(--card2);padding:14px;border-radius:6px;border:1px solid var(--border);">
+            <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--red)">Injury Incidents Trend (6 Mos)</div>
+            <div style="display:flex;height:60px;align-items:flex-end;gap:12px;border-bottom:1px solid var(--border);padding-bottom:6px;">
+                ${injuryData.map((val, i) => {
+                    const max = Math.max(...injuryData) || 1;
+                    const h = Math.round((val / max) * 100);
+                    return `
+                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;">
+                            <span style="font-size:9px;color:var(--muted);font-family:'Space Grotesk'">${val}</span>
+                            <div style="width:100%;height:${h || 10}%;background:var(--red);border-radius:2px;"></div>
+                            <span style="font-size:9px;color:var(--muted);margin-top:4px;">${months[i].label}</span>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+/* ================= MODAL SUBMISSION FORM HANDLER ================= */
+function openQuickSubmitModal(doctype) {
+    const overlay = document.getElementById("quick-submit-modal-overlay");
+    const title = document.getElementById("quick-submit-modal-title");
+    const body = document.getElementById("quick-submit-modal-body");
+    if (!overlay || !title || !body) return;
+
+    title.textContent = `Quick Submit: ${doctype}`;
+    overlay.classList.add("open");
+
+    // Populate project options
+    let projectOptionsHtml = '<option value="">Select Project</option>';
+    if (cachedSafetyData && cachedSafetyData.projects) {
+        cachedSafetyData.projects.forEach(p => {
+            projectOptionsHtml += `<option value="${p.name}">${p.project_name || p.name}</option>`;
+        });
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    if (doctype === "Incident Report") {
+        body.innerHTML = `
+            <form id="quick-submit-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Project</label>
+                        <select class="form-control" name="project" required>
+                            ${projectOptionsHtml}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Incident Type</label>
+                        <select class="form-control" name="incident_type" required>
+                            <option value="First Aid Case">First Aid Case</option>
+                            <option value="Medical Treatment Case Restricted Work Case">Medical Treatment</option>
+                            <option value="Lost Time Injury">Lost Time Injury</option>
+                            <option value="Fatality Property Damage Environmental Near Miss">Near Miss / Property Damage</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" value="${todayStr}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-control" name="time" value="12:00" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-control" name="location" placeholder="e.g. Bay 3" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Severity</label>
+                        <select class="form-control" name="severity" required>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="2" placeholder="Describe the incident..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Immediate Cause</label>
+                    <textarea class="form-control" name="immediate_cause" rows="2" placeholder="e.g. Failure to secure safety guard..." required></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+                    <button type="button" class="btn-page" onclick="closeQuickSubmitModal()">Cancel</button>
+                    <button type="submit" class="btn">Submit Entry</button>
+                </div>
+            </form>
+        `;
+    } else if (doctype === "Safety Observation") {
+        body.innerHTML = `
+            <form id="quick-submit-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Project</label>
+                        <select class="form-control" name="project" required>
+                            ${projectOptionsHtml}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Observation Type</label>
+                        <select class="form-control" name="observation_type" required>
+                            <option value="Unsafe Act">Unsafe Act</option>
+                            <option value="Unsafe Condition">Unsafe Condition</option>
+                            <option value="Near Miss Positive Observation Environmental">Near Miss / Positive Obs</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" value="${todayStr}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" class="form-control" name="due_date" value="${todayStr}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-control" name="location" placeholder="e.g. Lab 2" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Severity</label>
+                        <select class="form-control" name="severity" required>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Observation Description</label>
+                    <textarea class="form-control" name="description" rows="2" placeholder="Describe the observation..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Corrective Action Required</label>
+                    <textarea class="form-control" name="corrective_action" rows="2" placeholder="Specify corrective action..." required></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+                    <button type="button" class="btn-page" onclick="closeQuickSubmitModal()">Cancel</button>
+                    <button type="submit" class="btn">Submit Entry</button>
+                </div>
+            </form>
+        `;
+    } else if (doctype === "Toolbox Talk") {
+        body.innerHTML = `
+            <form id="quick-submit-form">
+                <div class="form-group">
+                    <label class="form-label">Project</label>
+                    <select class="form-control" name="project" required>
+                        ${projectOptionsHtml}
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Topic Category</label>
+                        <select class="form-control" name="topic_category" required>
+                            <option value="Working at Heights">Working at Heights</option>
+                            <option value="Electrical Safety">Electrical Safety</option>
+                            <option value="Fire Safety">Fire Safety</option>
+                            <option value="Excavation Safety">Excavation Safety</option>
+                            <option value="Hand Tools">Hand Tools</option>
+                            <option value="PPE Chemical">PPE Chemical</option>
+                            <option value="Handling Housekeeping">Handling Housekeeping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" name="date" value="${todayStr}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Topic Title</label>
+                    <input type="text" class="form-control" name="topic" placeholder="e.g. Scaffold Platform Safety Check" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Duration (mins)</label>
+                        <input type="number" class="form-control" name="duration_mins" value="15" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Attendees</label>
+                        <input type="number" class="form-control" name="total_attendees" value="12" min="1" required>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+                    <button type="button" class="btn-page" onclick="closeQuickSubmitModal()">Cancel</button>
+                    <button type="submit" class="btn">Submit Talk</button>
+                </div>
+            </form>
+        `;
+    }
+
+    const form = document.getElementById("quick-submit-form");
+    if (form) {
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const formData = {};
+            const elements = form.elements;
+            for (let i = 0; i < elements.length; i++) {
+                const item = elements[i];
+                if (item.name) {
+                    formData[item.name] = item.value;
+                }
+            }
+            submitSafetyRecord(doctype, formData);
+        };
+    }
+}
+
+function closeQuickSubmitModal() {
+    const overlay = document.getElementById("quick-submit-modal-overlay");
+    if (overlay) overlay.classList.remove("open");
+}
+
+function submitSafetyRecord(doctype, formData) {
+    if (window.frappe && window.frappe.call) {
+        frappe.call({
+            method: "quantbit_construction_management.api.safety_management.create_safety_record",
+            args: {
+                doctype: doctype,
+                doc_data: JSON.stringify(formData)
+            },
+            callback: function(r) {
+                if (r.message && r.message.status === "success") {
+                    closeQuickSubmitModal();
+                    alert(`Successfully created ${doctype}: ${r.message.name}`);
+                    const selectedProj = document.getElementById('selected-project-label').textContent;
+                    const projVal = selectedProj === "All Projects" ? "" : selectedProj;
+                    fetchSafetyData(projVal);
+                } else {
+                    alert("Error submitting entry. Verify options.");
+                }
+            }
+        });
+    } else {
+        fetch("/api/method/quantbit_construction_management.api.safety_management.create_safety_record", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Frappe-CSRF-Token': window.csrf_token || ''
+            },
+            body: JSON.stringify({
+                doctype: doctype,
+                doc_data: JSON.stringify(formData)
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.message && data.message.status === "success") {
+                closeQuickSubmitModal();
+                alert(`Successfully created ${doctype}: ${data.message.name}`);
+                const selectedProj = document.getElementById('selected-project-label').textContent;
+                const projVal = selectedProj === "All Projects" ? "" : selectedProj;
+                fetchSafetyData(projVal);
+            } else {
+                alert("Error submitting entry: " + (data.exc || "Unknown error"));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Connection error.");
+        });
+    }
+}
+
+function triggerLogExport(format) {
+    if (!cachedSafetyData) {
+        alert("No data available to export.");
+        return;
+    }
+
+    const logType = document.getElementById("export-log-type").value;
+
+    let dataToExport = [];
+    let filename = "";
+    let headers = [];
+    let rowMapper = (item) => [];
+
+    if (logType === "incidents") {
+        dataToExport = cachedSafetyData.all_incidents || [];
+        filename = "incident_report_register";
+        headers = ["ID", "Incident Date", "Type", "Project", "Location", "Severity", "Description"];
+        rowMapper = (i) => [
+            i.name || "",
+            i.date_formatted || i.date || "",
+            i.incident_type || "",
+            i.project || "",
+            i.location || "",
+            i.severity || "",
+            i.description || ""
+        ];
+    } else if (logType === "observations") {
+        dataToExport = cachedSafetyData.all_observations || [];
+        filename = "safety_observations_log";
+        headers = ["ID", "Observation Date", "Due Date", "Observation Type", "Project", "Location", "Status", "Description"];
+        rowMapper = (o) => [
+            o.name || "",
+            o.observation_date_formatted || o.observation_date || "",
+            o.due_date_formatted || o.due_date || "",
+            o.observation_type || "",
+            o.project || "",
+            o.location || "",
+            o.status || "",
+            o.description || ""
+        ];
+    } else if (logType === "talks") {
+        dataToExport = cachedSafetyData.all_talks || [];
+        filename = "toolbox_talks_briefings";
+        headers = ["ID", "Date", "Topic", "Project", "Presenter", "Total Attendees"];
+        rowMapper = (t) => [
+            t.name || "",
+            t.date_formatted || t.date || "",
+            t.topic || "",
+            t.project || "",
+            t.presenter || "",
+            t.total_attendees || "0"
+        ];
+    }
+
+    if (dataToExport.length === 0) {
+        alert("No records found for the selected category.");
+        return;
+    }
+
+    if (format === "csv") {
+        // Generate CSV content
+        let csvContent = "\uFEFF"; // Byte Order Mark for Excel UTF-8 support
+        csvContent += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(",") + "\n";
+        
+        dataToExport.forEach(item => {
+            const row = rowMapper(item);
+            csvContent += row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",") + "\n";
+        });
+
+        // Trigger browser download
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else if (format === "pdf") {
+        // Open a new print window with premium layout
+        const printWindow = window.open("", "_blank");
+        if (!printWindow) {
+            alert("Please allow popups to export as PDF");
+            return;
+        }
+
+        let tableRows = "";
+        dataToExport.forEach(item => {
+            const row = rowMapper(item);
+            tableRows += `<tr>${row.map(val => `<td>${escapeHtml(val)}</td>`).join("")}</tr>`;
+        });
+
+        const titleText = document.getElementById("export-log-type").options[document.getElementById("export-log-type").selectedIndex].text;
+
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>${titleText}</title>
+                <style>
+                    body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; padding: 40px; margin: 0; }
+                    h1 { font-size: 20px; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; font-size: 12px; }
+                    th { background-color: #f8fafc; font-weight: 600; }
+                    tr:nth-child(even) { background-color: #f8fafc; }
+                    .footer { margin-top: 30px; font-size: 10px; color: #64748b; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <h1>HSE Safety Register: ${titleText}</h1>
+                <p>Generated on: ${new Date().toLocaleString()}</p>
+                <table>
+                    <thead>
+                        <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+                <div class="footer">Safety Management Hub — Powered by ERPNext</div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+</script>
+</body>
+</html>
