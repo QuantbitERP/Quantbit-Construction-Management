@@ -161,6 +161,9 @@ fixtures = [
             ]
         ]
     },
+    {
+        "doctype": "Web Page"
+    },
 ]
 
 # Includes in <head>
