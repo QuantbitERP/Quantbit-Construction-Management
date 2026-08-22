@@ -1,7 +1,6 @@
 ### Quantbit Construction Management
 construction management system
 
-
 ### Documentation
 - [Functional Application Process Document](docs/functional-application-process.md)
 - [Technical Application Process Document](docs/technical-application-process.md)
@@ -33,11 +32,11 @@ Pre-commit is configured to use the following tools for checking and formatting 
 
 **Construction Management System – Mobile**
 
-[![Mobile App Repo](https://img.shields.io/badge/GitHub-construction--mgmt--sys--mobile-181717?style=for-the-badge&logo=github)](https://github.com/quantbit-shrutika/construction-mgmt-sys-mobile.git)
+[![Mobile App Repo](https://img.shields.io/badge/GitHub-construction--mgmt--sys--mobile-181717?style=for-the-badge&logo=github)](https://github.com/QuantbitERP/construction-mgmt-sys-mobile)
 
-🔗 [https://github.com/quantbit-shrutika/construction-mgmt-sys-mobile.git](https://github.com/quantbit-shrutika/construction-mgmt-sys-mobile.git)
+🔗 [https://github.com/QuantbitERP/construction-mgmt-sys-mobile](https://github.com/QuantbitERP/construction-mgmt-sys-mobile)
 
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAT4AAAE+AQAAAAA8Q0GdAAADkUlEQVR4nO2bQW7lOAxEnyIDvaRvkKPIN2v0zeij9A3k5QAyahaknWwGyAfSSL6mDSPwdwjE9SlSVUWniA8d58vH4uBv4PcNPEopZTnKWcpybHF3YV+AY+PYSimlbE8C5qOHepNUe4Mm+aANUG+YA9CqpN7GM4B5KLCULT6cKws75uXVBwzTAI6yfP0zfm4g6g1alUdaB9TeqhwTMEy1U2fL9XJdNAHsG5wr9fhZf29jofY/96e/RV1HutWpEubDvEpxTlfXqEOs6v84AZgOdRy9SRrm6q1K0CSpkxfSXKizhy9QSuH4WVbOUoCyUl699r2sTLhfywdIGqZhXuVXgTfJJSe2sGcA89AKrx3MhynADhPm6mCqckkT1nUnkGb3pmVpm6o0zEd8Fc8A5rEebl47gbr2JnntDPNs4DZlrqN7q8rvLKs39TYI7HPWNTSuPUu9Vbk6kkNIEo3Zcv3CsQEDFvs12MvKPyvnSimb5IOdo3z5M3524C0qGyZJQO0NU80VrjyfAcxD3axK6iE0mi7irc4gflJn42YoyLYp6ErWcm/3thUxs6GWSz7MMQ1L8RWmiuSXxzJhri+ziICpnkIsUx81/gxgHqrrYUnFg4gOc6KWTVKq7OlQt1tRXlYSmJKH94iaLNcv2K+FAL5XeXTs2nfMB3uS8K9+xs8OTPURlLtKl0t8/7bFjjZdrv1cGYDpLFspBfPcskNch0J5DjAfPSTPjm0iTghiFtfRxufKdW5Swc1G9nCpEyQtBNeE+7WkUJd67waHhQKQBOYZwDyGurcgn7GqqzS4GKl5lc+oPlpaZxCsu6a34DEDiou5UL8ACwTr/tEBzpVz3aHBzrHNul9nWnuTfNhbXQdFD0U2V66RvKbGDPUBtEEbpqj0mG9Ohzo8YQ/lJXnkt76RtDadb0bYg0HArmFHtvTocjkWeQYwj67w2nNVB/ZBy6n9Ne6cD3V2aXKzDq8sxKbCOZyQm3lYKGkW9Ugub/rafMpch2NGDDQ79+yjysNRmRB1jLfelTbkHUihPWEPz3cVwkpq14wv5pvUuDlfXXdIFyWFRr3NcFN4KRPmuue8I6f2aYo6wcrSN5sQNURCualplYfDAMQ0ZFLULWjY/dJRbOL51spsPfwO3Ic5R4H9LFtZ93PlR29lZTGV9Xs846cFvqvri4WGaTbeWty87xamZ3INdkNxkM7hdHVd/v4HxP8m8F8y563p18cDMQAAAABJRU5ErkJggg==" alt="QR Code – Construction Management Mobile App" width="160" height="160" />
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASYAAAEmAQAAAADnvwB3AAADP0lEQVR4nO2aS27mOAyEP7UMZCkDc4Achb7BHKmRm8lHyQEGoJcBaNQsKCfZ9d+YCWIbLWSRKFwUwYeqSBfx67P/eMAI/lh9nxVygKqeP9EERhMgNwAszor+YR9NUnWqJPVovapLoimaqiS/uo8/gFIWMLayz1Zfl4B9hq0AbGX6NlxfYWVsC62zLWxLANtyClz/1Wr6+LW9TK1P/yx5OzUv34jra+qRpuomNznZeaTb1ONaSgGrrwsZQezpdanOtC17KWU+NfpHjsbpcgsITI6kgAylpIvHEUlVHSxaz0Ql3XSL1gNoN/HxPYLRFE20Hk3RemBxCw5Ay57Tq1uVApOb1DNpr99zkrBZNMnTTQbJwdLZe8QxnZJ6tAwiNMktXb6Dj+qBSV1SNFU3sHHfemD34OS0TntvOxZYPv35ptQ71CNypJ7pSuuBVbeAmn/e4e3odWirLqe6SR3s4HV2Cx+VjgyC6kY2IudgBVfP1WH15Cus+wztRc4+M7VenX1evxXX/2KF1IFoI11rtlmH9xZ0i1ytDhAYbVDxzNJIgxvk6rbss8mtOmxLdZNTX5fy/MIR0BOjf9RKzsQ6tT4qEco8/j3lpODM6B+yWveZAFhpHQjWaAKqE/A2nxr9I0fSSEgI+KhNbNzeoOe4BciJz7PWQ0gOCXlW9I9zueyokuKQxtLI1XoXvkrrOQ3I8HEUI1huB67vow1JNYQVwZg9xruoPCv63+E5h6Ryak6rDkWZA5DL++hWJVrPkNWUjT40VwqQ6/s46hFIPVXVk9QFdhP9eMwB0jVGX+3v99fnqxOs8Rcx/QRgra/LylKDfUbb39+G6ws0cj2Ucj2KMSlBda5fjz9gLTMBZV6r81bK/qwy25NTZgaVPTH6h6y2nwFlprrtM7muOljrCrbPZ0b/0Blrq2Okk611dNShH6+fq1sppUwwbUW+7jMTa3Vi+1mdKR+X86J/6HzSGh+xO0TWsYs8K/rfeB+xql6lscA65uSjKi/PAT5ZjVZjwbrPlHkd9bgtV0D/gNW27M8vb2V8yhFbyTYLdv15zlGPUs1VI5Z7nNyApF6+eK5+fC+XYipXHsfN2NZd3Mfy59vOW1j9CxUa/DBUUCApAAAAAElFTkSuQmCC" alt="QR Code – Construction Management Mobile App" width="160" height="160" />
 
 > Scan the QR code to open the mobile app repository directly on your device.
 
