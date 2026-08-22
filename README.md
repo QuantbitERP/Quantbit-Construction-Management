@@ -7,6 +7,18 @@ construction management system
 - [Functional Application Process Document](docs/functional-application-process.md)
 - [Technical Application Process Document](docs/technical-application-process.md)
 
+### Mobile Application Repository
+
+[https://github.com/QuantbitERP/construction-mgmt-sys-mobile](https://github.com/QuantbitERP/construction-mgmt-sys-mobile)
+
+![QR code for the Quantbit Construction Management mobile application repository](docs/qr_mobile.svg)
+
+### Procurex Bundle Repository
+
+[https://github.com/QuantbitERP/ProcurexBundle.git](https://github.com/QuantbitERP/ProcurexBundle.git)
+
+![QR code for the Procurex Bundle repository](docs/qr_procurex.svg)
+
 ### Installation
 
 You can install this app using the [bench](https://github.com/frappe/bench) CLI:
