@@ -1,7 +1,7 @@
 {
  "app": "quantbit_construction_management",
  "charts": [],
- "content": "[{\"id\":\"uDDYsSjJqZ\",\"type\":\"paragraph\",\"data\":{\"text\":\"Masters\",\"col\":12}},{\"id\":\"EZz0c6CRdH\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}},{\"id\":\"IkCQktHbz5\",\"type\":\"card\",\"data\":{\"card_name\":\"Site Diary\",\"col\":4}},{\"id\":\"QiJAh0zEJz\",\"type\":\"card\",\"data\":{\"card_name\":\"Tendaring\",\"col\":4}}]",
+ "content": "[{\"id\":\"uDDYsSjJqZ\",\"type\":\"paragraph\",\"data\":{\"text\":\"Masters\",\"col\":12}},{\"id\":\"EZz0c6CRdH\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}},{\"id\":\"IkCQktHbz5\",\"type\":\"card\",\"data\":{\"card_name\":\"Site Diary\",\"col\":4}},{\"id\":\"QiJAh0zEJz\",\"type\":\"card\",\"data\":{\"card_name\":\"Tendaring\",\"col\":4}},{\"id\":\"CMs39tFgGh\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Dashboard</b></span>\",\"col\":12}},{\"id\":\"8rNu6KFLhr\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Drawing Management\",\"col\":3}},{\"id\":\"MUo_6XsjcA\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Quality Management\",\"col\":3}},{\"id\":\"-eVo2Yc6QH\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Safety Management\",\"col\":3}}]",
  "creation": "2026-07-17 13:24:29.634489",
  "custom_blocks": [],
  "docstatus": 0,
@@ -171,7 +171,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-08-19 12:27:36.044696",
+ "modified": "2026-08-20 11:23:06.792066",
  "modified_by": "Administrator",
  "module": "Quantbit Construction Management",
  "name": "Build X",
@@ -181,7 +181,29 @@
  "quick_lists": [],
  "roles": [],
  "sequence_id": 0.0,
- "shortcuts": [],
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Drawing Management",
+   "type": "URL",
+   "url": "/drawing-management"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Quality Management",
+   "type": "URL",
+   "url": "/quality-management"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Safety Management",
+   "type": "URL",
+   "url": "/safety-management"
+  }
+ ],
  "title": "Build X",
  "type": "Workspace"
 }

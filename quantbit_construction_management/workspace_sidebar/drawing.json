@@ -1,26 +1,26 @@
 {
  "app": "quantbit_construction_management",
- "creation": "2026-07-03 17:56:24.639080",
+ "creation": "2026-08-20 16:38:55.363060",
  "docstatus": 0,
  "doctype": "Workspace Sidebar",
- "idx": 0,
+ "idx": 1,
  "items": [
   {
    "child": 0,
    "collapsible": 1,
    "indent": 0,
    "keep_closed": 0,
-   "label": "Safety",
-   "link_to": "Safety",
+   "label": "Drawing",
+   "link_to": "Drawing",
    "link_type": "Workspace",
    "show_arrow": 0,
    "type": "Link"
   }
  ],
- "modified": "2026-07-04 12:39:05.968140",
+ "modified": "2026-08-20 16:47:06.200595",
  "modified_by": "Administrator",
- "name": "Safety",
+ "name": "Drawing",
  "owner": "Administrator",
  "standard": 1,
- "title": "Safety"
+ "title": "Drawing"
 }
