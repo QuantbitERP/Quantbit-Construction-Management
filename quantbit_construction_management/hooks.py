@@ -29,7 +29,8 @@ doctype_js = {
   "Project" : "public/js/Project.js",
   "Task" : "public/js/Task.js",
   "Opportunity" : "public/js/Opportunity.js",
-  "Stock Entry" : "public/js/Stock_Entry.js"
+  "Stock Entry" : "public/js/Stock_Entry.js",
+  "Journal Entry" : "public/js/Journal_Entry.js"
 }
 
 fixtures = [
@@ -300,6 +301,7 @@ doc_events = {
         "on_update": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_purchase_invoice_update"
     },
     "Journal Entry": {
+        "validate": "quantbit_construction_management.overrides.journal_entry.validate_journal_entry",
         "on_update": "quantbit_construction_management.subcontractor_management.doctype.contractor_billing.contractor_billing.on_journal_entry_update"
     }
 }
